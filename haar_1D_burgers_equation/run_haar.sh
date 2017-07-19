@@ -1,2 +1,2 @@
-g++ burger1D.cpp -o exec
+g++ burger1D.cpp -g -o exec
 ./exec

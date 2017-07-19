@@ -28,6 +28,8 @@ int main(void) {
     //------- Declare initial parameters -----------//--------------------------------------//
     double v=0.1;                                   // kinematic diffusivity constant       //
     int M=2;                                        // half of collocation points           //
+    int mxi=3*M;                                    // max no. of iterations 4 matrix solvr //
+    double tol=1.e+8;                               // matrix solver tolerance              //
     int J=log2(M);                                  // number of total scales               //
     int i;                                          // counter variable                     //
     int l;                                          // counter variable                     //
@@ -54,7 +56,7 @@ int main(void) {
     for (i=0;i<N;i++) Ux[i]=new double[2*M];        //                                      //
     double** Uxx=new double *[N];                   // initialize second derivtive of soln  //
     for (i=0;i<N;i++) Uxx[i]=new double[2*M];       //                                      //
-    //------- Boundary and initial conditions ------//--------------------------------------//
+    //------- Initial conditions -------------------//--------------------------------------//
     BCIC bcic;                                      // declare class variable               //
     for (l=0;l<2*M;l++) {                           // populate the initial U,Ux,Uxx arrays //
         U[0][l]=bcic.f(x[l]);                       // initial function                     //
@@ -97,9 +99,11 @@ int main(void) {
                 bcic.f1(t[s])-bcic.f2(t[s])-        //                                      //
                 Ux[s][l]);                          //                                      //
             b[l]=c1+c2+c3;                          // RHS of matrix system                 //
+        }                                           //                                      //
+        c=BiCGSTAB(A,b,tol,mxi);                    // solve matrix system                  //
+        for (l=0;l<size;l++) {                      // update solution variables            //
+            Uxx[s+1][l]=
         }
-        // call BiCGSTAB
-        // update U, Ux, Uxx
     }
     
     //------- Fill in derichlet conditions ---------//--------------------------------------//
@@ -122,7 +126,6 @@ int main(void) {
         char fn[20];
         snprintf(fn,sizeof fn,"output/%04d.dat",s);
         output.open(fn);
-//        output.open("output/data"+std::to_string(s)+".dat");
         for (l=0;l<2*M+2;l++) {
             output << xnew[l] << " " << Unew[s][l] << endl;
         }

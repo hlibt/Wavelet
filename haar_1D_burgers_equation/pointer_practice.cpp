@@ -1,12 +1,13 @@
 #include<iostream>
 using namespace std;
-const int MAX=3;
-main() {
-int var[MAX]={10,100,200};
-int *ptr[MAX];
-for (int i=0;i<MAX;i++) {
-    ptr[i]=&var[i];
-    cout<< *ptr[i]<<endl;
+int main() {
+int a;
+double b=2.76;
+double c;
+for (int i=0;i<3;i++) {
+    a=i>0;
+    c=a*b+a;
+    cout << c;
 }
 return 0;
 }

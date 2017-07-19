@@ -28,6 +28,8 @@ int main(void) {
     //------- Declare initial parameters -----------//--------------------------------------//
     double v=0.1;                                   // kinematic diffusivity constant       //
     int M=2;                                        // half of collocation points           //
+    int mxi=3*M;                                    // max no. of iterations 4 matrix solvr //
+    double tol=1.e+8;                               // matrix solver tolerance              //
     int J=log2(M);                                  // number of total scales               //
     int i;                                          // counter variable                     //
     int l;                                          // counter variable                     //
@@ -48,38 +50,39 @@ int main(void) {
     double* b=new double[2*M];                      // RHS of matrix system                 //
     double** A=new double*[2*M];                    // initialize the LHS matrix 2Mx2M      //
     for (i=0;i<2*M;i++) A[i]=new double[2*M];       //                                      //
-    double** U=new double *[N];                     // initialize solution matrix U         //
-    for (i=0;i<N;i++) U[i]=new double[2*M];         //                                      //
-    double** Ux=new double *[N];                    // initialize derivative of soln (U')   //
-    for (i=0;i<N;i++) Ux[i]=new double[2*M];        //                                      //
-    double** Uxx=new double *[N];                   // initialize second derivtive of soln  //
-    for (i=0;i<N;i++) Uxx[i]=new double[2*M];       //                                      //
-    //------- Boundary and initial conditions ------//--------------------------------------//
+    double* U_old=new double [2*M];                 // initialize solution matrix U         //
+    double* Ux_old=new double [2*M];                // initialize derivative of soln (U')   //
+    double* Uxx_old=new double [2*M];               // initialize second derivtive of soln  //
+    double* U_new=new double [2*M];                 // initialize solution matrix U         //
+    double* Ux_new=new double [2*M];                // initialize derivative of soln (U')   //
+    double* Uxx_new=new double [2*M];               // initialize second derivtive of soln  //
+    //------- Initial conditions -------------------//--------------------------------------//
     BCIC bcic;                                      // declare class variable               //
     for (l=0;l<2*M;l++) {                           // populate the initial U,Ux,Uxx arrays //
-        U[0][l]=bcic.f(x[l]);                       // initial function                     //
-        Ux[0][l]=bcic.fx(x[l]);                     // derivative of intial function        //
-        Uxx[0][l]=bcic.fxx(x[l]);                   // second derivative                    //
+        U_old[l]=bcic.f(x[l]);                      // initial function                     //
+        Ux_old[l]=bcic.fx(x[l]);                    // derivative of intial function        //
+        Uxx_old[l]=bcic.fxx(x[l]);                  // second derivative                    //
     }                                               //                                      //
     //------- Advance simulation in time -----------//--------------------------------------//
     for (int s=0;s<N;s++) {                         // march in time                        //
         for (l=0;l<2*M;l++) {                       // loop through collocation points      //
-            c1=H.q1(x[l])-x[l]*H.q_tilda(1);        //                                      //
-            c2=dt*(-v*H.h1(x[l])+Ux[s][l]*          //                                      //
+            c1=H.q1(x[l])-x[l]*H.q_tilda(1);        // and populate with functions for i=1  //
+            c2=dt*(-v*H.h1(x[l])+Ux_old[l]*         //                                      //
                 (H.q1(x[l])-x[l]*H.q_tilda(1)));    //                                      //
-            c3=dt*U[s][l]*(H.p1(x[l])-H.q_tilda(1));//                                      //
+            c3=dt*U_old[l]*(H.p1(x[l])-             //                                      //
+                H.q_tilda(1));                      //                                      //
             A[l][0]=c1+c2+c3;                       // populate LHS matrix for i=1          //
         }                                           //                                      //
-        for (int j=0;j<J;j++) {                     // repeat with wavelet functions (i!=1) //
+        for (int j=0;j<=J;j++) {                     // repeat with wavelet functions (i!=1) //
             for (int k=0;k<2^j;k++) {               // wavelet translation parameter        //
                 H.set_params(k,2^j);                // set parameters from k and m          //
                 for (l=0;l<2*M;l++) {               // loop through collocation points      //
                     c1=H.q(x[l])-x[l]*H.q_tilda(2^j //                                      //
                         +k+1);                      //                                      //
-                    c2=dt*(-v*H.h(x[l])+Ux[s][l]*   //                                      //
+                    c2=dt*(-v*H.h(x[l])+Ux_old[l]*  //                                      //
                         (H.q(x[l])-x[l]*            //                                      //
                         H.q_tilda(2^j+k+1)));       //                                      //
-                    c3=dt*U[s][l]*(H.p(x[l])-       //                                      //
+                    c3=dt*U_old[l]*(H.p(x[l])-      //                                      //
                        H.q_tilda(2^j+k+1));         //                                      //
                     A[l][k+2^j]=c1+c2+c3;           // populate LHS matrix for i!=1         //
                 }                                   //                                      //
@@ -88,51 +91,75 @@ int main(void) {
         for (l=0;l<2*M;l++) {                       // populate RHS of matrix system        //
             c1=-bcic.f1t(t[s+1])-x[l]*              //                                      //
                 (bcic.f2t(t[s+1])-bcic.f1t(t[s+1]));//                                      //
-            c2=v*Uxx[s][l]-Ux[s][l]*(bcic.f1(t[s])- //                                      //
-                bcic.f1(t[s+1]))+x[l]*(             //                                      //
+            c2=v*Uxx_old[l]-Ux_old[l]*(bcic.f1(t[s])//                                      //
+                -bcic.f1(t[s+1]))+x[l]*(            //                                      //
                 -bcic.f2(t[s+1])+bcic.f1(t[s+1])-   //                                      //
                  bcic.f2(t[s])+bcic.f1(t[s]))*      //                                      //
-                 Ux[s][l];                          //                                      //
-            c3=U[s][l]*(bcic.f1(t[s+1])+            //                                      //
+                 Ux_old[l];                         //                                      //
+            c3=U_old[l]*(bcic.f1(t[s+1])+           //                                      //
                 bcic.f1(t[s])-bcic.f2(t[s])-        //                                      //
-                Ux[s][l]);                          //                                      //
+                Ux_old[l]);                         //                                      //
             b[l]=c1+c2+c3;                          // RHS of matrix system                 //
+        }                                           //                                      //
+    //------- Solve matrix system ------------------//--------------------------------------//
+        c=BiCGSTAB(A,b,tol,2*M,mxi);                // solve sys. for wavelet coefficients  //
+    //------- Update solution variables ------------//--------------------------------------//
+        for (l=0;l<2*M;l++) {                       // update solution variables            //
+            c1=dt*c[0]*H.h1(x[l]);                  // temporary constant                   //
+            c2=dt*c[0]*(H.p1(x[l])-                 //                                      //
+                H.q_tilda(0));                      //                                      //
+            c3=dt*c[0]*(H.q1(x[l])-                 //                                      //
+                H.q_tilda(0));                      //                                      //
+            for (int j=0;j<=J;i++) {                //                                      //
+                for (int k=0;k<2^j;k++) {           //                                      //
+                    i=2^j+k+1;                      //                                      //
+                    H.set_params(k,2^j);            //                                      //
+                    c1+=dt*c[i]*H.h(x[l]);          //                                      //
+                    c2+=dt*c[i]*(H.p(x[l])-         //                                      //
+                         H.q_tilda(i));             //                                      //
+                    c3+=dt*c[i]*(H.q(x[l])-         //                                      //
+                         H.q_tilda(i));             //                                      //
+                }                                   //                                      //
+            }                                       //                                      // 
+            Uxx_new[l]=dt*c1+Uxx_old[l];            // update Uxx                           //
+            Ux_new[l]=dt*c2+bcic.f2(t[s+1])-        //                                      //
+                  bcic.f1(t[s+1])+bcic.f1(t[s])     //                                      //
+                  -bcic.f2(t[s]);                   //                                      //
+            U_new[l]=dt*c3+x[l]*(bcic.f2(t[s+1])-   // update U                             //
+                  bcic.f1(t[s+1])-bcic.f2(t[s])+    //                                      //
+                  bcic.f1(t[s]))+bcic.f1(t[s+1])-   //                                      //
+                  bcic.f1(t[s])+U_old[l];           //                                      //
+            U_old[l]=U_new[l];                      //                                      //
+            Ux_old[l]=Ux_new[l];                    //                                      //
+            Uxx_old[l]=Uxx_new[l];                  //                                      //
+    //------- Write data to file -------------------//--------------------------------------//
+            ofstream output;                        //                                      //
+            char fn[20];                            //                                      //
+            snprintf(fn,sizeof fn,"output/%04d.dat",s);
+            output.open(fn);
+            output << x[l] << " " << U_new[l] << endl;
+            output.close();
         }
-        // call BiCGSTAB
-        // update U, Ux, Uxx
     }
-    
     //------- Fill in derichlet conditions ---------//--------------------------------------//
-    double* xnew=new double[N];           
-    for (l=1;l<2*M+1;l++) xnew[l]=x[l-1];
-    xnew[0]=0.;
-    xnew[2*M+1]=0;
-    double **Unew=new double *[N];                  //                                      //
-    for (i=0;i<N;i++) Unew[i]=new double[2*M+2];  // append x to include x=0, x=1         //
-    for (int s=0;s<N;s++) {
-        for (l=0;l<2*M;l++) {
-            Unew[s][l+1]=U[s][l];
-        }
-        Unew[s][0]=0.;
-        Unew[s][2*M+1]=0.;
-    }
-    //------- Write data to file -------------------//---------------------------------------//
-   for (int s=0;s<N;s++) {
-        ofstream output;
-        char fn[20];
-        snprintf(fn,sizeof fn,"output/%04d.dat",s);
-        output.open(fn);
-//        output.open("output/data"+std::to_string(s)+".dat");
-        for (l=0;l<2*M+2;l++) {
-            output << xnew[l] << " " << Unew[s][l] << endl;
-        }
-        output.close();
-    }
+//    double* xnew=new double[N];           
+ //   for (l=1;l<2*M+1;l++) xnew[l]=x[l-1];
+  //  xnew[0]=0.;
+   // xnew[2*M+1]=0;
+   // double **Unew=new double *[N];                  //                                      //
+   // for (i=0;i<N;i++) Unew[i]=new double[2*M+2];  // append x to include x=0, x=1         //
+    //for (int s=0;s<N;s++) {
+     //   for (l=0;l<2*M;l++) {
+      //      Unew[s][l+1]=U[s][l];
+       // }
+       // Unew[s][0]=0.;
+       // Unew[s][2*M+1]=0.;
+   // }
     return 0; 
 }    
 
 
-double* BiCGSTAB(double **A,double *b,double tol,int size,int mxi) {
+double* BiCGSTAB(double** A,double* b,double tol,int size,int mxi) {
     // Purpose:  Solves the matrix equation 'Ax=b' using
     //          the Biconjugate gradient stabilized method. 
     // Modified: July 03, 2017
