@@ -28,16 +28,16 @@ int main(void) {
     //------- Declare initial parameters -----------//--------------------------------------//
     double v=0.1;                                   // kinematic diffusivity constant       //
     int M=16;                                        // half of collocation points           //
-    int mxi=10*M;                                    // max no. of iterations 4 matrix solvr //
+    int mxi=10000;                                    // max no. of iterations 4 matrix solvr //
     double tol=1.e-8;                               // matrix solver tolerance              //
     int J=log2(M);                                  // number of total scales               //
     int i;                                          // counter variable                     //
     int m;                                          //                                      //
     int l;                                          // counter variable                     //
-    double c1,c2,c3;                                // constants                            //
+    double c1,c2,c3,c4,c5;                          // constants                            //
     Haar H;                                         // declare class variable               //
     //------- Temporal discretization --------------//--------------------------------------//
-    int N=1000;                                       // number of timesteps                  //
+    int N=100;                                       // number of timesteps                  //
     double t_i=0.;                                  // initial simulation time              //
     double t_f=1.;                                  // final simulation time                //   
     double dt=(t_f-t_i)/N;                          // timestep size                        //
@@ -218,18 +218,18 @@ double* BiCGSTAB(double** A,double* b,double tol,int size,int mxi) {
             else {
                 for (int i=0;i<size;i++) r_new[i]=s[i]-omega_new*t[i];
             }
-            for (int i=0;i<size;i++) {
-                r_old[i]=r_new[i];
-                p_old[i]=p_new[i];
-                v_old[i]=v_new[i];
-            }            
-            rho_old=rho_new;
-            omega_old=omega_new;
-            k++;
-            if (k>mxi) {
-                iterate=false;
-                cout << "Max iterations reached \n";
-            }
+        }
+        for (int i=0;i<size;i++) {
+            r_old[i]=r_new[i];
+            p_old[i]=p_new[i];
+            v_old[i]=v_new[i];
+        }            
+        rho_old=rho_new;
+        omega_old=omega_new;
+        k++;
+        if (k>mxi) {
+            iterate=false;
+            cout << "Max iterations reached \n";
         }
     }while(iterate==true);
     return x0;
@@ -263,9 +263,10 @@ bool chk_conv(double** A,double* y,double* b,double tolerance,int n) {
     for (int i=0;i<n;i++) residual[i]=b[i]-residual[i];
     rel_error=L2norm(residual,n)/L2norm(b,n);
     if (rel_error<tolerance)
-        return conv=true;
+        conv=true;
     else
-        return conv=false;
+        conv=false;
+    return conv;
 }
 
 double L2norm(double* x,int n) {
