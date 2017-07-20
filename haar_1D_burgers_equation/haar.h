@@ -1,15 +1,15 @@
 #include <math.h>
 
 class Haar {
-    public:
+    public: 
 
         // Parameters:
         int M;              // number of collocation points
         int J;              // maximum level of resolution
-        int i;              // wavelet coefficient index
-        int j;              // indicates level of wavelet
-        double k;           // translation parameter
-        double m;           // 
+        int ii;             // wavelet coefficient index
+        int jj;             // indicates level of wavelet
+        double kk;          // translation parameter
+        double mm;          // 
         double Xi1; 
         double Xi2;
         double Xi3;
@@ -52,19 +52,19 @@ double Haar::q(double x) {
     else if (x>=Xi1 && x<Xi2)
         return pow(.5*(x-Xi1),2.);
     else if (x>=Xi2 && x<Xi3)
-        return 1./(4.*pow(m,2.))-pow(.5*(Xi3-x),2.);
+        return 1./(4.*pow(mm,2.))-pow(.5*(Xi3-x),2.);
     else if (x>=Xi3 && x<=1)
-        return 1./(4.*pow(m,2.));
+        return 1./(4.*pow(mm,2.));
 }
 
 // set the parameters for each new detail wavelet:
 void Haar::set_params(int a, int b) {
-    k=static_cast<double>(a);
-    m=static_cast<double>(b);
-    Xi1=k/m;
-    Xi2=(k+.5)/m;
-    Xi3=(k+1.)/m;   
-    i=a+b+1;
+    kk=static_cast<double>(a);
+    mm=static_cast<double>(b);
+    Xi1=kk/mm;
+    Xi2=(kk+.5)/mm;
+    Xi3=(kk+1.)/mm;   
+    ii=a+b+1;
 }
 
 // scaling function:
@@ -96,5 +96,5 @@ double Haar::q_tilda(int i) {
     if (i==1)
         return .5;
     else if (i>1)
-        return 1./(4.*pow(m,2.));
+        return 1./(4.*pow(mm,2.));
 }

@@ -2,7 +2,7 @@
 #define PI 3.14159265
 
 class BCIC {
-    public:
+    public:  
     
     // Function declarations:
     double f(double x);         // the initial condition
@@ -16,17 +16,21 @@ class BCIC {
 
 // Initial condition:
 double BCIC::f(double x) {
-    return sin(2.*PI*x);
+//    return sin(2.*PI*x);
+    return 4.*x*(1.-x);
 }
 
 // First derivative of initial function:
 double BCIC::fx(double x) {
-    return 2.*PI*cos(2.*PI*x);
+//    return 2.*PI*cos(2.*PI*x);
+    return 4.-8.*x;
 }
 
 // Second derivative of initial function:
 double BCIC::fxx(double x) {
-    return -4.*pow(PI,2.)*sin(2.*PI*x);
+//    return -4.*pow(PI,2.)*sin(2.*PI*x);
+    return -8.;
+    
 }
 
 // Left boundary condition:

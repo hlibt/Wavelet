@@ -27,16 +27,17 @@ double L2norm(double* x,int n);
 int main(void) {
     //------- Declare initial parameters -----------//--------------------------------------//
     double v=0.1;                                   // kinematic diffusivity constant       //
-    int M=2;                                        // half of collocation points           //
-    int mxi=3*M;                                    // max no. of iterations 4 matrix solvr //
-    double tol=1.e+8;                               // matrix solver tolerance              //
+    int M=16;                                        // half of collocation points           //
+    int mxi=10*M;                                    // max no. of iterations 4 matrix solvr //
+    double tol=1.e-8;                               // matrix solver tolerance              //
     int J=log2(M);                                  // number of total scales               //
     int i;                                          // counter variable                     //
+    int m;                                          //                                      //
     int l;                                          // counter variable                     //
     double c1,c2,c3;                                // constants                            //
     Haar H;                                         // declare class variable               //
     //------- Temporal discretization --------------//--------------------------------------//
-    int N=10;                                       // number of timesteps                  //
+    int N=1000;                                       // number of timesteps                  //
     double t_i=0.;                                  // initial simulation time              //
     double t_f=1.;                                  // final simulation time                //   
     double dt=(t_f-t_i)/N;                          // timestep size                        //
@@ -73,18 +74,19 @@ int main(void) {
                 H.q_tilda(1));                      //                                      //
             A[l][0]=c1+c2+c3;                       // populate LHS matrix for i=1          //
         }                                           //                                      //
-        for (int j=0;j<=J;j++) {                     // repeat with wavelet functions (i!=1) //
-            for (int k=0;k<2^j;k++) {               // wavelet translation parameter        //
-                H.set_params(k,2^j);                // set parameters from k and m          //
+        for (int j=0;j<=J;j++) {                    // repeat with wavelet functions (i!=1) //
+            m=pow(2,j);                             //                                      //
+            for (int k=0;k<m;k++) {                 // wavelet translation parameter        //
+                H.set_params(k,m);                  // set parameters from k and m          //
                 for (l=0;l<2*M;l++) {               // loop through collocation points      //
-                    c1=H.q(x[l])-x[l]*H.q_tilda(2^j //                                      //
+                    c1=H.q(x[l])-x[l]*H.q_tilda(m   //                                      //
                         +k+1);                      //                                      //
                     c2=dt*(-v*H.h(x[l])+Ux_old[l]*  //                                      //
                         (H.q(x[l])-x[l]*            //                                      //
-                        H.q_tilda(2^j+k+1)));       //                                      //
+                        H.q_tilda(m+k+1)));         //                                      //
                     c3=dt*U_old[l]*(H.p(x[l])-      //                                      //
-                       H.q_tilda(2^j+k+1));         //                                      //
-                    A[l][k+2^j]=c1+c2+c3;           // populate LHS matrix for i!=1         //
+                       H.q_tilda(m+k+1));           //                                      //
+                    A[l][k+m]=c1+c2+c3;             // populate LHS matrix for i!=1         //
                 }                                   //                                      //
             }                                       //                                      //
         }                                           //                                      //
@@ -105,56 +107,42 @@ int main(void) {
         c=BiCGSTAB(A,b,tol,2*M,mxi);                // solve sys. for wavelet coefficients  //
     //------- Update solution variables ------------//--------------------------------------//
         for (l=0;l<2*M;l++) {                       // update solution variables            //
-            c1=dt*c[0]*H.h1(x[l]);                  // temporary constant                   //
-            c2=dt*c[0]*(H.p1(x[l])-                 //                                      //
-                H.q_tilda(0));                      //                                      //
-            c3=dt*c[0]*(H.q1(x[l])-                 //                                      //
-                H.q_tilda(0));                      //                                      //
-            for (int j=0;j<=J;i++) {                //                                      //
-                for (int k=0;k<2^j;k++) {           //                                      //
-                    i=2^j+k+1;                      //                                      //
-                    H.set_params(k,2^j);            //                                      //
-                    c1+=dt*c[i]*H.h(x[l]);          //                                      //
-                    c2+=dt*c[i]*(H.p(x[l])-         //                                      //
-                         H.q_tilda(i));             //                                      //
-                    c3+=dt*c[i]*(H.q(x[l])-         //                                      //
-                         H.q_tilda(i));             //                                      //
+            c1=c[0]*H.h1(x[l]);                     // begin inner product for Uxx (scaling)//
+            c2=c[0]*(H.p1(x[l])-H.q_tilda(1));      // begin inner product for Ux           //
+            c3=c[0]*(H.q1(x[l])-x[l]*H.q_tilda(1)); // begin inner product for U            //
+            for (int j=0;j<=J;j++) {                //                                      //
+                m=pow(2,j);                         //                                      //
+                for (int k=0;k<m;k++) {             //                                      //
+                    i=m+k+1;                        //                                      //
+                    H.set_params(k,m);              // set parameters Xi1, Xi2, Xi3         //
+                    c1+=c[i-1]*H.h(x[l]);           // continue inner product calculation   //
+                    c2+=c[i-1]*(H.p(x[l])-          // "                                    //
+                         H.q_tilda(i));             // "                                    //
+                    c3+=c[i-1]*(H.q(x[l])-x[l]*     // "                                    //
+                         H.q_tilda(i));             // "                                    //
                 }                                   //                                      //
             }                                       //                                      // 
             Uxx_new[l]=dt*c1+Uxx_old[l];            // update Uxx                           //
             Ux_new[l]=dt*c2+bcic.f2(t[s+1])-        //                                      //
                   bcic.f1(t[s+1])+bcic.f1(t[s])     //                                      //
-                  -bcic.f2(t[s]);                   //                                      //
+                  -bcic.f2(t[s])+Ux_old[l];         //                                      //
             U_new[l]=dt*c3+x[l]*(bcic.f2(t[s+1])-   // update U                             //
                   bcic.f1(t[s+1])-bcic.f2(t[s])+    //                                      //
                   bcic.f1(t[s]))+bcic.f1(t[s+1])-   //                                      //
                   bcic.f1(t[s])+U_old[l];           //                                      //
-            U_old[l]=U_new[l];                      //                                      //
+        }                                           //                                      //
+        ofstream output;                            //                                      //
+        char fn[20];                                //                                      //
+        snprintf(fn,sizeof fn,"output/%04d.dat",s); //                                      //
+        output.open(fn);                            //                                      //
+        for (l=0;l<2*M;l++) {                       //                                      //
+            output<<x[l]<<" "<<U_old[l]<<endl;      //                                      //
+            Uxx_old[l]=Uxx_new[l];                  // update for next iteration            //
             Ux_old[l]=Ux_new[l];                    //                                      //
-            Uxx_old[l]=Uxx_new[l];                  //                                      //
-    //------- Write data to file -------------------//--------------------------------------//
-            ofstream output;                        //                                      //
-            char fn[20];                            //                                      //
-            snprintf(fn,sizeof fn,"output/%04d.dat",s);
-            output.open(fn);
-            output << x[l] << " " << U_new[l] << endl;
-            output.close();
-        }
-    }
-    //------- Fill in derichlet conditions ---------//--------------------------------------//
-//    double* xnew=new double[N];           
- //   for (l=1;l<2*M+1;l++) xnew[l]=x[l-1];
-  //  xnew[0]=0.;
-   // xnew[2*M+1]=0;
-   // double **Unew=new double *[N];                  //                                      //
-   // for (i=0;i<N;i++) Unew[i]=new double[2*M+2];  // append x to include x=0, x=1         //
-    //for (int s=0;s<N;s++) {
-     //   for (l=0;l<2*M;l++) {
-      //      Unew[s][l+1]=U[s][l];
-       // }
-       // Unew[s][0]=0.;
-       // Unew[s][2*M+1]=0.;
-   // }
+            U_old[l]=U_new[l];                      //                                      //
+        }                                           //                                      //
+        output.close();                             // close file                           //
+    }                                               // end of temporal iteration            //
     return 0; 
 }    
 
@@ -193,7 +181,7 @@ double* BiCGSTAB(double** A,double* b,double tol,int size,int mxi) {
     double beta;
 
 
-    for (int i=0;i<size;i++) x0[0]=.0;              // populate initial solution guess
+    for (int i=0;i<size;i++) x0[i]=.0;              // populate initial solution guess
     double* c=ADOTX(A,x0,size);                     // calculate A*x0;
     for (int i=0;i<size;i++) r_old[i]=b[i]-c[i];    // start the residual with initial guess
     for (int i=0;i<size;i++) rhat[i]=r_old[i];      // choose arbitrary vector rhat
@@ -202,7 +190,7 @@ double* BiCGSTAB(double** A,double* b,double tol,int size,int mxi) {
     alpha=1.;
     for (int i=0;i<size;i++) {
         v_old[i]=0.;
-        p_old[i]=0;
+        p_old[i]=0.;
     }
     int k=1;
     bool iterate=true;
@@ -213,25 +201,36 @@ double* BiCGSTAB(double** A,double* b,double tol,int size,int mxi) {
         v_new=ADOTX(A,p_new,size);
         alpha=rho_new/inner_product(rhat,v_new,size);
         for (int i=0;i<size;i++) h[i]=x0[i]+alpha*p_new[i];
-        if (chk_conv(A,h,b,tol,size)==true)
+        if (chk_conv(A,h,b,tol,size)==true) {
             iterate=false;
-        else
-            for(int i=0;i<size;i++) s[i]=r_old[i]-alpha*v_new[i];
+            for (int i=0;i<size;i++) x0[i]=h[i];
+            cout << "Check 1 \n";
+        }
+        else {
+            for (int i=0;i<size;i++) s[i]=r_old[i]-alpha*v_new[i];
             t=ADOTX(A,s,size);
             omega_new=inner_product(t,s,size)/inner_product(t,t,size);
             for (int i=0;i<size;i++) x0[i]=h[i]+omega_new*s[i];
-            if (chk_conv(A,x0,b,tol,size)==true)
+            if (chk_conv(A,x0,b,tol,size)==true) {
                 iterate=false;
-            else
+                cout << "Check 2 \n";
+            }
+            else {
                 for (int i=0;i<size;i++) r_new[i]=s[i]-omega_new*t[i];
-            for (int i=0;i<size;i++) r_old[i]=r_new[i];
+            }
+            for (int i=0;i<size;i++) {
+                r_old[i]=r_new[i];
+                p_old[i]=p_new[i];
+                v_old[i]=v_new[i];
+            }            
             rho_old=rho_new;
-            for (int i=0;i<size;i++) p_old[i]=p_new[i];
-            for (int i=0;i<size;i++) v_old[i]=v_new[i];
             omega_old=omega_new;
             k++;
-            if (k>mxi)
+            if (k>mxi) {
                 iterate=false;
+                cout << "Max iterations reached \n";
+            }
+        }
     }while(iterate==true);
     return x0;
 }
