@@ -16,20 +16,20 @@ class BCIC {
 
 // Initial condition:
 double BCIC::f(double x) {
-//    return sin(2.*PI*x);
-    return 4.*x*(1.-x);
+    return sin(2.*PI*x);
+//    return 4.*x*(1.-x);
 }
 
 // First derivative of initial function:
 double BCIC::fx(double x) {
-//    return 2.*PI*cos(2.*PI*x);
-    return 4.-8.*x;
+    return 2.*PI*cos(2.*PI*x);
+//    return 4.-8.*x;
 }
 
 // Second derivative of initial function:
 double BCIC::fxx(double x) {
-//    return -4.*pow(PI,2.)*sin(2.*PI*x);
-    return -8.;
+    return -4.*pow(PI,2.)*sin(2.*PI*x);
+//    return -8.;
     
 }
 

@@ -6,7 +6,6 @@ class Haar {
         // Parameters:
         int M;              // number of collocation points
         int J;              // maximum level of resolution
-        int ii;             // wavelet coefficient index
         int jj;             // indicates level of wavelet
         double kk;          // translation parameter
         double mm;          // 
@@ -50,9 +49,9 @@ double Haar::q(double x) {
     if (x>=0 && x<Xi1)
         return 0.;
     else if (x>=Xi1 && x<Xi2)
-        return pow(.5*(x-Xi1),2.);
+        return .5*pow(x-Xi1,2.);
     else if (x>=Xi2 && x<Xi3)
-        return 1./(4.*pow(mm,2.))-pow(.5*(Xi3-x),2.);
+        return 1./(4.*pow(mm,2.))-.5*pow(Xi3-x,2.);
     else if (x>=Xi3 && x<=1)
         return 1./(4.*pow(mm,2.));
 }
@@ -64,7 +63,6 @@ void Haar::set_params(int a, int b) {
     Xi1=kk/mm;
     Xi2=(kk+.5)/mm;
     Xi3=(kk+1.)/mm;   
-    ii=a+b+1;
 }
 
 // scaling function:

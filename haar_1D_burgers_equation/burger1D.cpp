@@ -26,10 +26,10 @@ double L2norm(double* x,int n);
 
 int main(void) {
     //------- Declare initial parameters -----------//--------------------------------------//
-    double v=0.1;                                   // kinematic diffusivity constant       //
-    int M=16;                                        // half of collocation points           //
+    double v=0.01;                                   // kinematic diffusivity constant       //
+    int M=2;                                        // half of collocation points           //
     int mxi=10000;                                    // max no. of iterations 4 matrix solvr //
-    double tol=1.e-8;                               // matrix solver tolerance              //
+    double tol=1.0e-5;                               // matrix solver tolerance              //
     int J=log2(M);                                  // number of total scales               //
     int i;                                          // counter variable                     //
     int m;                                          //                                      //
@@ -37,9 +37,9 @@ int main(void) {
     double c1,c2,c3,c4,c5;                          // constants                            //
     Haar H;                                         // declare class variable               //
     //------- Temporal discretization --------------//--------------------------------------//
-    int N=100;                                       // number of timesteps                  //
+    int N=10;                                       // number of timesteps                  //
     double t_i=0.;                                  // initial simulation time              //
-    double t_f=1.;                                  // final simulation time                //   
+    double t_f=2.;                                  // final simulation time                //   
     double dt=(t_f-t_i)/N;                          // timestep size                        //
     double* t=new double[N+1];                      // define temporal array                //
     for (i=0;i<=N;i++) t[i]=dt*i;                   // populate temporal array              //
@@ -51,12 +51,12 @@ int main(void) {
     double* b=new double[2*M];                      // RHS of matrix system                 //
     double** A=new double*[2*M];                    // initialize the LHS matrix 2Mx2M      //
     for (i=0;i<2*M;i++) A[i]=new double[2*M];       //                                      //
-    double* U_old=new double [2*M];                 // initialize solution matrix U         //
-    double* Ux_old=new double [2*M];                // initialize derivative of soln (U')   //
-    double* Uxx_old=new double [2*M];               // initialize second derivtive of soln  //
-    double* U_new=new double [2*M];                 // initialize solution matrix U         //
-    double* Ux_new=new double [2*M];                // initialize derivative of soln (U')   //
-    double* Uxx_new=new double [2*M];               // initialize second derivtive of soln  //
+    double* U_old=new double[2*M];                  // initialize solution matrix U         //
+    double* Ux_old=new double[2*M];                 // initialize derivative of soln (U')   //
+    double* Uxx_old=new double[2*M];                // initialize second derivtive of soln  //
+    double* U_new=new double[2*M];                  // initialize solution matrix U         //
+    double* Ux_new=new double[2*M];                 // initialize derivative of soln (U')   //
+    double* Uxx_new=new double[2*M];                // initialize second derivtive of soln  //
     //------- Initial conditions -------------------//--------------------------------------//
     BCIC bcic;                                      // declare class variable               //
     for (l=0;l<2*M;l++) {                           // populate the initial U,Ux,Uxx arrays //
@@ -105,6 +105,7 @@ int main(void) {
         }                                           //                                      //
     //------- Solve matrix system ------------------//--------------------------------------//
         c=BiCGSTAB(A,b,tol,2*M,mxi);                // solve sys. for wavelet coefficients  //
+	for (i=0;i<2*M;i++) cout << c[i] << endl;
     //------- Update solution variables ------------//--------------------------------------//
         for (l=0;l<2*M;l++) {                       // update solution variables            //
             c1=c[0]*H.h1(x[l]);                     // begin inner product for Uxx (scaling)//
@@ -146,7 +147,6 @@ int main(void) {
     return 0; 
 }    
 
-
 double* BiCGSTAB(double** A,double* b,double tol,int size,int mxi) {
     // Purpose:  Solves the matrix equation 'Ax=b' using
     //          the Biconjugate gradient stabilized method. 
@@ -181,7 +181,7 @@ double* BiCGSTAB(double** A,double* b,double tol,int size,int mxi) {
     double beta;
 
 
-    for (int i=0;i<size;i++) x0[i]=.0;              // populate initial solution guess
+    for (int i=0;i<size;i++) x0[i]=1.0;              // populate initial solution guess
     double* c=ADOTX(A,x0,size);                     // calculate A*x0;
     for (int i=0;i<size;i++) r_old[i]=b[i]-c[i];    // start the residual with initial guess
     for (int i=0;i<size;i++) rhat[i]=r_old[i];      // choose arbitrary vector rhat
@@ -235,7 +235,6 @@ double* BiCGSTAB(double** A,double* b,double tol,int size,int mxi) {
     return x0;
 }
 
-
 double* ADOTX(double** A,double* x,int n) {
     double* output=new double[n];
     double sum=0.;
@@ -271,6 +270,6 @@ bool chk_conv(double** A,double* y,double* b,double tolerance,int n) {
 
 double L2norm(double* x,int n) {
     double sum=0.;
-    for (int i=0;i<n;i++) sum+=sum+pow(x[i],2.);
-    return sum=sqrt(sum);
+    for (int i=0;i<n;i++) sum+=pow(x[i],2.);
+    return sqrt(sum);
 }
