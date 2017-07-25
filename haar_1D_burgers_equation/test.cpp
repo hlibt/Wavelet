@@ -1,160 +1,139 @@
 #include <iostream>
 #include <math.h>
+#include <cmath>
 using namespace std;
 
-double* BiCGSTAB(double** A,double* b,double tol,int size,int mxi);
-double* ADOTX(double** A,double* b,int n);
-double inner_product(double* a,double* b,int n);
-bool chk_conv(double** A,double* y,double* b,double tolerance,int n);
-double L2norm(double* x,int n);
+double* partial_pivot(double** A,int size);
+double* complete_pivot(double** A,int size);
 
 int main() {
 	double** A=new double*[2];
-	for (int i=0;i<2;i++) A[i]= new double[2];
-	A[0][0]=2;
-	A[0][1]=4;
-	A[1][0]=6;
-	A[1][1]=6;
+	for (int i=0;i<2;i++) A[i]= new double[3];
+	A[0][0]=2.;
+	A[0][1]=4.;
+	A[1][0]=6.1;
+	A[1][1]=6.2;
 	for (int i=0;i<2;i++) {
 		for (int j=0;j<2;j++) {
 			cout << *(*(A+i)+j) << endl;
 		}
 	}
-	double* b=new double[2];
-	b[0]=1;
-	b[1]=2;
+	A[0][2]=1.5;
+	A[1][2]=2.;
+    cout << A[0][2] << endl;
+    cout << A[1][2] << endl;
 	double* x=new double[2];
-	x=BiCGSTAB(A,b,0.0000001,2,1000);
+	x=partial_pivot(A,2);
 	for (int i=0;i<2;i++) {
 		cout << x[i] << endl;
 	}
 }
 
-
-double* BiCGSTAB(double** A,double* b,double tol,int size,int mxi) {
-    // Purpose:  Solves the matrix equation 'Ax=b' using
-    //          the Biconjugate gradient stabilized method. 
-    // Modified: July 03, 2017
-    //
-    // Author: Brandon Gusto
-    //
-    // Parameters: Input --> Diag, the elements on the diagonal of the matrix 'A'
-    //             Input --> Lowr, the elements on the lower diagonal of the matrix 'A'
-    //             Input --> Uppr, the elements on the upper diagonal of the matrix 'A'
-    //             Input --> b, the elements in the vector 'b' in the RHS of 'Ax=b'
-    //             Input --> x, the solution vector
-    //             Input --> tol, the tolerance with which the BiCGSTAB method solves the system
-    //             Input --> mxi, the maximum number of iterations
-    //             Local -->
-    double* r_new=new double[size];
-    double* r_old=new double[size];
-    double* rhat=new double[size];
-    double* v_new=new double[size];    
-    double* v_old=new double[size];
-    double* p_new=new double[size];
-    double* p_old=new double[size];
-    double* h=new double[size];
-    double* s=new double[size];
-    double* t=new double[size];
-    double* x0=new double[size];
-    double omega_new;
-    double omega_old;
-    double rho_new;
-    double rho_old;
-    double alpha;
-    double beta;
-
-
-    for (int i=0;i<size;i++) x0[i]=.0;              // populate initial solution guess
-    double* c=ADOTX(A,x0,size);                     // calculate A*x0;
-    for (int i=0;i<size;i++) r_old[i]=b[i]-c[i];    // start the residual with initial guess
-    for (int i=0;i<size;i++) rhat[i]=r_old[i];      // choose arbitrary vector rhat
-    rho_old=1.;
-    omega_old=1.;
-    alpha=1.;
-    for (int i=0;i<size;i++) {
-        v_old[i]=0.;
-        p_old[i]=0.;
+double* complete_pivot(double** A,int size) {
+    int i, j, p, k, q, tmp;
+    int* NROW=new int[size];
+    int* NCOL=new int[size];
+    double** m=new double*[size];
+    for (i=0;i<size;i++) m[i]=new double[size+1];
+    double* x=new double[size];
+    double sigma;
+    double A_pq;
+    double A_kj;
+    bool swap_row;
+    bool swap_col;
+    
+    for (i=0;i<size;i++) {                          //                                      //    
+        NROW[i]=i;                                  // initialize row pointer               //
+        NCOL[i]=i;                                  // initialize column pointer            //
     }
-    int k=1;
-    bool iterate=true;
-    do {
-        rho_new=inner_product(rhat,r_old,size);
-        beta=rho_new/rho_old*alpha/omega_old;
-        for (int i=0;i<size;i++) p_new[i]=r_old[i]+beta*(p_old[i]-omega_old*v_old[i]);
-        v_new=ADOTX(A,p_new,size);
-        alpha=rho_new/inner_product(rhat,v_new,size);
-        for (int i=0;i<size;i++) h[i]=x0[i]+alpha*p_new[i];
-        if (chk_conv(A,h,b,tol,size)==true) {
-            iterate=false;
-            for (int i=0;i<size;i++) x0[i]=h[i];
-            cout << "Check 1 \n";
-        }
-        else {
-            for (int i=0;i<size;i++) s[i]=r_old[i]-alpha*v_new[i];
-            t=ADOTX(A,s,size);
-            omega_new=inner_product(t,s,size)/inner_product(t,t,size);
-            for (int i=0;i<size;i++) x0[i]=h[i]+omega_new*s[i];
-            if (chk_conv(A,x0,b,tol,size)==true) {
-                iterate=false;
-                cout << "Check 2 \n";
-            }
-            else {
-                for (int i=0;i<size;i++) r_new[i]=s[i]-omega_new*t[i];
+    for (i=0;i<size;i++) {
+        p=i;
+        q=i;
+        swap_row=false;
+        swap_col=false;
+        A_pq=abs(A[NROW[p]][NCOL[q]]);
+        for (k=i;k<size;k++) {
+            for (j=k;j<size;j++) {
+                A_kj=abs(A[NROW[k]][NCOL[j]]);
+                if (A_kj>A_pq) {
+                    if (k!=p) {
+                        p=k;
+                        swap_row=true;
+                    }
+                    if (j!=q) {
+                        q=j;
+                        swap_col=true;
+                    }
+                    A_pq=abs(A[NROW[p]][NCOL[q]]);
+                }
             }
         }
-        for (int i=0;i<size;i++) {
-            r_old[i]=r_new[i];
-            p_old[i]=p_new[i];
-            v_old[i]=v_new[i];
-        }            
-        rho_old=rho_new;
-        omega_old=omega_new;
-        k++;
-        if (k>mxi) {
-            iterate=false;
-            cout << "Max iterations reached \n";
+        if (swap_row==true) {
+            tmp=NROW[i];
+            NROW[i]=NROW[p];
+            NROW[p]=tmp;
         }
-    }while(iterate==true);
-    return x0;
-}
-
-
-double* ADOTX(double** A,double* x,int n) {
-    double* output=new double[n];
-    double sum=0.;
-    for (int i=0;i<n;i++) {
-        for (int j=0;j<n;j++) {
-            sum+=A[i][j]*x[j];
+        if (swap_col==true) {
+            tmp=NCOL[i];
+            NCOL[i]=NCOL[q];
+            NCOL[q]=tmp;
         }
-        output[i]=sum;
-        sum=0;
+        for (j=i+1;j<size;j++) {
+            m[NROW[j]][NCOL[i]]=A[NROW[j]][NCOL[i]]/A[NROW[i]][NCOL[i]];
+            for (tmp=0;tmp<size+1;tmp++) {
+                A[NROW[j]][tmp]=A[NROW[j]][tmp]-m[NROW[j]][NCOL[i]]*A[NROW[i]][tmp];
+            }
+        }
     }
-    return output;
+    x[NCOL[size-1]]=A[NROW[size-1]][size]/A[NROW[size-1]][NCOL[size-1]];
+    for (i=size-2;i>=0;i--) {
+        sigma=0.;
+        for (j=i;j<size;j++) {
+            sigma+=A[NROW[i]][NCOL[j]]*x[NCOL[j]];
+        }
+        x[NCOL[i]]=(A[NROW[i]][size]-sigma)/A[NROW[i]][NCOL[i]];
+    }
+    return x;
 }
 
-double inner_product(double* a, double* b,int n) {
-    double output=0.;
-    for (int i=0;i<n;i++) output+=a[i]*b[i];
-    return output;
-}
-
-bool chk_conv(double** A,double* y,double* b,double tolerance,int n) {
-    double* residual=new double[n];
-    double rel_error;
-    bool conv;
-    residual=ADOTX(A,y,n);
-    for (int i=0;i<n;i++) residual[i]=b[i]-residual[i];
-    rel_error=L2norm(residual,n)/L2norm(b,n);
-    if (rel_error<tolerance)
-        conv=true;
-    else
-        conv=false;
-    return conv;
-}
-
-double L2norm(double* x,int n) {
-    double sum=0.;
-    for (int i=0;i<n;i++) sum+=pow(x[i],2.);
-    return sqrt(sum);
+double* partial_pivot(double** A,int size) {
+    int i, j, p, k, q, tmp;
+    int* NROW=new int[size];
+    double** m=new double*[size+1];
+    for (i=0;i<size;i++) m[i]=new double[size+1];
+    double* x=new double[size];
+    double sigma;
+    bool swap;
+    
+    for (i=0;i<size;i++) NROW[i]=i;
+    for (j=0;j<size;j++) {
+        p=j;
+        swap=false;
+        for (i=j;i<size;i++) {
+            for (j=k;j<size;j++) {
+                if (abs(A[i][j])>abs(A[p][j])) {
+                    p=i;
+                    swap=true;
+                }
+                if (swap==true) {
+                    tmp=NROW[i];
+                    NROW[i]=NROW[p];
+                    NROW[p]=tmp;
+                }  
+            }
+        }
+        for (i=j+1;i<size;i++) {
+            m[NROW[i]][j]=A[NROW[i]][j]/A[NROW[j]][j];
+            for (tmp=0;tmp<=size;tmp++) {
+                A[NROW[i]][tmp]=A[NROW[i]][tmp]-m[NROW[i]][j]*A[NROW[j]][tmp];
+            }
+        }
+    }
+    x[size-1]=A[NROW[size-1]][size]/A[NROW[size-1]][size-1];
+    for (i=size-2;i>=0;i--) {
+        sigma=0.;
+        for (j=i+1;j<size;j++) sigma+=A[NROW[i]][j]*x[j];
+        x[i]=(A[NROW[i]][size]-sigma)/A[NROW[i]][i];
+    }
+    return x;
 }

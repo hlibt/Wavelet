@@ -2,7 +2,7 @@ reset
 set term gif animate
 set output "animate.gif"
 i=0
-n=100
+n=1000
 set xrange[0:1]
 set yrange[0:1]
 load "animate.gnuplot"
