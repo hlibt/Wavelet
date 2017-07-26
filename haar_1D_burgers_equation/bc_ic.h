@@ -16,31 +16,35 @@ class BCIC {
 
 // Initial condition:
 double BCIC::f(double x) {
-//    return sin(2.*PI*x);
-    return 4.*x*(1.-x);
+    return sin(2.*PI*x);
+//    return 4.*x*(1.-x);
+//    return 1.;
 }
 
 // First derivative of initial function:
 double BCIC::fx(double x) {
-//    return 2.*PI*cos(2.*PI*x);
-    return 4.-8.*x;
+    return 2.*PI*cos(2.*PI*x);
+//    return 4.-8.*x;
+    return 0.;
 }
 
 // Second derivative of initial function:
 double BCIC::fxx(double x) {
-//    return -4.*pow(PI,2.)*sin(2.*PI*x);
-    return -8.;
-    
+    return -4.*pow(PI,2.)*sin(2.*PI*x);
+//    return -8.;
+//    return 0.;
 }
 
 // Left boundary condition:
 double BCIC::f1(double t) {
     return 0.;
+//    return sin(4.*PI*t);
 }
 
 // Left boundary condition derivative:
 double BCIC::f1t(double t) {
     return 0.;
+//    return -4.*PI*cos(4.*PI*t);
 }
 
 // Right boundary condition:

@@ -20,11 +20,12 @@ using namespace std;
     //----------------------------------------------//
 
 double* complete_pivot(double** A,int size);
+void time_stamp(int time,double diff,double dt);
 
 int main(void) {
     //------- Declare initial parameters -----------//--------------------------------------//
-    double v=0.01;                                   // kinematic diffusivity constant       //
-    int M=128;                                        // half of collocation points           //
+    double v=0.1;                                   // kinematic diffusivity constant       //
+    int M=64;                                       // half of collocation points           //
     int J=log2(M);                                  // number of total scales               //
     int i;                                          // counter variable                     //
     int m;                                          //                                      //
@@ -32,9 +33,9 @@ int main(void) {
     double c1,c2,c3;                                // constants                            //
     Haar H;                                         // declare class variable               //
     //------- Temporal discretization --------------//--------------------------------------//
-    int N=1000;                                       // number of timesteps                  //
+    int N=1000;                                     // number of timesteps                  //
     double t_i=0.;                                  // initial simulation time              //
-    double t_f=3.;                                  // final simulation time                //   
+    double t_f=2.;                                  // final simulation time                //   
     double dt=(t_f-t_i)/N;                          // timestep size                        //
     double* t=new double[N+1];                      // define temporal array                //
     for (i=0;i<=N;i++) t[i]=dt*i;                   // populate temporal array              //
@@ -60,7 +61,6 @@ int main(void) {
     }                                               //                                      //
     //------- Advance simulation in time -----------//--------------------------------------//
     for (int s=0;s<N;s++) {                         // march in time                        //
-   cout<<s<<endl;
         for (l=0;l<2*M;l++) {                       // loop through collocation points      //
             c1=H.q1(x[l])-x[l]*H.q_tilda(1);        // and populate with functions for i=1  //
             c2=dt*(-v*H.h1(x[l])+Ux_old[l]*         //                                      //
@@ -96,7 +96,7 @@ int main(void) {
             c3=U_old[l]*(bcic.f1(t[s+1])+           //                                      //
                 bcic.f1(t[s])-bcic.f2(t[s])-        //                                      //
                 Ux_old[l]);                         //                                      //
-            A[l][2*M]=c1+c2+c3;                     // RHS of matrix system                 //
+            A[l][2*M]=c1+c2+c3;                     // 'RHS' of augmented matrix system     //
         }                                           //                                      //
     //------- Solve matrix system ------------------//--------------------------------------//
         c=complete_pivot(A,2*M);                // solve sys. for wavelet coefficients  //
@@ -118,7 +118,7 @@ int main(void) {
                 }                                   //                                      //
             }                                       //                                      // 
             Uxx_new[l]=dt*c1+Uxx_old[l];            // update Uxx                           //
-            Ux_new[l]=dt*c2+bcic.f2(t[s+1])-        //                                      //
+            Ux_new[l]=dt*c2+bcic.f2(t[s+1])-        // Update Ux                            //
                   bcic.f1(t[s+1])+bcic.f1(t[s])     //                                      //
                   -bcic.f2(t[s])+Ux_old[l];         //                                      //
             U_new[l]=dt*c3+x[l]*(bcic.f2(t[s+1])-   // update U                             //
@@ -131,23 +131,25 @@ int main(void) {
         snprintf(fn,sizeof fn,"output/%04d.dat",s); //                                      //
         output.open(fn);                            //                                      //
         for (l=0;l<2*M;l++) {                       //                                      //
-            output<<x[l]<<" "<<U_old[l]<<endl;      //                                      //
+            output<<x[l]<<" "<<U_old[l]<<endl;      // output solution to file              //
             Uxx_old[l]=Uxx_new[l];                  // update for next iteration            //
             Ux_old[l]=Ux_new[l];                    //                                      //
             U_old[l]=U_new[l];                      //                                      //
         }                                           //                                      //
         output.close();                             // close file                           //
+        time_stamp(s,v,dt);                         // print info to screen                 //
     }                                               // end of temporal iteration            //
-    return 0; 
-}    
+    return 0;                                       //                                      //
+}   //------- End of main --------------------------//--------------------------------------//
 
-double* complete_pivot(double** A,int size) {
-    int i, j, p, k, q, tmp;
-    int* NROW=new int[size];
-    int* NCOL=new int[size];
-    double** m=new double*[size];
-    for (i=0;i<size;i++) m[i]=new double[size+1];
-    double* x=new double[size];
+    //------- Guassian elimination algorithm -------//--------------------------------------//
+double* complete_pivot(double** A,int size) {       //                                      //
+    int i, j, p, k, q, tmp;                         //                                      //
+    int* NROW=new int[size];                        // pointer                              //
+    int* NCOL=new int[size];                        // pointer                              //
+    double** m=new double*[size];                   //                                      //
+    for (i=0;i<size;i++) m[i]=new double[size+1];   //                                      //
+    double* x=new double[size];                     // solution                             //
     double sigma;
     double A_pq;
     double A_kj;
@@ -206,4 +208,15 @@ double* complete_pivot(double** A,int size) {
         x[NCOL[i]]=(A[NROW[i]][size]-sigma)/A[NROW[i]][NCOL[i]];
     }
     return x;
+}
+
+void time_stamp(int time,double diff,double dt) {
+    cout << " " << endl;
+    cout << "------------------------------"<<endl;
+    cout << " kinematic diffusivity: " << diff << endl;
+    cout << " current step: " << time << endl;
+    cout << " time-step size: " << dt << endl;
+    cout << " simulation time: " << dt*time << endl;
+    cout << "------------------------------"<<endl;
+    cout << " " << endl;
 }
