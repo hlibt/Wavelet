@@ -24,8 +24,8 @@ void time_stamp(int time,double diff,double dt);
 
 int main(void) {
     //------- Declare initial parameters -----------//--------------------------------------//
-    double v=0.001;                                 // kinematic diffusivity constant       //
-    int M=256;                                      // half of collocation points           //
+    double v=0.0001;                                // kinematic diffusivity constant       //
+    int M=512;                                      // half of collocation points           //
     int J=log2(M);                                  // number of total scales               //
     int i;                                          // counter variable                     //
     int m;                                          //                                      //
