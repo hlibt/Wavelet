@@ -24,8 +24,8 @@ void time_stamp(int time,double diff,double dt);
 
 int main(void) {
     //------- Declare initial parameters -----------//--------------------------------------//
-    double v=0.01;                                   // kinematic diffusivity constant       //
-    int M=256;                                       // half of collocation points           //
+    double v=0.001;                                 // kinematic diffusivity constant       //
+    int M=256;                                      // half of collocation points           //
     int J=log2(M);                                  // number of total scales               //
     int i;                                          // counter variable                     //
     int m;                                          //                                      //
@@ -99,7 +99,7 @@ int main(void) {
             A[l][2*M]=c1+c2+c3;                     // 'RHS' of augmented matrix system     //
         }                                           //                                      //
     //------- Solve matrix system ------------------//--------------------------------------//
-        c=complete_pivot(A,2*M);                // solve sys. for wavelet coefficients  //
+        c=complete_pivot(A,2*M);                    // solve sys. for wavelet coefficients  //
     //------- Update solution variables ------------//--------------------------------------//
         for (l=0;l<2*M;l++) {                       // update solution variables            //
             c1=c[0]*H.h1(x[l]);                     // begin inner product for Uxx (scaling)//
@@ -128,7 +128,7 @@ int main(void) {
         }                                           //                                      //
         ofstream output;                            //                                      //
         char fn[20];                                //                                      //
-        snprintf(fn,sizeof fn,"output/%04d.dat",s); //                                      //
+        snprintf(fn,sizeof fn,"../output/%04d.dat",s); //                                      //
         output.open(fn);                            //                                      //
         output<<0.<<" "<<bcic.f1(t[s])<<endl;       // left boundary                        //
         for (l=0;l<2*M;l++) {                       //                                      //
