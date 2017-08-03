@@ -35,44 +35,45 @@ int main(void) {
     double tf=1.;                                               // final simulation time     
     double dt=(t_f-t_i)/num_steps;                              // timestep size
     //------- STEP 3: SET UP DYADIC GRID -----------------------//
-    int N=256;                                                  // number of level j=0 collocation points
+    int N=64;                                                   // number of level j=0 collocation points
     int J=log2(N);                                              // number of scales possible
     int num_ext_wave_left=1;                                    // number of external wavelets on left end of grid domain
     int num_ext_wave_right=1;                                   // number of externam wavelets on right end of grid domain
     int L=1;                                                    // indicates largest scale in wavelet basis
     double left_bound=0.;                                       // left boundary point of the domain
     double right_bound=1.;                                      // right boundary point of the domain
-    double** x=new double*[J+1];                                // collocation points
-    for (j=0;j<=J;j++) x[j]=new double[pow(2,j+2)+1];           //
-    for (j=0;j<J;j++) {                                         //
-        for (k=0;k<=pow(2,j+2);k++) {                           //
-            x[j][k]=left_bound+k*pow(2,-j+2);                   // 
-        }                                                       //
-    }                                                           // 
+    double** x=new double*[J+1];                                // collocation points - create rows
+    for (j=0;j<=J;j++) x[j]=new double[pow(2,j+2)+1];           // create columns
     double b0=1.;                                               // wavelet translation constant
     double a0=pow(2.,-L)*(right_bound-left_bound)/b0;           // wavelet dilation constant    
-    double* a=new double[J];                                    // wavelet dilation constants
+    double* a=new double[J+1];                                  // wavelet dilation constants
     double** b=new double*[J+1];                                // wavelet translation constants
-    for (j=0;j<=J;j++) b[j]=new double[N];                      // fill rows of above ^^ with spatial points
+    for (j=0;j<=J;j++) b[j]=new double[N+1];                    // fill rows of above ^^ with spatial points
     for (j=0;j<=J;j++) {                                        //
-        a[j]=pow(2.,-j)*a0;                                     // 
-        for (k=0;k<pow(2,j);k++) {                              //
-            b[j][k]=.5*(left_bound+right_bound)+a[j]*b0*k;      //  
+        a[j]=pow(2.,-(j+1.))*a0;                                // 
+        for (k=0;k<=pow(2,j+2);k++) {                           //
+            b[j][k]=left_bound+a[j]*b0*k;                       //  
+            x[j][k]=b[j][k];                                    //
         }                                                       //
     }                                                           //
     //------- STEP 4: SAMPLE INITIAL FUNCTION ON Gt ------------//
-    double** U_old=new double*[J+1];                            // initialize solution matrix U        
-    for (j=0;j<=J;j++) U_old[j]=new double*[N];                 //  
+    double** U_old=new double*[J+1];                            // initialize solution matrix U - create rows
+    for (j=0;j<=J;j++) U_old[j]=new double*[N];                 // create columns
     for (j=0;j<=J;j++) {                                        //
-        for (k=0;k<pow(2,j);k++) {                              //
-            U_old[j][k]=IC.f(x[j][k]);                          //
+        for (k=0;k<=pow(2,j+2);k++) {                           //
+            U_old[j][k]=IC.f(x[j][k]);                          // evaluate initial condition at collocation points on dyadic grid
         }                                                       //
     }                                                           //
-    //------- STEP 5: COMPUTE THE RESIDUAL BETWEEN RESOLUTIONS -//
-    double** residual=new double*[J+1];                         // the residual between approximation Uj(x) and Uj-1(x)
-    for (j=0;j<=J;j++) residual[j]=new double*[N];              //
-    for (j=0;j<=J;j++) {                                        //
-        for (int l=0;l<=j;l++) {                                //
+    //------- STEP 5: COMPUTE THE RESIDUALS --------------------//
+    double** residual=new double*[J+1];                         // the residual between approximation Uj(x) and Uj-1(x) - create rows
+    for (j=0;j<=J;j++) residual[j]=new double*[N];              // residual - create columns
+    for (k=0;k<=pow(2,J+2);k++) {
+        residual[0][k]=U_old[J][k]    
+
+
+for (j=0;j<=J;j++) {                                        //
+            
+        for (int l=0;l<=j;l++) {                                // 
             for (k=0;k<pow(2.,j);k++) {                         //  
                 if (j>=1 && l==j) {                             //
                     residual[j][k]=U_old[J][k]-U_old[j-1][k];   // equation 11 in Vasilyev & Paolucci 1997
@@ -88,6 +89,7 @@ int main(void) {
     }                                                           //
     double** residual=new double*[J];                           // the residual between approximation Uj(x) and Uj-1(x)
     for (j=0;j<J;j++) residual[j]=new double*[N];               //
+    //------- STEP : POPULATE TRANSFORM MATRIX A --------------//
     //------- STEP : ADJUST THE DYADIC GRID, Gt+1 -------------//    
     // adjust Gt+1 based on coefficients and epsilon parameter
     //------- STEP : IF Gt != Gt+1, EVALUATE U AT NEW POINTS---//
