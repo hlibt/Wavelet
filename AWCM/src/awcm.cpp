@@ -65,30 +65,24 @@ int main(void) {
         }                                                       //
     }                                                           //
     //------- STEP 5: COMPUTE THE RESIDUALS --------------------//
+    double sum;                                                 // temporary variable
     double** residual=new double*[J+1];                         // the residual between approximation Uj(x) and Uj-1(x) - create rows
     for (j=0;j<=J;j++) residual[j]=new double*[N];              // residual - create columns
-    for (k=0;k<=pow(2,J+2);k++) {
-        residual[0][k]=U_old[J][k]    
-
-
-for (j=0;j<=J;j++) {                                        //
-            
-        for (int l=0;l<=j;l++) {                                // 
-            for (k=0;k<pow(2.,j);k++) {                         //  
-                if (j>=1 && l==j) {                             //
-                    residual[j][k]=U_old[J][k]-U_old[j-1][k];   // equation 11 in Vasilyev & Paolucci 1997
-                }                                               //
-                else if (j>=1 && l<j) {                         // 
-                    residual[j][k]=0.;                          // equation 11
-                }                                               //
-                else {                                          //
-                    residual[j][k]=0.;                          //
-                }                                               //
+    for (j=0;j<=J;j++) {                                        // begin solving for coeff's one level at a time
+        if (j==0) {                                             //
+            for (k=0;k<=pow(2,0+2);k++) {                       //
+                residual[0][k]=U_old[0][k];                     // populate j=0 'rhs' of matrix system
             }                                                   //
         }                                                       //
-    }                                                           //
-    double** residual=new double*[J];                           // the residual between approximation Uj(x) and Uj-1(x)
-    for (j=0;j<J;j++) residual[j]=new double*[N];               //
+        else if (j>0) {                                         //
+            sum=0.;                                             //
+            for (int l=0;l<j;l++) {                             // 
+                for (k=0;k<pow(2,j);k++) {                      //  
+                    sum+=wave_coeffs[l][k]*psi_jk(x[l][k]);     // sum the contributions of coefficients at lower levels
+                }                                               //
+            }                                                   //
+            residual[j][k]=U_old[J][k]-sum;
+        }                                                       //
     //------- STEP : POPULATE TRANSFORM MATRIX A --------------//
     //------- STEP : ADJUST THE DYADIC GRID, Gt+1 -------------//    
     // adjust Gt+1 based on coefficients and epsilon parameter
