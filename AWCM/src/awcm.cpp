@@ -77,42 +77,65 @@ int main(void) {
         else if (j>0) {                                         //
 	    for (i=0;i<=pow(2,j+2);i++) {			// loop through all collocation points at current level
 		sum=0.;						//
-                for (k=0;k<pow(2,j+1);k++) {                    //  
-		    sum+=wave_coeff[j-1][k]			//
-			*psi_jk(x[j][i],j-1,k);			//    	
-                }                                               //
-		residual[j][i]=residual[j-1][k]-sum;		// populate j>0 'rhs' of matrix system
+		for (int l=0;l<=j-1;l++) {			//
+                    for (k=0;k<=pow(2,j+1);k++) {               //  
+		        sum+=wave_coeff[j-1][k]			//
+			    *psi_jk(x[j][i],j-1,k);		//    	
+                    }                                           //
+		}						//
+		residual[j][i]=U_old[j][i]-sum; 		// populate j>0 'rhs' of matrix system
 	    }							//
 	}							//	
-    //------- POPULATE TRANSFORM MATRIX A ----------------------//
-	double** A=new double*[pow(2,j+2)+1];			// wavelet transform matrix filled with daughter wavelet functions
+    //------- POPULATE WAVELET MATRIX Ajj ----------------------//
+	double** A=new double*[pow(2,j+2)+1];			// wavelet matrix filled with daughter wavelet functions
 	for (i=0;i<=(pow(2,j+2));i++) {				//
 	    A[i]=new double[pow(2,j+2)+1];			//
 	}							//
 	for (i=0;i<=pow(2,j+2);i++) {				//
 	    for (k=0;k<=pow(2,j+2);k++) {			//
-		if (wave_coeff[j][k]>threshold) {		// keep wavelet only if corresponding coefficient is above threshold
-		    A[i][k]=psi_jk(x[j][i],j,k);		//
+		if (j>0) {					//
+		    if (abs(wave_coeff[j][k])>threshold) {	// keep wavelet only if corresponding coefficient is above threshold
+		    	A[i][k]=psi_jk(x[j][i],j,k);		//
+		    }						//
+		    else {					//
+		    	A[i][k]=0.;				// otherwise knock it out
+		    }						//
 		}						//
 		else {						//
-		    A[i][k]=0.;					// otherwise knock it out
+		    A[i][k]=psi_jk(x[j][k],j,k);		// matrix A00 for when j=0;
 		}						//
 	    }							//
 	}							//
     //------- SOLVE FOR WAVELET COEFFICIENTS AT j LEVEL --------//	
 	double** wave_coeff=new double*[J+1]			//
 	for (j=0;j<=J;j++) wave_coeff[j]=new double[pow(j+2)+1];//
-	wave_coeff[j]=BiCGSTAB(A,residuals,tol,pow(2,j+2)+1,mxi);// use the BiCGSTAB method to solve for wavelet coefficients
+	wave_coeff[j]=BiCGSTAB(A,residual,tol,pow(2,j+2)+1,mxi);// use the BiCGSTAB method to solve for wavelet coefficients
     //------- ELIMINATE COEFFICIENTS BELOW THRESHOLD -----------//
    	for (k=0;k<=pow(2,j+2);k++) {				//
 	    if (abs(wave_coeff[j][k])<=threshold) {		// check absolute value of coefficient against prescribed threshold
 		wave_coeff[j+1][2*k]=0.;	        	// knock out coefficients at level j+1
+	    }							//
+	}							//
+    }								// end of j=0 to j=J loop
+    //------- IF Gt != Gt+1, EVALUATE U AT NEW POINTS ----------//
+    for (j=0;j<=J;j++) {					//
+	sum=0;							//
+	for (int l=0;l<=j;l++) {				//
+	    for (i=0;i<=pow(2,j+2);i++) {			//
+	    	for (k=0;k<=pow(2,j+2);k++) {			//
+	            if (wave_coeff[l][k]>threshold) {		//
+		        sum+=wave_coeff[l][k]*psi_jk(x[j][i],j,k);
+		    }						//
+		    else {					//
+			
+		    }
+		}
 	    }
 	}
-    //------- STEP : IF Gt != Gt+1, EVALUATE U AT NEW POINTS---//
-    //------- STEP : INTEGRATE SOLUTION IN TIME ---------------//
-    //double* U_new=new double[2*M];                              // initialize solution matrix U        
-    //------- STEP : OUTPUT SOLUTION TO FILE ------------------//    
+    }
+    //------- COMPUTE DERIVATIVES USING BASIS ------------------//
+    //------- INTEGRATE SOLUTION IN TIME -----------------------//
+    //------- OUTPUT SOLUTION TO FILE --------------------------//    
     ofstream output;                            //                                      //
     char fn[20];                                //                                      //
     snprintf(fn,sizeof fn,"../output/%04d.dat",s); //                                      //
