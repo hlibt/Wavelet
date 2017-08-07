@@ -22,19 +22,19 @@ using namespace std;
 void time_stamp(int time,double diff,double dt);
 
 int main(void) {
-    //------- STEP 1: DEFINE GENERAL PARAMETERS ----------------//
+    //------- DEFINE GENERAL PARAMETERS ------------------------//
     double v=0.0001;                                            // kinematic diffusivity constant  
     int j;                                                      // counter variable for wavelet level
     int k;                                                      // counter variable for spatial index
-    double eps=5*pow(10.,-3);                                   // error tolerance for wavelet coefficients
+    double threshold=5*pow(10.,-3);                             // error tolerance for wavelet coefficients
     initial_condition IC;                                       // declare 'initial condition' class variable
     wavelet db4;                                                // declare 'wavelet' class variable
-    //------- STEP 2: DEFINE TIMESTEP SIZE ---------------------//
+    //------- DEFINE TIMESTEP SIZE -----------------------------//
     int num_steps=1000;                                         // number of timesteps     
     double ti=0.;                                               // initial simulation time  
     double tf=1.;                                               // final simulation time     
     double dt=(t_f-t_i)/num_steps;                              // timestep size
-    //------- STEP 3: SET UP DYADIC GRID -----------------------//
+    //------- SET UP DYADIC GRID -------------------------------//
     int N=64;                                                   // number of level j=0 collocation points
     int J=log2(N);                                              // number of scales possible
     int num_ext_wave_left=1;                                    // number of external wavelets on left end of grid domain
@@ -56,7 +56,7 @@ int main(void) {
             x[j][k]=b[j][k];                                    //
         }                                                       //
     }                                                           //
-    //------- STEP 4: SAMPLE INITIAL FUNCTION ON Gt ------------//
+    //------- SAMPLE INITIAL FUNCTION ON Gt --------------------//
     double** U_old=new double*[J+1];                            // initialize solution matrix U - create rows
     for (j=0;j<=J;j++) U_old[j]=new double*[N];                 // create columns
     for (j=0;j<=J;j++) {                                        //
@@ -64,10 +64,10 @@ int main(void) {
             U_old[j][k]=IC.f(x[j][k]);                          // evaluate initial condition at collocation points on dyadic grid
         }                                                       //
     }                                                           //
-    //------- STEP 5: COMPUTE THE RESIDUALS --------------------//
-    double sum;                                                 // temporary variable
+    //------- COMPUTE THE RESIDUALS ----------------------------//
+    double sum;							// summation variable
     double** residual=new double*[J+1];                         // the residual between approximation Uj(x) and Uj-1(x) - create rows
-    for (j=0;j<=J;j++) residual[j]=new double*[N];              // residual - create columns
+    for (j=0;j<=J;j++) residual[j]=new double[N];               // residual - create columns
     for (j=0;j<=J;j++) {                                        // begin solving for coeff's one level at a time
         if (j==0) {                                             //
             for (k=0;k<=pow(2,0+2);k++) {                       //
@@ -75,17 +75,40 @@ int main(void) {
             }                                                   //
         }                                                       //
         else if (j>0) {                                         //
-            sum=0.;                                             //
-            for (int l=0;l<j;l++) {                             // 
-                for (k=0;k<pow(2,j);k++) {                      //  
-                    sum+=wave_coeffs[l][k]*psi_jk(x[l][k]);     // sum the contributions of coefficients at lower levels
+	    for (i=0;i<=pow(2,j+2);i++) {			// loop through all collocation points at current level
+		sum=0.;						//
+                for (k=0;k<pow(2,j+1);k++) {                    //  
+		    sum+=wave_coeff[j-1][k]			//
+			*psi_jk(x[j][i],j-1,k);			//    	
                 }                                               //
-            }                                                   //
-            residual[j][k]=U_old[J][k]-sum;
-        }                                                       //
-    //------- STEP : POPULATE TRANSFORM MATRIX A --------------//
-    //------- STEP : ADJUST THE DYADIC GRID, Gt+1 -------------//    
-    // adjust Gt+1 based on coefficients and epsilon parameter
+		residual[j][i]=residual[j-1][k]-sum;		// populate j>0 'rhs' of matrix system
+	    }							//
+	}							//	
+    //------- POPULATE TRANSFORM MATRIX A ----------------------//
+	double** A=new double*[pow(2,j+2)+1];			// wavelet transform matrix filled with daughter wavelet functions
+	for (i=0;i<=(pow(2,j+2));i++) {				//
+	    A[i]=new double[pow(2,j+2)+1];			//
+	}							//
+	for (i=0;i<=pow(2,j+2);i++) {				//
+	    for (k=0;k<=pow(2,j+2);k++) {			//
+		if (wave_coeff[j][k]>threshold) {		// keep wavelet only if corresponding coefficient is above threshold
+		    A[i][k]=psi_jk(x[j][i],j,k);		//
+		}						//
+		else {						//
+		    A[i][k]=0.;					// otherwise knock it out
+		}						//
+	    }							//
+	}							//
+    //------- SOLVE FOR WAVELET COEFFICIENTS AT j LEVEL --------//	
+	double** wave_coeff=new double*[J+1]			//
+	for (j=0;j<=J;j++) wave_coeff[j]=new double[pow(j+2)+1];//
+	wave_coeff[j]=BiCGSTAB(A,residuals,tol,pow(2,j+2)+1,mxi);// use the BiCGSTAB method to solve for wavelet coefficients
+    //------- ELIMINATE COEFFICIENTS BELOW THRESHOLD -----------//
+   	for (k=0;k<=pow(2,j+2);k++) {				//
+	    if (abs(wave_coeff[j][k])<=threshold) {		// check absolute value of coefficient against prescribed threshold
+		wave_coeff[j+1][2*k]=0.;	        	// knock out coefficients at level j+1
+	    }
+	}
     //------- STEP : IF Gt != Gt+1, EVALUATE U AT NEW POINTS---//
     //------- STEP : INTEGRATE SOLUTION IN TIME ---------------//
     //double* U_new=new double[2*M];                              // initialize solution matrix U        

@@ -1,4 +1,3 @@
-
 double* BiCGSTAB(double** A,double* b,double tol,int size,int mxi) {
     // Purpose:  Solves the matrix equation 'Ax=b' using
     //          the Biconjugate gradient stabilized method. 
