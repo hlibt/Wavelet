@@ -25,7 +25,6 @@ void time_stamp(int time,double diff,double dt);
 int main(void) {
     //------- DEFINE GENERAL PARAMETERS --------------------------------//
     double v=0.0001;                                                	// kinematic diffusivity constant  
-    int i;                                                              // counter variable for spatial index
     int j;                                                          	// j is the counter variable for wavelet level
     int k;                                                          	// k is the counter variable for spatial index
     double threshold=5*pow(10.,-3);                                 	// error tolerance for wavelet coefficients
@@ -41,6 +40,8 @@ int main(void) {
     double** Uxx=new double*[J+1];				                	    // second derivative of U with respect to x
     double** U_new=new double*[J+1];				            	    // solution after time integration
     double** x=new double*[J+1];			            		        // dyadic points
+    double* a=new double[J+1];                                  	    // wavelet dilation constants
+    double** b=new double*[J+1];                                	    // wavelet translation constants
     for (j=0;j<=J;j++) {						                        //
 	int N=pow(2,j+2);						                            //
         U_old[j]=new double[N+1];					                    //
@@ -50,12 +51,13 @@ int main(void) {
 	    wave_coeff[j]=new double[N+1];					                //
 	    residual[j]=new double[N+1];					                //
 	    x[j]=new double[N+1];						                    //
+	    b[j]=new double[N+1]; 		                 		            //
     }									                                //
     //------- DEFINE TIMESTEP SIZE -------------------------------------//
     int num_steps=1000;                                         	    // number of timesteps     
     double ti=0.;                                               	    // initial simulation time  
     double tf=1.;                                               	    // final simulation time     
-    double dt=(tf-ti)/num_steps;                                 	    // timestep size
+    double dt=(t_f-t_i)/num_steps;                              	    // timestep size
     //------- SET UP DYADIC GRID ---------------------------------------//
     int num_points=64;                                                 	// number of level j=0 collocation points
     int J=log2(num_points);                                            	// number of scales possible
@@ -66,12 +68,11 @@ int main(void) {
     double U_right_bound=1.;                                      	    // right boundary point of the domain
     double b0=1.;                                               	    // wavelet translation constant
     double a0=pow(2.,-L)*(U_right_bound-U_left_bound)/b0;           	// wavelet dilation constant    
-    double aj;                                                          //
-    double bjk;                                                         // 
     for (j=0;j<=J;j++) {                                        	    //
-        aj=pow(2.,-(j+1.))*a0;                                     	    // 
+        a[j]=pow(2.,-(j+1.))*a0;                                	    // 
         for (k=0;k<=pow(2,j+2);k++) {                           	    //
-            x[j][k]=U_left_bound+aj*b0*k;                         	    // values of x on dyadic grid
+            db4.set_params(j,k);                                        // set parameters to calculate the daughter wavelets
+            x[j][k]=U_left_bound+a[j]*b0*k;                       	    // values of x on dyadic grid
         }                                                       	    //
     }                                                           	    //
     //------- SAMPLE INITIAL FUNCTION ON GRID 'Gt' ---------------------//
@@ -105,17 +106,17 @@ int main(void) {
 	    for (i=0;i<=pow(2,j+2);i++) {					                //
 	        for (k=0;k<=pow(2,j+2);k++) {				                //
 		        if (j>0) {						                        // when j>0
-//		            if (abs(wave_coeff[j][k])>threshold) {		        // keep wavelet only if corresponding coefficient is above threshold
+		            if (abs(wave_coeff[j][k])>threshold) {		        // keep wavelet only if corresponding coefficient is above threshold
 			            db4.set_params(j,k);				            // set parameters to calculate daughter wavelet
-		    	        A[i][k]=db4.daughter(x[j][i]); 			        // populate matrix A with daughter wavelet values
-//		            }							                        //
-//		            else {						                        //
-//		    	        A[i][k]=0.;					                    // otherwise knock it out
-//		            }							                        //
+		    	        A[i][k]=db4.daught(x[j][i]); 			        // populate matrix A with daughter wavelet values
+		            }							                        //
+		            else {						                        //
+		    	        A[i][k]=0.;					                    // otherwise knock it out
+		            }							                        //
 		        }							                            //
 		        else {							                        //
 		            db4.set_params(j,k);				                // set parameters to form daughter wavelet
-		            A[i][k]=db4.daughter(x[j][i],j,k);			        // matrix A00 for when j=0;
+		            A[i][k]=db4.daught(x[j][i],j,k);			        // matrix A00 for when j=0;
 		        }							                            //
 	        }								                            //
 	    }								                                //
