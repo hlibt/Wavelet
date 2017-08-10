@@ -22,6 +22,7 @@ using namespace std;
 //function declarations
 void time_stamp(int time,double diff,double dt);
 double* BiCGSTAB(double** A,double* b,double tol,int size,int mxi);
+double* complete_pivot(double** A,int size);
 bool chk_conv(double** A,double* y,double* b,double tolerance,int n);
 double inner_product(double* a, double* b,int n);
 double* ADOTX(double** A,double* x,int n);
@@ -85,13 +86,14 @@ int main(void) {
     }                                                           	    //
     //------- COMPUTE RESIDUALS ----------------------------------------//
     for (j=0;j<=J;j++) {                                        	    // begin solving for coeff's one level at a time
+        int N=pow(2,j+2);                                               //
         if (j==0) {                                             	    //
-            for (k=0;k<=pow(2,j+2);k++) {                       	    //
+            for (k=0;k<=N;k++) {                                   	    //
                 residual[j][k]=U_old[j][k];                     	    // populate j=0 'rhs' of matrix system
             }                                                   	    //
         }                                                       	    //
         else if (j>0) {                                         	    //
-	        for (i=0;i<=pow(2,j+2);i++) {				                // loop through all collocation points at current level
+	        for (i=0;i<=N;i++) {	        			                // loop through all collocation points at current level
 		        sum=0.;							                        // summation variable for contributions of lower levels
 		        for (int l=0;l<=j-1;l++) {				                // loop from l=0 to l=j-1 (contributions of lower levels)
                     for (k=0;k<=pow(2,l+2);k++) {                    	// loop through all spatial indices at level l 
@@ -103,20 +105,31 @@ int main(void) {
 	        }								                            //
 	    }								                                //	
     //------- POPULATE WAVELET MATRIX Ajj ------------------------------//
-        int N=pow(2,j+2);                                               //
 	    double** A=new double*[N+1];        				            // wavelet matrix filled with daughter wavelet functions
-	    for (i=0;i<=pow(2,j+2);i++) {					                //
-            A[i]=new double[N+1];	            //
-	        for (k=0;k<=pow(2,j+2);k++) {				                //
+	    for (i=0;i<=N;i++) {					                        //
+            A[i]=new double[N+2];	                                    //
+	        for (k=0;k<=N;k++) {		        		                //
 		        db4.set_params(j,k);                                    // set parameters to calculate wavelets
 		    	A[i][k]=db4.daughter(x[j][i]); 			                // populate matrix A with daughter wavelet values
-                cout<<A[i][k]<<endl;
 	        }								                            //
 	    }								                                //
+        for (i=0;i<=N;i++) {                                            // augment matrix for guassian elimination algorithm
+            A[i][N+1]=residual[j][i];                                   //
+        }                                                               //
     //------- SOLVE FOR WAVELET COEFFICIENTS AT j LEVEL ----------------//	
-	    wave_coeff[j]=BiCGSTAB(A,residual[j],tol,pow(2,j+2)+1,mxi);	    // use the BiCGSTAB method to solve for wavelet coefficients
-    }
-   
+	    wave_coeff[j]=complete_pivot(A,N+1);                            // wave_coeff[j]=BiCGSTAB(A,residual[j],tol,pow(2,j+2)+1,mxi);
+    //------- ELIMINATE COEFFICIENTS BELOW THRESHOLD -------------------//
+   	    for (k=0;k<=N;k++) {		        			                //
+	        if (abs(wave_coeff[j][k])<=threshold) {			            // check absolute value of coefficient against prescribed threshold
+                cout << j << k << endl;
+		        wave_coeff[j][k]=0;					                    // make coefficient zero (for now - ideally would not have to store it)
+		        if (j<J) {                                              //
+                    wave_coeff[j+1][2*k]=0.;	       		            // knock out coefficients at level j+1 (to make next matrix solve easier)
+                }								                        // 
+	        }							                                // 
+        }								                                // 
+    }                                                                   // end of j=0 to j=J loop
+
     for (j=0;j<=J;j++) {
         for (i=0;i<=pow(2,j+2);i++) {                                                 	    //
             sum=0.;
@@ -128,17 +141,9 @@ int main(void) {
             }
             U_new[j][i]=sum;
         }              
-    }                                                           	    //
-/*    //------- ELIMINATE COEFFICIENTS BELOW THRESHOLD -------------------//
-   	    for (k=0;k<=pow(2,j+2);k++) {					                //
-	        if (abs(wave_coeff[j][k])<=threshold) {			            // check absolute value of coefficient against prescribed threshold
-		        wave_coeff[j][k]=0;					                    // make coefficient zero (for now - ideally would not have to store it)
-//		if (j<J) wave_coeff[j+1][2*k]=0.;	       		                // knock out coefficients at level j+1 (to make next matrix solve easier)
-	        }								                            // 
-	    }								                                // 
-    }									                                // end of j=0 to j=J loop
+    }                                                          	    //
     //------- IF Gt != Gt+1, EVALUATE U AT NEW POINTS ------------------//
-    for (j=0;j<=J;j++) {						//
+  /*  for (j=0;j<=J;j++) {						//
 	for (i=0;i<=pow(2,j+2);i++) {		         		//
 	    sum=0.;							//
 	    for (int l=0;l<j;l++) {					//
@@ -161,14 +166,16 @@ int main(void) {
 	}								//
     }									//
  */ //------- OUTPUT SOLUTION TO FILE ----------------------------------//    
+    for (j=0;j<=J;j++) {
     ofstream output;                            			//
     char fn[20];                               				// 
-    snprintf(fn,sizeof fn,"func.dat"); 			//
+    snprintf(fn,sizeof fn,"func%i.dat",j); 			//
     output.open(fn);                            			// 
-for (int l=0;l<=pow(2,5);l++) {
-            output<<x[3][l]<<" "<<U_new[3][l]<<endl;      // output solution to file              //
-}
+    for (int l=0;l<=pow(2,j+2);l++) {
+            output<<x[j][l]<<" "<<U_new[j][l]<<endl;      // output solution to file              //
+    }
          output.close();                             // close file                           //     //  time_stamp(s,v,dt);                         // print info to screen                 //
+    }
     return 0;                                       //                                      //
 }   
 
@@ -308,6 +315,73 @@ void time_stamp(int time,double diff,double dt) {
     cout << " simulation time: " << dt*time << endl;
     cout << "------------------------------"<<endl;
     cout << " " << endl;
+}
+
+double* complete_pivot(double** A,int size) {       //                                      //
+    int i, j, p, k, q, tmp;                         //                                      //
+    int* NROW=new int[size];                        // pointer                              //
+    int* NCOL=new int[size];                        // pointer                              //
+    double** m=new double*[size];                   //                                      //
+    for (i=0;i<size;i++) m[i]=new double[size+1];   //                                      //
+    double* x=new double[size];                     // solution                             //
+    double sigma;
+    double A_pq;
+    double A_kj;
+    bool swap_row;
+    bool swap_col;
+    
+    for (i=0;i<size;i++) {                          //                                      //    
+        NROW[i]=i;                                  // initialize row pointer               //
+        NCOL[i]=i;                                  // initialize column pointer            //
+    }
+    for (i=0;i<size;i++) {
+        p=i;
+        q=i;
+        swap_row=false;
+        swap_col=false;
+        A_pq=abs(A[NROW[p]][NCOL[q]]);
+        for (k=i;k<size;k++) {
+            for (j=k;j<size;j++) {
+                A_kj=abs(A[NROW[k]][NCOL[j]]);
+                if (A_kj>A_pq) {
+                    if (k!=p) {
+                        p=k;
+                        swap_row=true;
+                    }
+                    if (j!=q) {
+                        q=j;
+                        swap_col=true;
+                    }
+                    A_pq=abs(A[NROW[p]][NCOL[q]]);
+                }
+            }
+        }
+        if (swap_row==true) {
+            tmp=NROW[i];
+            NROW[i]=NROW[p];
+            NROW[p]=tmp;
+        }
+        if (swap_col==true) {
+            tmp=NCOL[i];
+            NCOL[i]=NCOL[q];
+            NCOL[q]=tmp;
+        }
+        for (j=i+1;j<size;j++) {
+            m[NROW[j]][NCOL[i]]=A[NROW[j]][NCOL[i]]/A[NROW[i]][NCOL[i]];
+            for (tmp=0;tmp<size+1;tmp++) {
+                A[NROW[j]][tmp]=A[NROW[j]][tmp]-m[NROW[j]][NCOL[i]]*A[NROW[i]][tmp];
+            }
+        }
+    }
+    x[NCOL[size-1]]=A[NROW[size-1]][size]/A[NROW[size-1]][NCOL[size-1]];
+    for (i=size-2;i>=0;i--) {
+        sigma=0.;
+        for (j=i;j<size;j++) {
+            sigma+=A[NROW[i]][NCOL[j]]*x[NCOL[j]];
+        }
+        x[NCOL[i]]=(A[NROW[i]][size]-sigma)/A[NROW[i]][NCOL[i]];
+    }
+    return x;
 }
 
    /* for (j=0;j<=J;j++) {
