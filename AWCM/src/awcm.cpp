@@ -6,7 +6,6 @@
 #include <cmath>
 #include "wavelet.h"
 #include "initial_conditions.h"
-#include "awcm.hpp"
 #define PI 3.14159265
 using namespace std;
 
@@ -20,33 +19,44 @@ using namespace std;
     //                                                                              //
     //------------------------------------------------------------------------------//
 
+//function declarations
 void time_stamp(int time,double diff,double dt);
+double* BiCGSTAB(double** A,double* b,double tol,int size,int mxi);
+bool chk_conv(double** A,double* y,double* b,double tolerance,int n);
+double inner_product(double* a, double* b,int n);
+double* ADOTX(double** A,double* x,int n);
+double L2norm(double* x,int n);
 
 int main(void) {
     //------- DEFINE GENERAL PARAMETERS --------------------------------//
     double v=0.0001;                                                	// kinematic diffusivity constant  
+    int num_points=16;                                                 	// number of level j=0 collocation points
+    int J=log2(num_points);                                            	// number of scales possible
+    int num_ext_wave_left=1;                                    	    // number of external wavelets on left end of grid domain
+    int num_ext_wave_right=1;                                   	    // number of externam wavelets on right end of grid domain
+    int L=1;                                                    	    // indicates largest scale in wavelet basis
+    double U_left_bound=0.;                                       	    // left boundary point of the domain
+    double U_right_bound=1.;                                      	    // right boundary point of the domain
     int i;                                                              // counter variable for spatial index
     int j;                                                          	// j is the counter variable for wavelet level
     int k;                                                          	// k is the counter variable for spatial index
     double threshold=5*pow(10.,-3);                                 	// error tolerance for wavelet coefficients
+    double tol=pow(10.,-8.);                                            // BiCGSTAB convergence tolerance
+    int mxi=5000;                                                       // maximum number of BiCGSTAB iterations
     initial_condition IC;                                           	// declare 'initial condition' class variable
     wavelet db4;                                                    	// declare 'wavelet' class variable
     //------- DECLARE ARRAYS -------------------------------------------//
     double sum;							                            	// summation variable
     double sum1;						                        	    // summation variable
     double** residual=new double*[J+1];                         	    // the residual between approximation Uj(x) and Uj-1(x) - create rows
-    double** wave_coeff=new double*[J+1]				                //
+    double** wave_coeff=new double*[J+1];    			                //
     double** U_old=new double*[J+1];					                //
-    double** Ux=new double*[J+1];				                	    // first derivative of U with respect to x
-    double** Uxx=new double*[J+1];				                	    // second derivative of U with respect to x
     double** U_new=new double*[J+1];				            	    // solution after time integration
     double** x=new double*[J+1];			            		        // dyadic points
     for (j=0;j<=J;j++) {						                        //
 	int N=pow(2,j+2);						                            //
         U_old[j]=new double[N+1];					                    //
 	    U_new[j]=new double[N+1];					                    //
-	    Ux[j]=new double[N+1];						                    //
-	    Uxx[j]=new double[N+1];						                    //
 	    wave_coeff[j]=new double[N+1];					                //
 	    residual[j]=new double[N+1];					                //
 	    x[j]=new double[N+1];						                    //
@@ -56,14 +66,7 @@ int main(void) {
     double ti=0.;                                               	    // initial simulation time  
     double tf=1.;                                               	    // final simulation time     
     double dt=(tf-ti)/num_steps;                                 	    // timestep size
-    //------- SET UP DYADIC GRID ---------------------------------------//
-    int num_points=64;                                                 	// number of level j=0 collocation points
-    int J=log2(num_points);                                            	// number of scales possible
-    int num_ext_wave_left=1;                                    	    // number of external wavelets on left end of grid domain
-    int num_ext_wave_right=1;                                   	    // number of externam wavelets on right end of grid domain
-    int L=1;                                                    	    // indicates largest scale in wavelet basis
-    double U_left_bound=0.;                                       	    // left boundary point of the domain
-    double U_right_bound=1.;                                      	    // right boundary point of the domain
+    //------- POPULATE DYADIC GRID -------------------------------------//
     double b0=1.;                                               	    // wavelet translation constant
     double a0=pow(2.,-L)*(U_right_bound-U_left_bound)/b0;           	// wavelet dilation constant    
     double aj;                                                          //
@@ -100,28 +103,32 @@ int main(void) {
 	        }								                            //
 	    }								                                //	
     //------- POPULATE WAVELET MATRIX Ajj ------------------------------//
-	    double** A=new double*[pow(2,j+2)+1];				            // wavelet matrix filled with daughter wavelet functions
-	    for (i=0;i<=(pow(2,j+2));i++) A[i]=new double[pow(2,j+2)+1];	//
+        int N=pow(2,j+2);                                               //
+	    double** A=new double*[N+1];        				            // wavelet matrix filled with daughter wavelet functions
 	    for (i=0;i<=pow(2,j+2);i++) {					                //
+            A[i]=new double[N+1];	            //
 	        for (k=0;k<=pow(2,j+2);k++) {				                //
-		        if (j>0) {						                        // when j>0
-//		            if (abs(wave_coeff[j][k])>threshold) {		        // keep wavelet only if corresponding coefficient is above threshold
-			            db4.set_params(j,k);				            // set parameters to calculate daughter wavelet
-		    	        A[i][k]=db4.daughter(x[j][i]); 			        // populate matrix A with daughter wavelet values
-//		            }							                        //
-//		            else {						                        //
-//		    	        A[i][k]=0.;					                    // otherwise knock it out
-//		            }							                        //
-		        }							                            //
-		        else {							                        //
-		            db4.set_params(j,k);				                // set parameters to form daughter wavelet
-		            A[i][k]=db4.daughter(x[j][i],j,k);			        // matrix A00 for when j=0;
-		        }							                            //
+		        db4.set_params(j,k);                                    // set parameters to calculate wavelets
+		    	A[i][k]=db4.daughter(x[j][i]); 			                // populate matrix A with daughter wavelet values
+                cout<<A[i][k]<<endl;
 	        }								                            //
 	    }								                                //
     //------- SOLVE FOR WAVELET COEFFICIENTS AT j LEVEL ----------------//	
-	    wave_coeff[j]=BiCGSTAB(A,residual,tol,pow(2,j+2)+1,mxi);	    // use the BiCGSTAB method to solve for wavelet coefficients
-}
+	    wave_coeff[j]=BiCGSTAB(A,residual[j],tol,pow(2,j+2)+1,mxi);	    // use the BiCGSTAB method to solve for wavelet coefficients
+    }
+   
+    for (j=0;j<=J;j++) {
+        for (i=0;i<=pow(2,j+2);i++) {                                                 	    //
+            sum=0.;
+            for (int l=0;l<=j;l++) {
+                for (k=0;k<=pow(2,l+2);k++) {                           	    //
+                    db4.set_params(l,k);
+                    sum+=wave_coeff[l][k]*db4.daughter(x[j][i]);
+                }
+            }
+            U_new[j][i]=sum;
+        }              
+    }                                                           	    //
 /*    //------- ELIMINATE COEFFICIENTS BELOW THRESHOLD -------------------//
    	    for (k=0;k<=pow(2,j+2);k++) {					                //
 	        if (abs(wave_coeff[j][k])<=threshold) {			            // check absolute value of coefficient against prescribed threshold
@@ -145,45 +152,152 @@ int main(void) {
 	}								//
     }					*/				//
     //------- COMPUTE DERIVATIVES USING BASIS --------------------------//
- //   for (j=0;j<=J;j++) {						//
-//	for (i=0;i<=pow(2,j+2);i++) {		         		//
-//	    sum=0.;							//
-//	    sum1=0.;							//
-//	    for (int l=0;l<j;l++) {					//
-//	    	for (k=0;k<=pow(2,l+2);k++) {				//
-//		    if (abs(wave_coeff[l][k])>threshold) {		// 
-//		        sum+=wave_coeff[l][k]*psi_x_jk(x[j][i],l,k);	//
-//			sum1+=wave_coeff[l][k]*psi_xx_jk(x[j][i],l,k);  // 
-//		    }							//
-//		}							//
-//	    }								//
-//	    Ux[j][i]=sum;						//
-//	    Uxx[j][i]=sum1;						//
-//	}								//
- //   }									//
-/*    //------- INTEGRATE SOLUTION IN TIME -------------------------------//
+    //------- INTEGRATE SOLUTION IN TIME -------------------------------// 
+    /*
     for (j=0;j<=J;j++) {						//
 	for (i=0;i<=pow(2,j+2);i++) {					//
 	    U_new[j][i]=U_old[j][i]+dt*(v*Uxx[j][i]-			//
 			 U_old[j][i]*Ux[j][i]);				//
 	}								//
     }									//
-    //------- OUTPUT SOLUTION TO FILE ----------------------------------//    
+ */ //------- OUTPUT SOLUTION TO FILE ----------------------------------//    
     ofstream output;                            			//
     char fn[20];                               				// 
-    snprintf(fn,sizeof fn,"../output/%04d.dat",s); 			//
+    snprintf(fn,sizeof fn,"func.dat"); 			//
     output.open(fn);                            			// 
-    output<<0.<<" "<<bcic.f1(t[s])<<endl;       // left boundary                        //
-            output<<x[l]<<" "<<U_old[l]<<endl;      // output solution to file              //
-            Uxx_old[l]=Uxx_new[l];                  // update for next iteration            //
-            Ux_old[l]=Ux_new[l];                    //                                      //
-            U_old[l]=U_new[l];                      //                                      //
-        output<<1.<<" "<<bcic.f2(t[s])<<endl;       //                                      //
-        output.close();                             // close file                           //
-        time_stamp(s,v,dt);                         // print info to screen                 //
-    } */                                              // end of temporal iteration            //
+for (int l=0;l<=pow(2,5);l++) {
+            output<<x[3][l]<<" "<<U_new[3][l]<<endl;      // output solution to file              //
+}
+         output.close();                             // close file                           //     //  time_stamp(s,v,dt);                         // print info to screen                 //
     return 0;                                       //                                      //
 }   
+
+double* BiCGSTAB(double** A,double* b,double tol,int size,int mxi) {
+    // Purpose:  Solves the matrix equation 'Ax=b' using
+    //          the Biconjugate gradient stabilized method. 
+    // Modified: July 03, 2017
+    //
+    // Author: Brandon Gusto
+    //
+    // Parameters: Input --> Diag, the elements on the diagonal of the matrix 'A'
+    //             Input --> Lowr, the elements on the lower diagonal of the matrix 'A'
+    //             Input --> Uppr, the elements on the upper diagonal of the matrix 'A'
+    //             Input --> b, the elements in the vector 'b' in the RHS of 'Ax=b'
+    //             Input --> x, the solution vector
+    //             Input --> tol, the tolerance with which the BiCGSTAB method solves the system
+    //             Input --> mxi, the maximum number of iterations
+    //             Local -->
+    double* r_new=new double[size];
+    double* r_old=new double[size];
+    double* rhat=new double[size];
+    double* v_new=new double[size];    
+    double* v_old=new double[size];
+    double* p_new=new double[size];
+    double* p_old=new double[size];
+    double* h=new double[size];
+    double* s=new double[size];
+    double* t=new double[size];
+    double* x0=new double[size];
+    double* tmp=new double[size];
+    double omega_new;
+    double omega_old;
+    double rho_new;
+    double rho_old;
+    double alpha;
+    double beta;
+
+    for (int i=0;i<size;i++) x0[i]=10.0;             // populate initial solution guess
+    tmp=ADOTX(A,x0,size);                           // calculate A*x0;
+    for (int i=0;i<size;i++) r_old[i]=b[i]-tmp[i];  // start the residual with initial guess
+    for (int i=0;i<size;i++) rhat[i]=r_old[i];      // choose arbitrary vector rhat
+    rho_old=1.; omega_old=1.; alpha=1.;             // initial parameters
+    for (int i=0;i<size;i++) {
+        v_old[i]=0.;
+        p_old[i]=0.;
+    }
+    int k=1;
+    bool iterate=true;
+    do {
+        rho_new=inner_product(rhat,r_old,size);
+        beta=(rho_new/rho_old)*(alpha/omega_old);
+        for (int i=0;i<size;i++) p_new[i]=r_old[i]+beta*(p_old[i]-omega_old*v_old[i]);
+        v_new=ADOTX(A,p_new,size);
+        alpha=rho_new/inner_product(rhat,v_new,size);
+        for (int i=0;i<size;i++) h[i]=x0[i]+alpha*p_new[i];
+        if (chk_conv(A,h,b,tol,size)==true) {
+            iterate=false;
+            for (int i=0;i<size;i++) x0[i]=h[i];
+            cout << "Check 1 \n";
+        }
+        else {
+            for (int i=0;i<size;i++) s[i]=r_old[i]-alpha*v_new[i];
+            t=ADOTX(A,s,size);
+            omega_new=inner_product(t,s,size)/inner_product(t,t,size);
+            for (int i=0;i<size;i++) x0[i]=h[i]+omega_new*s[i];
+            if (chk_conv(A,x0,b,tol,size)==true) {
+                iterate=false;
+                cout << "Check 2 \n";
+            }
+            else {
+                for (int i=0;i<size;i++) r_new[i]=s[i]-omega_new*t[i];
+            }
+        }
+        for (int i=0;i<size;i++) {
+            r_old[i]=r_new[i];
+            p_old[i]=p_new[i];
+            v_old[i]=v_new[i];
+        }            
+        rho_old=rho_new;
+        omega_old=omega_new;
+        k++;
+        if (k>mxi) {
+            iterate=false;
+            cout << "Max iterations reached \n";
+        }
+    }while(iterate==true);
+    return x0;
+}
+
+double* ADOTX(double** A,double* x,int n) {
+    double* output=new double[n];
+    double sum=0.;
+    for (int i=0;i<n;i++) {
+        for (int j=0;j<n;j++) {
+            sum+=A[i][j]*x[j];
+        }
+        output[i]=sum;
+        sum=0;
+    }
+    return output;
+}
+ 
+double inner_product(double* a, double* b,int n) {
+    double output=0.;
+    for (int i=0;i<n;i++) output+=a[i]*b[i];
+    return output;
+}
+
+double L2norm(double* x,int n) {
+    double sum=0.;
+    for (int i=0;i<n;i++) sum+=sum+pow(x[i],2.);
+    return sum=sqrt(sum);
+    for (int i=0;i<n;i++) sum+=pow(x[i],2.);
+    return sqrt(sum);
+}
+
+bool chk_conv(double** A,double* y,double* b,double tolerance,int n) {
+    double* residual=new double[n];
+    double rel_error;
+    bool conv;
+    residual=ADOTX(A,y,n);
+    for (int i=0;i<n;i++) residual[i]=b[i]-residual[i];
+    rel_error=L2norm(residual,n)/L2norm(b,n);
+    if (rel_error<tolerance)
+        conv=true;
+    else
+        conv=false;
+    return conv;
+}
 
 void time_stamp(int time,double diff,double dt) {
     cout << " " << endl;
@@ -195,3 +309,16 @@ void time_stamp(int time,double diff,double dt) {
     cout << "------------------------------"<<endl;
     cout << " " << endl;
 }
+
+   /* for (j=0;j<=J;j++) {
+        for (i=0;i<=pow(2,j+2);i++) {                                                 	    //
+            sum=0.;
+            for (int l=0;l<=j;l++) {
+                for (k=0;k<=pow(2,l+2);k++) {                           	    //
+                    db4.set_params(l,k);
+                    sum+=wave_coeff[l][k]*db4.daughter(x[j][i]);
+                }
+            }
+            U_new[j][i]=sum;
+        }              
+    }  */                                                         	    //

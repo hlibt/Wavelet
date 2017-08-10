@@ -72,13 +72,13 @@ double wavelet::daughter(double x) {
     return y;
 }
 
-void set_params(int j,int k) {
+void wavelet::set_params(int j,int k) {
 
     // largest scale
     int L=1;
 
     // grid boundaries
-    double xl=-1.;
+    double xl=0.;
     double xr=1.;
 
 	// daughter wavelet parameters
