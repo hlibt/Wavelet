@@ -54,6 +54,7 @@ int main(void) {
     double** U_old=new double*[J+1];					                //
     double** U_new=new double*[J+1];				            	    // solution after time integration
     double** x=new double*[J+1];			            		        // dyadic points
+    int** map=new int*[J+1];                                            // pointer to deal with dynamic array indexing
     for (j=0;j<=J;j++) {						                        //
 	int N=pow(2,j+2);						                            //
         U_old[j]=new double[N+1];					                    //
@@ -61,13 +62,14 @@ int main(void) {
 	    wave_coeff[j]=new double[N+1];					                //
 	    residual[j]=new double[N+1];					                //
 	    x[j]=new double[N+1];						                    //
+        map[j]=new int[N+1];                                            //
     }									                                //
     //------- DEFINE TIMESTEP SIZE -------------------------------------//
     int num_steps=1000;                                         	    // number of timesteps     
     double ti=0.;                                               	    // initial simulation time  
     double tf=1.;                                               	    // final simulation time     
     double dt=(tf-ti)/num_steps;                                 	    // timestep size
-    //------- POPULATE DYADIC GRID -------------------------------------//
+    //------- POPULATE DYADIC GRID FOR INITIAL CONDITION ---------------//
     double b0=1.;                                               	    // wavelet translation constant
     double a0=pow(2.,-L)*(U_right_bound-U_left_bound)/b0;           	// wavelet dilation constant    
     double aj;                                                          //
@@ -76,6 +78,7 @@ int main(void) {
         aj=pow(2.,-(j+1.))*a0;                                     	    // 
         for (k=0;k<=pow(2,j+2);k++) {                           	    //
             x[j][k]=U_left_bound+aj*b0*k;                         	    // values of x on dyadic grid
+            map[j][k]=k;                                                //  
         }                                                       	    //
     }                                                           	    //
     //------- SAMPLE INITIAL FUNCTION ON GRID 'Gt' ---------------------//
@@ -84,6 +87,7 @@ int main(void) {
             U_old[j][k]=IC.f(x[j][k]);                          	    // evaluate initial condition at collocation points on dyadic grid
         }                                                       	    //
     }                                                           	    //
+    //------- BEGIN TEMPORAL INTEGRATION -------------------------------//
     //------- COMPUTE RESIDUALS ----------------------------------------//
     for (j=0;j<=J;j++) {                                        	    // begin solving for coeff's one level at a time
         int N=pow(2,j+2);                                               //
@@ -97,11 +101,17 @@ int main(void) {
 		        sum=0.;							                        // summation variable for contributions of lower levels
 		        for (int l=0;l<=j-1;l++) {				                // loop from l=0 to l=j-1 (contributions of lower levels)
                     for (k=0;k<=pow(2,l+2);k++) {                    	// loop through all spatial indices at level l 
-			            db4.set_params(l,k);				            // set parameters to calculate daughter wavelet value
-		                sum+=wave_coeff[l][k]*db4.daughter(x[j][i]);    // note that the operation is performed on grid level j 
+			            db4.set_params(l,map[j][k]);		            // set parameters to calculate daughter wavelet value
+                        if (l==0) {                                     //
+                            sum+=wave_coeff[l][map[l][k]]               // scaling function
+                                *db4.father(6,x[j][map[j][i]]);         //
+                        } else {                                        //
+		                    sum+=wave_coeff[l][k]                       //
+                                *db4.daughter(x[j][i]);                 // note that the operation is performed on grid level j 
+                        }                                               //
                     }                                           	    //
 		        }							                            //
-		        residual[j][i]=U_old[j][i]-sum; 	                    // populate j>0 'rhs' of matrix system
+		        residual[j][map[j][i]]=U_old[j][map[j][i]]-sum; 	    // populate j>0 'rhs' of matrix system
 	        }								                            //
 	    }								                                //	
     //------- POPULATE WAVELET MATRIX Ajj ------------------------------//
@@ -109,9 +119,13 @@ int main(void) {
 	    for (i=0;i<=N;i++) {					                        //
             A[i]=new double[N+2];	                                    //
 	        for (k=0;k<=N;k++) {		        		                //
-		        db4.set_params(j,k);                                    // set parameters to calculate wavelets
-		    	A[i][k]=db4.daughter(x[j][i]); 			                // populate matrix A with daughter wavelet values
-	        }								                            //
+		        db4.set_params(j,map[j][k]);                            // set parameters to calculate wavelets
+                if (j==0) {                                             //
+                    A[i][k]=db4.father(6,x[j][map[j][i]]);              // populate matrix A with scaling wavelets
+                } else {                                                //
+		    	    A[i][k]=db4.daughter(x[j][map[j][i]]); 			    // populate matrix A with daughter wavelet values
+	            }							                            //
+            }
 	    }								                                //
         for (i=0;i<=N;i++) {                                            // augment matrix for guassian elimination algorithm
             A[i][N+1]=residual[j][i];                                   //
@@ -121,22 +135,43 @@ int main(void) {
     //------- ELIMINATE COEFFICIENTS BELOW THRESHOLD -------------------//
    	    for (k=0;k<=N;k++) {		        			                //
 	        if (abs(wave_coeff[j][k])<=threshold) {			            // check absolute value of coefficient against prescribed threshold
-                cout << j << k << endl;
-		        wave_coeff[j][k]=0;					                    // make coefficient zero (for now - ideally would not have to store it)
-		        if (j<J) {                                              //
-                    wave_coeff[j+1][2*k]=0.;	       		            // knock out coefficients at level j+1 (to make next matrix solve easier)
-                }								                        // 
+                for (int l=k;l<=N;l++) {                                //
+                  //  map[j][l]--;                                        //
+                }
 	        }							                                // 
         }								                                // 
     }                                                                   // end of j=0 to j=J loop
-
+    //------- ADJUST GRID Gt+1 -----------------------------------------//
+   /*     for (j=0;j<=J;j++) {
+            int N=pow(2,j+2);
+            for (k=0;k<=N;k++) {
+        double** wave_coeff=new double*[J+1];    			                //
+        double** U_old=new double*[J+1];					                //
+        double** x=new double*[J+1];			            		        // dyadic points
+        for (j=0;j<=J;j++) {						                        //
+	        int N=pow(2,j+2);						                            //
+            wave_coeff[j]=new double[N+1];					                //
+            U_old[j]=new double[N+1];					                    //
+	        x[j]=new double[N+1];						                   //
+        }									                                //
+        for (j=0;j<=J;j++) {                                        	    //
+            aj=pow(2.,-(j+1.))*a0;                                     	    // 
+            for (k=0;k<=pow(2,j+2);k++) {                           	    //
+                x[j][map[j][k]]=U_left_bound+aj*b0*k;                         	    // values of x on dyadic grid
+            }                                                       	    //
+        } */                                                          	    //
+    //------------------------------------------------------------------//
     for (j=0;j<=J;j++) {
         for (i=0;i<=pow(2,j+2);i++) {                                                 	    //
             sum=0.;
             for (int l=0;l<=j;l++) {
                 for (k=0;k<=pow(2,l+2);k++) {                           	    //
                     db4.set_params(l,k);
-                    sum+=wave_coeff[l][k]*db4.daughter(x[j][i]);
+                    if (l==0) {
+                        sum+=wave_coeff[l][k]*db4.father(6,x[j][i]);
+                    } else {
+                        sum+=wave_coeff[l][k]*db4.daughter(x[j][i]);
+                    }
                 }
             }
             U_new[j][i]=sum;
