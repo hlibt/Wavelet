@@ -83,3 +83,44 @@ double* BiCGSTAB(double** A,double* b,double tol,int size,int mxi) {
     }while(iterate==true);
     return x0;
 }
+
+double* ADOTX(double** A,double* x,int n) {
+    double* output=new double[n];
+    double sum=0.;
+    for (int i=0;i<n;i++) {
+        for (int j=0;j<n;j++) {
+            sum+=A[i][j]*x[j];
+        }
+        output[i]=sum;
+        sum=0;
+    }
+    return output;
+}
+ 
+double inner_product(double* a, double* b,int n) {
+    double output=0.;
+    for (int i=0;i<n;i++) output+=a[i]*b[i];
+    return output;
+}
+
+double L2norm(double* x,int n) {
+    double sum=0.;
+    for (int i=0;i<n;i++) sum+=sum+pow(x[i],2.);
+    return sum=sqrt(sum);
+    for (int i=0;i<n;i++) sum+=pow(x[i],2.);
+    return sqrt(sum);
+}
+
+bool chk_conv(double** A,double* y,double* b,double tolerance,int n) {
+    double* residual=new double[n];
+    double rel_error;
+    bool conv;
+    residual=ADOTX(A,y,n);
+    for (int i=0;i<n;i++) residual[i]=b[i]-residual[i];
+    rel_error=L2norm(residual,n)/L2norm(b,n);
+    if (rel_error<tolerance)
+        conv=true;
+    else
+        conv=false;
+    return conv;
+}
