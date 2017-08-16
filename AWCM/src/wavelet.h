@@ -7,12 +7,6 @@
 class wavelet {
     public:  
 
-	// daughter wavelet parameters
-    double b0;
-  	double bjk;
-   	double a0;   
-   	double aj;
-
 	// class function declarations
 	double father(int n,double x);
 	double mother(int n,double x);
