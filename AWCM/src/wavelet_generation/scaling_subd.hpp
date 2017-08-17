@@ -1,2 +1,3 @@
-double* scaling_subd(int j,int m,int k,int Jmax,int npnts);
+double* scaling_subd(double** x,int j,int m,int Jmax,int npnts);
+double lagrange_interp(double eval_point,double* x,int i,int N1,int N2);
 double kronecker_delta(int k, int m);
