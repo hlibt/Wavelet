@@ -24,7 +24,7 @@ void time_stamp(int time,double diff,double dt);
 
 int main(void) {
     //------- General parameters ---------------------------------------//
-    int num_points=16;                                                 	// number of level j=0 collocation points
+    int num_points=64;                                                 	// number of level j=0 collocation points
     int J=log2(num_points);                                            	// maximum scale level
     double u_bc1=-1.;                                            	    // left boundary point of the domain
     double u_bc2=1.;                                            	    // right boundary point of the domain
@@ -68,13 +68,13 @@ int main(void) {
             u_old[j][k+N]=IC.f(x[j][k]);                          	    // evaluate initial condition at collocation points 
         }                                                       	    //
     }                                                           	    //
-    phi=scaling_subd(x,1,1,4,2);
+    phi=scaling_subd(x,0,2,J,1);
     ofstream output;                            	
     char fn[20];                               		 
     snprintf(fn,sizeof fn,"scaling.dat"); 			
     output.open(fn);                            	 
     for (int t=0;t<=num_points;t++) {
-        output<<x[3][t]<<" "<<phi[t]<<endl;     
+        output<<x[5][t]<<" "<<phi[t]<<endl;     
     }
     output.close();   
     return 0;

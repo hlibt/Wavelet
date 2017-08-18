@@ -46,9 +46,12 @@ double* scaling_subd(double** x,int j,int m,int Jmax,int npnts) {
                 L2-=abs((n-1)-(L2+i));                                  //
                 L1-=abs((n-1)-(L2+i));                                  //
             }                                                           //
+            cout<<"L1 is:"<<L1<<endl;
+            cout<<"L2 is:"<<L2<<endl;
             for (int l=L1;l<=L2;l++) {                                  // 
                 lagrange_coeff=lagrange_interp(x[jstar+1][2*i+1],       //
-                                x[jstar],l+i,L1,L2);                    //
+                                x[jstar],i,l,L1,L2);                    //
+                cout<<"Lagrange coeff is:"<<lagrange_coeff<<endl;                             //
                 tmp+=lagrange_coeff*f[jstar][i+l];                      //
             }                                                           //
             f[jstar+1][2*i+1]=tmp;                                      // odd points
@@ -57,12 +60,12 @@ double* scaling_subd(double** x,int j,int m,int Jmax,int npnts) {
     return f[Jmax];                                                     // the final scaling function at sampled points
 }                                                                       //
 
-double lagrange_interp(double eval_point,double* x,int i,int N1,int N2) {
+double lagrange_interp(double eval_point,double* x,int I,int L,int N1,int N2) {
     double prod=1.;
-    for (int k=N1;k<=N2;k++) {
-        if (k==i) {
+    for (int k=N1+I;k<=N2+I;k++) {
+        if (k==I+L) {
         } else {
-            prod*=(eval_point-x[k])/(x[i]-x[k]);
+            prod*=(eval_point-x[k])/(x[L+I]-x[k]);
         }
     }
     return prod;
