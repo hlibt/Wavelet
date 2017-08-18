@@ -6,7 +6,7 @@
 #include <cmath>
 #include "matrix_solvers/BiCGSTAB.h"
 #include "initial_conditions/initial_conditions.hpp"
-#include "wavelet_generation/scaling_subd.hpp"
+#include "wavelet_generation/wavelet_generation.hpp"
 #define PI 3.14159265
 using namespace std;
 
@@ -24,7 +24,7 @@ void time_stamp(int time,double diff,double dt);
 
 int main(void) {
     //------- General parameters ---------------------------------------//
-    int num_points=64;                                                 	// number of level j=0 collocation points
+    int num_points=512;                                                 	// number of level j=0 collocation points
     int J=log2(num_points);                                            	// maximum scale level
     double u_bc1=-1.;                                            	    // left boundary point of the domain
     double u_bc2=1.;                                            	    // right boundary point of the domain
@@ -45,7 +45,7 @@ int main(void) {
     double** u_new=new double*[J+1];				            	    // solution after time integration
     double** x=new double*[J+1];			            		        // dyadic points
     int** map=new int*[J+1];                                            // pointer to deal with dynamic array indexing
-    double* phi=new double[17];
+    double* phi=new double[num_points];                                 //
     for (j=0;j<=J;j++) {						                        //
 	int N=pow(2,j+1);						                            // ** need to change this ***
 	    scaling_coeff[j]=new double[N+1];					            //
@@ -58,7 +58,7 @@ int main(void) {
     for (j=0;j<=J;j++) {                                        	    //
         int N=pow(2,j);                                                 //
         for (k=-N;k<=N;k++) {                                    	    //
-            x[j][k+N]=pow(2.,-j)*k;                                	    // values of x on dyadic grid
+            x[j][k+N]=6*pow(2.,-j)*k;                             	    // values of x on dyadic grid
         }                                                       	    //
     }                                                           	    //
     //------- Sample initial function on grid Gt -----------------------//
@@ -68,13 +68,14 @@ int main(void) {
             u_old[j][k+N]=IC.f(x[j][k]);                          	    // evaluate initial condition at collocation points 
         }                                                       	    //
     }                                                           	    //
-    phi=scaling_subd(x,0,2,J,1);
+    //------- Perform forward wavelet transform ------------------------//
+    phi=detail_subd(x,3,7,J,3);
     ofstream output;                            	
     char fn[20];                               		 
-    snprintf(fn,sizeof fn,"scaling.dat"); 			
+    snprintf(fn,sizeof fn,"detail.dat"); 			
     output.open(fn);                            	 
-    for (int t=0;t<=num_points;t++) {
-        output<<x[5][t]<<" "<<phi[t]<<endl;     
+    for (int t=0;t<=2*num_points;t++) {  
+        output<<x[J][t]<<" "<<phi[t]<<endl;     
     }
     output.close();   
     return 0;

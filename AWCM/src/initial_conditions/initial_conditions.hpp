@@ -8,5 +8,5 @@ class initial_condition {
 
 // Initial condition:
 double initial_condition::f(double x) {
-    return 4.*x*(1.-x);
+    return cos(80.*PI*x)*exp(-64.*x*2);  
 }
