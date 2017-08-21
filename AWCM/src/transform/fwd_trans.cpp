@@ -1,22 +1,19 @@
 #include <iostream>
 #include <cmath>
 #include <math.h>
-#include "wavelet_generation.hpp"
+#include "../wavelet_generation/wavelet_generation.hpp"
 using namespace std;
 
-double* detail_subd(double** x,int j,int m,int Jmax,int N) {
+void fwd_trans(double* c,double* x,int Jmax) {
     
     //------------------------------------------------------------------//
-    // Information: scaling_subd performs the interpolating subdivision algorithm
-    //              in order to determine the scaling functions phi_j,m sampled at the 
-    //              specific locations of x_Jmax,k. 
+    // Information: fwd_trans performs the forward wavelet 
+    //              transformation to recover the scaling and detail
+    //              coefficients at each lower level until j=0. 
     //
     // Input: 
-    //              j     - level of the scaling function
-    //              m     - translaton parameter of the scaling function
-    //              Jmax  - maximum desired grid level for the point x
-    //              k     - spatial index of x
-    //              npnts - half the number of nearest points to use in subdivision scheme
+    //              c     - scaling coeff's at maximum level Jmax
+    //              Jmax  - maximum grid level
     // Output:
     //              phi_j,m(x_Jmax,k)
     //------------------------------------------------------------------//     
@@ -40,7 +37,6 @@ double* detail_subd(double** x,int j,int m,int Jmax,int N) {
         }                                                               //
     }                                                                   //
     for (int jstar=j;jstar<Jmax;jstar++) {                              // begin inverse transform process
-
         int n=pow(2,jstar+1)+1;                                         // number of points at level jstar
         int Nstar;                                                      // adjustable copy of N
         if (jstar==0) {                                                 // 

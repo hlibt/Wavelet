@@ -36,7 +36,7 @@ double* scaling_subd(double** x,int j,int m,int Jmax,int N) {
         int Nstar;                                                      // adjustable copy of N
         if (jstar==0) {                                                 // 
             Nstar=1;                                                    // nearest points can only be 1
-        } else if (jstar==1 && N>2) {                                   //
+        } else if (jstar==1 && N>1) {                                   //
             Nstar=2;                                                    // cannot have npnts greater than 2
         } else {                                                        //
             Nstar=N;                                                    //

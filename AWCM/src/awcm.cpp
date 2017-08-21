@@ -70,7 +70,7 @@ int main(void) {
 
 
 
-    phi=detail_subd(x,0,1,J,1);
+    phi=detail_subd(x,1,1,J,2);
     ofstream output;                            	
     char fn[25];                               		 
     snprintf(fn,sizeof fn,"output/detail_j0.dat"); 			
