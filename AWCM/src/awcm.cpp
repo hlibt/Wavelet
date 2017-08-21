@@ -24,10 +24,8 @@ void time_stamp(int time,double diff,double dt);
 
 int main(void) {
     //------- General parameters ---------------------------------------//
-    int num_points=512;                                                 	// number of level j=0 collocation points
+    int num_points=128;                                                 	// number of level j=0 collocation points
     int J=log2(num_points);                                            	// maximum scale level
-    double u_bc1=-1.;                                            	    // left boundary point of the domain
-    double u_bc2=1.;                                            	    // right boundary point of the domain
     double threshold=5*pow(10.,-3);                                 	// error tolerance for wavelet coefficients
     int i;                                                              // counter variable for spatial index
     int j;                                                          	// j is the counter variable for wavelet level
@@ -58,7 +56,7 @@ int main(void) {
     for (j=0;j<=J;j++) {                                        	    //
         int N=pow(2,j);                                                 //
         for (k=-N;k<=N;k++) {                                    	    //
-            x[j][k+N]=6*pow(2.,-j)*k;                             	    // values of x on dyadic grid
+            x[j][k+N]=4*pow(2.,-j)*k;                             	    // values of x on dyadic grid
         }                                                       	    //
     }                                                           	    //
     //------- Sample initial function on grid Gt -----------------------//
@@ -69,16 +67,19 @@ int main(void) {
         }                                                       	    //
     }                                                           	    //
     //------- Perform forward wavelet transform ------------------------//
-    phi=detail_subd(x,3,7,J,3);
+
+
+
+    phi=detail_subd(x,0,1,J,1);
     ofstream output;                            	
-    char fn[20];                               		 
-    snprintf(fn,sizeof fn,"detail.dat"); 			
+    char fn[25];                               		 
+    snprintf(fn,sizeof fn,"output/detail_j0.dat"); 			
     output.open(fn);                            	 
     for (int t=0;t<=2*num_points;t++) {  
         output<<x[J][t]<<" "<<phi[t]<<endl;     
     }
     output.close();   
-    return 0;
+    return 0; 
 }
 
 void time_stamp(int time,double diff,double dt) {

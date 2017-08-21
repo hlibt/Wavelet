@@ -1,0 +1,5 @@
+set term png
+set output "scaling_j1.png"
+plot "scaling_j1.dat" with lines title "{/Symbol f}^{1}(x)"
+replot
+set term x11

@@ -4,7 +4,7 @@
 #include "wavelet_generation.hpp"
 using namespace std;
 
-double* detail_subd(double** x,int j,int m,int Jmax,int npnts) {
+double* detail_subd(double** x,int j,int m,int Jmax,int N) {
     
     //------------------------------------------------------------------//
     // Information: scaling_subd performs the interpolating subdivision algorithm
@@ -40,22 +40,31 @@ double* detail_subd(double** x,int j,int m,int Jmax,int npnts) {
         }                                                               //
     }                                                                   //
     for (int jstar=j;jstar<Jmax;jstar++) {                              // begin inverse transform process
+
         int n=pow(2,jstar+1)+1;                                         // number of points at level jstar
+        int Nstar;                                                      // adjustable copy of N
+        if (jstar==0) {                                                 // 
+            Nstar=1;                                                    // nearest points can only be 1
+        } else if (jstar==1 && N>2) {                                   //
+            Nstar=2;                                                    // cannot have npnts greater than 2
+        } else {                                                        //
+            Nstar=N;                                                    //
+        }                                                               //
         for (int i=0;i<n-1;i++) {                                       // 
             c[jstar+1][2*i]=c[jstar][i];                                // even points stay the same
-            double tmp=0.;                                              // summation variable
-            int L1=-npnts+1;                                            //
-            int L2=npnts;                                               //
+            int L1=-Nstar+1;                                            //
+            int L2=Nstar;                                               //
             if (L1+i<0) {                                               //
-                L2+=abs(0-L1+i);                                        //
-                L1+=abs(0-L1+i);                                        //
+                L2+=abs(0-(L1+i));                                      //
+                L1+=abs(0-(L1+i));                                      //
             } else if (L2+i>=n) {                                       //
                 L1-=abs((n-1)-(L2+i));                                  //
                 L2-=abs((n-1)-(L2+i));                                  //
             }                                                           //
+            double tmp=0.;                                              //
             for (int l=L1;l<=L2;l++) {                                  // 
                 lagrange_coeff=lagrange_interp(x[jstar+1][2*i+1],       //
-                                x[jstar],i,l,L1,L2);                    //
+                                x[jstar],i+l,L1+i,L2+i);                //
                 tmp+=lagrange_coeff*c[jstar][i+l];                      //
             }                                                           //
             c[jstar+1][2*i+1]=2*d[jstar][i]+tmp;                        // odd points
@@ -63,22 +72,3 @@ double* detail_subd(double** x,int j,int m,int Jmax,int npnts) {
     }                                                                   //
     return c[Jmax];                                                     // the final scaling function at sampled points
 }                                                                       //
-
-double lagrange_interp(double eval_point,double* x,int I,int L,int N1,int N2) {
-    double prod=1.;
-    for (int k=N1+I;k<=N2+I;k++) {
-        if (k==I+L) {
-        } else {
-            prod*=(eval_point-x[k])/(x[L+I]-x[k]);
-        }
-    }
-    return prod;
-}
-
-double kronecker_delta(int k, int m) {
-    if (k==m) {
-        return 1.;
-    } else {
-        return 0.;
-    }
-}
