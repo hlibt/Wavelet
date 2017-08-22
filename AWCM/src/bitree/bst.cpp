@@ -1,4 +1,5 @@
 #include <iostream>
+#include <stdio.h>
 using namespace std;
 
 struct node {
@@ -18,13 +19,20 @@ node* get_new_node(double data){
 node* insert(node* root, double data) {
     if (root==NULL) {
         root = get_new_node(data);
-        return root;
     } else if (data <= root->data) {
         root->left = insert(root->left,data);
     } else if (data > root->data) {
         root->right = insert(root->right,data);
     }
     return root;
+};
+
+void print_tree(struct node* node) {
+    if (node==NULL) return;
+    print_tree(node->left);
+    print_tree(node->right);
+    cout << node->data << endl;
+ //    printf("%f",node->data);
 };
 
 bool lookup(node* root,int data) {
@@ -35,9 +43,15 @@ bool lookup(node* root,int data) {
 };
 
 int main() {
-    node* root=NULL;    // setting tree as empty
-    insert(root,-1);
-    insert(root,-0.75);
-       
+    node* root = NULL;          // setting tree as empty
+    root = insert(root, -1);
+    root = insert(root,-1);      // return new node called root, which contains data point of 4
+    root = insert(root,-0.5);
+    root = insert(root,-1);
+    root = insert(root,-0.75);    
+    root = insert(root,-0.5);
+    root = insert(root,-0.25);
+    print_tree(root);
+    return 0;
 }
     
