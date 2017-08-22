@@ -41,7 +41,7 @@ double* scaling_subd(double** x,int j,int m,int Jmax,int N) {
         } else {                                                        //
             Nstar=N;                                                    //
         }                                                               //
-        for (int i=0;i<n-1;i++) {                                       // 
+        for (int i=0;i<n;i++) {                                         // 
             f[jstar+1][2*i]=f[jstar][i];                                // even points stay the same
             int L1=-Nstar+1;                                            //
             int L2=Nstar;                                               //

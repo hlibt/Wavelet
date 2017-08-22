@@ -4,7 +4,7 @@
 #include "../wavelet_generation/wavelet_generation.hpp"
 using namespace std;
 
-void fwd_trans(double* c,double* x,int Jmax) {
+void fwd_trans(double** x,double* u,double** c,double** d,int Jmax,int N) {
     
     //------------------------------------------------------------------//
     // Information: fwd_trans performs the forward wavelet 
@@ -12,60 +12,49 @@ void fwd_trans(double* c,double* x,int Jmax) {
     //              coefficients at each lower level until j=0. 
     //
     // Input: 
-    //              c     - scaling coeff's at maximum level Jmax
+    //              x     - grid at each level j
+    //              u     - solution at finest resolution Jmax
+    //              c     - scaling coeff's 
+    //              d     - detail coeff's
     //              Jmax  - maximum grid level
-    // Output:
-    //              phi_j,m(x_Jmax,k)
+    //              N     - half the number of nearest neighbors to use
     //------------------------------------------------------------------//     
                                                                         //
     double lagrange_coeff;                                              // the lagrange polynomial evaluated at interp point
-    double** c=new double*[Jmax];                                       // scaling function coefficients
-    double** d=new double*[Jmax];                                       // detail function coefficients
-    for (int i=0;i<=Jmax;i++) {                                         //
-        int n=pow(2,i+1)+1;                                             // number of points at level j
-        c[i]=new double[n];                                             // intialize columns of c
-        d[i]=new double[n];                                             // initialize columns of d
-    }                                                                   //
-    int n=pow(2,j+1)+1;                                                 //
+    int n=pow(2,Jmax+1)+1;                                              //
     for (int i=0;i<n;i++) {                                             //
-        c[j][i]=0;                                                      // set scaling coefficients to zero
+        c[Jmax][i]=u[i];                                                // set scaling coefficients to zero
     }                                                                   //
-    for (int jstar=j;jstar<Jmax;jstar++) {                              //
-        int n=pow(2,jstar+1)+1;                                         //
-        for (int i=0;i<n;i++) {                                         //
-            d[jstar][i]=kronecker_delta(jstar,j)*kronecker_delta(i,m);  //
-        }                                                               //
-    }                                                                   //
-    for (int jstar=j;jstar<Jmax;jstar++) {                              // begin inverse transform process
-        int n=pow(2,jstar+1)+1;                                         // number of points at level jstar
+    for (int j=Jmax-1;j>=0;j--) {                                       // begin forward transform process
+        int n=pow(2,j+1)+1;                                             // number of points at each level
         int Nstar;                                                      // adjustable copy of N
-        if (jstar==0) {                                                 // 
+        if (j==0) {                                                     // 
             Nstar=1;                                                    // nearest points can only be 1
-        } else if (jstar==1 && N>2) {                                   //
-            Nstar=2;                                                    // cannot have npnts greater than 2
+        } else if (j==1 && N>2) {                                       //
+            Nstar=2;                                                    // cannot have nearest points greater than 2
         } else {                                                        //
-            Nstar=N;                                                    //
+            Nstar=N;                                                    // else allow number of points to be desired
         }                                                               //
-        for (int i=0;i<n-1;i++) {                                       // 
-            c[jstar+1][2*i]=c[jstar][i];                                // even points stay the same
+        for (int k=0;k<n;k++) {                                       // 
+            c[j][k]=c[j+1][2*k];                                        // even points stay the same
             int L1=-Nstar+1;                                            //
             int L2=Nstar;                                               //
-            if (L1+i<0) {                                               //
-                L2+=abs(0-(L1+i));                                      //
-                L1+=abs(0-(L1+i));                                      //
-            } else if (L2+i>=n) {                                       //
-                L1-=abs((n-1)-(L2+i));                                  //
-                L2-=abs((n-1)-(L2+i));                                  //
+            if (L1+k<0) {                                               //
+                L2+=abs(0-(L1+k));                                      //
+                L1+=abs(0-(L1+k));                                      //
+            } else if (L2+k>=n) {                                       //
+                L1-=abs((n-1)-(L2+k));                                  //
+                L2-=abs((n-1)-(L2+k));                                  //
             }                                                           //
             double tmp=0.;                                              //
             for (int l=L1;l<=L2;l++) {                                  // 
-                lagrange_coeff=lagrange_interp(x[jstar+1][2*i+1],       //
-                                x[jstar],i+l,L1+i,L2+i);                //
-                cout<<"Lagrange ceoff is: "<<lagrange_coeff<<endl;
-                tmp+=lagrange_coeff*c[jstar][i+l];                      //
+                lagrange_coeff=lagrange_interp(x[j+1][2*k+1],       //
+                                x[j],k+l,L1+k,L2+k);                //
+             //   lagrange_coeff=0.5;
+                tmp+=lagrange_coeff*c[j+1][2*k+2*l];                    //
             }                                                           //
-            c[jstar+1][2*i+1]=2*d[jstar][i]+tmp;                        // odd points
+            d[j][k]=.5*(c[j+1][2*k+1]-tmp);                             // detail coefficients
         }                                                               //
     }                                                                   //
-    return c[Jmax];                                                     // the final scaling function at sampled points
+    return;                                                             //
 }                                                                       //

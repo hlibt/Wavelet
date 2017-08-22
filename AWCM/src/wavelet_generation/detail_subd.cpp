@@ -40,7 +40,6 @@ double* detail_subd(double** x,int j,int m,int Jmax,int N) {
         }                                                               //
     }                                                                   //
     for (int jstar=j;jstar<Jmax;jstar++) {                              // begin inverse transform process
-
         int n=pow(2,jstar+1)+1;                                         // number of points at level jstar
         int Nstar;                                                      // adjustable copy of N
         if (jstar==0) {                                                 // 
@@ -50,7 +49,7 @@ double* detail_subd(double** x,int j,int m,int Jmax,int N) {
         } else {                                                        //
             Nstar=N;                                                    //
         }                                                               //
-        for (int i=0;i<n-1;i++) {                                       // 
+        for (int i=0;i<n;i++) {                                         // 
             c[jstar+1][2*i]=c[jstar][i];                                // even points stay the same
             int L1=-Nstar+1;                                            //
             int L2=Nstar;                                               //
@@ -65,7 +64,6 @@ double* detail_subd(double** x,int j,int m,int Jmax,int N) {
             for (int l=L1;l<=L2;l++) {                                  // 
                 lagrange_coeff=lagrange_interp(x[jstar+1][2*i+1],       //
                                 x[jstar],i+l,L1+i,L2+i);                //
-                cout<<"Lagrange ceoff is: "<<lagrange_coeff<<endl;
                 tmp+=lagrange_coeff*c[jstar][i+l];                      //
             }                                                           //
             c[jstar+1][2*i+1]=2*d[jstar][i]+tmp;                        // odd points
