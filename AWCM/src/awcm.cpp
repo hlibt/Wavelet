@@ -64,7 +64,7 @@ int main(void) {
     for (j=0;j<=J;j++) {                                        	    //
         int N=pow(2,j);                                                 //
         for (k=-N;k<=N;k++) {                                    	    //
-            x[j][k+N]=pow(2.,-j)*k;                             	    // values of x on dyadic grid
+            x[j][k+N]=4*pow(2.,-j)*k;                             	    // values of x on dyadic grid
         }                                                       	    //
     }                                                           	    //
     //------- Sample initial function on grid Gt -----------------------//
@@ -75,10 +75,10 @@ int main(void) {
         }                                                       	    //
     }                                                           	    //
     //------- Perform forward wavelet transform ------------------------//
-    fwd_trans(x,u_old[J],c,d,J,1);
+    //fwd_trans(x,u_old[J],c,d,J,1);
     //------- Reconstruct function using wavelets ----------------------//    
-    phi[0]=scaling_subd(x,0,0,J,1);
-    phi[1]=scaling_subd(x,0,1,J,1);
+    phi[0]=scaling_subd(x,1,2,J,1);
+ /*   phi[1]=scaling_subd(x,0,1,J,1);
     phi[2]=scaling_subd(x,0,2,J,1);
     double* sum1=new double[2*num_points];
     for (int i=0;i<pow(2,J+1)+1;i++) {
@@ -110,16 +110,16 @@ int main(void) {
         u_new[J][i]=sum1[i]+sum2[i];
     }
 //    for (j=0;j<=J;j++) {
-//        int n=pow(2,j+1)+1;
+//        int n=pow(2,j+1)+1; */
         ofstream output;                            	
         char fn[25];                               		 
-        snprintf(fn,sizeof fn,"solution.dat"); 			
+        snprintf(fn,sizeof fn,"phi.dat"); 			
         output.open(fn);                            	 
-        for (int t=0;t<2*num_points;t++) {  
-            output<<x[J][t]<<" "<<u_new[J][t]<<endl;     
+        for (int t=0;t<=2*num_points;t++) {  
+            output<<x[J][t]<<" "<<phi[0][t]<<endl;     
         }
         output.close(); 
-//    }
+//    } */
     return 0; 
 }
 
