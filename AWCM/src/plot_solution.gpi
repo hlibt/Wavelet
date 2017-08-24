@@ -1,0 +1,6 @@
+set term png
+set output "solution.png"
+unset key
+plot "solution.dat" with lines
+replot
+set term x11

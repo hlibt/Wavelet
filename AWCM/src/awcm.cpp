@@ -27,7 +27,7 @@ int main(void) {
     //------- General parameters ---------------------------------------//
     int num_points=128;                                                 // number of level j=Jmax collocation points
     int J=log2(num_points);                                            	// maximum scale level
-    double threshold=5*pow(10.,-3);                                 	// error tolerance for wavelet coefficients
+    double threshold=pow(10.,-2);                                 	// error tolerance for wavelet coefficients
     int i;                                                              // counter variable for spatial index
     int j;                                                          	// j is the counter variable for wavelet level
     int k;                                                          	// k is the counter variable for spatial index
@@ -43,6 +43,7 @@ int main(void) {
     double** u_old=new double*[J+1];	            	                // solution at current/previous timestep
     double** u_new=new double*[J+1];				            	    // solution after time integration
     double** x=new double*[J+1];			            		        // dyadic points
+    int** ucpy=new int*[J+1];
     double** c=new double*[J+1];                                       // scaling function coefficients
     double** d=new double*[J+1];                                       // detail function coefficients
     int** map=new int*[J+1];                                            // pointer to deal with dynamic array indexing
@@ -52,9 +53,8 @@ int main(void) {
     phi[2]=new double[2*num_points];
     for (j=0;j<=J;j++) {						                        //
 	int N=pow(2,j+1);						                            // ** need to change this ***
-	    scaling_coeff[j]=new double[N+1];					            //
-        if (j<J) detail_coeff[j]=new double[N+1];                       //
         u_old[j]=new double[N+1];                                       //
+        ucpy[j]=new int[N+1];
         u_new[j]=new double[N+1];                                       //
 	    x[j]=new double[N+1];						                    //
         c[j]=new double[N+1];                                           // scaling coefficients
@@ -64,7 +64,7 @@ int main(void) {
     for (j=0;j<=J;j++) {                                        	    //
         int N=pow(2,j);                                                 //
         for (k=-N;k<=N;k++) {                                    	    //
-            x[j][k+N]=4*pow(2.,-j)*k;                             	    // values of x on dyadic grid
+            x[j][k+N]=pow(2.,-j)*k;                             	    // values of x on dyadic grid
         }                                                       	    //
     }                                                           	    //
     //------- Sample initial function on grid Gt -----------------------//
@@ -76,9 +76,7 @@ int main(void) {
     }                                                           	    //
     //------- Perform forward wavelet transform ------------------------//
     fwd_trans(x,u_old[J],c,d,J,1);
-    //------- Reconstruct function using wavelets ----------------------//
-    
-    
+    //------- Reconstruct function using wavelets ----------------------//    
     phi[0]=scaling_subd(x,0,0,J,1);
     phi[1]=scaling_subd(x,0,1,J,1);
     phi[2]=scaling_subd(x,0,2,J,1);
@@ -87,6 +85,7 @@ int main(void) {
         sum1[i]=0.;
         for (k=0;k<pow(2,0+1)+1;k++) {
             sum1[i]+=c[0][k]*phi[k][i];
+            cout<<"c is "<<c[0][k]<<endl;
         }
     }
     double* sum2=new double[2*num_points]; 
@@ -96,22 +95,31 @@ int main(void) {
             int N=pow(2,j+1)+1;
             double** psi=new double*[N];
             for (int l=0;l<N;l++) {
+                if (abs(d[j][l])<threshold) {
+                    d[j][l]=0.;
+                    ucpy[j][l]=-5;
+                } else {
+                    ucpy[j][l]=j;
+                }
                 psi[l]=new double[2*num_points];
                 psi[l]=detail_subd(x,j,l,J,1);
                 sum2[i]+=d[j][l]*psi[l][i];
+                cout<<"j is "<<j<<"l is "<<l<<"d is "<<d[j][l]<<endl;
             }
         }
         u_new[J][i]=sum1[i]+sum2[i];
     }
-
-    ofstream output;                            	
-    char fn[25];                               		 
-    snprintf(fn,sizeof fn,"solution.dat"); 			
-    output.open(fn);                            	 
-    for (int t=0;t<=2*num_points;t++) {  
-        output<<x[J][t]<<" "<<u_new[J][t]<<endl;     
-    }
-    output.close(); 
+//    for (j=0;j<=J;j++) {
+//        int n=pow(2,j+1)+1;
+        ofstream output;                            	
+        char fn[25];                               		 
+        snprintf(fn,sizeof fn,"solution.dat"); 			
+        output.open(fn);                            	 
+        for (int t=0;t<2*num_points;t++) {  
+            output<<x[J][t]<<" "<<u_new[J][t]<<endl;     
+        }
+        output.close(); 
+//    }
     return 0; 
 }
 
