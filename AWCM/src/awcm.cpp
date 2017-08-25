@@ -38,15 +38,11 @@ int main(void) {
     double tf=1.;                                               	    // final simulation time     
     double dt=(tf-ti)/num_steps;                                 	    // timestep size
     //------- Declare arrays -------------------------------------------//
-    double** scaling_coeff=new double*[J+1];    	                    // scaling wavelet coefficients
-    double** detail_coeff=new double*[J];                               // detail wavelet coefficients
     double** u_old=new double*[J+1];	            	                // solution at current/previous timestep
     double** u_new=new double*[J+1];				            	    // solution after time integration
     double** x=new double*[J+1];			            		        // dyadic points
-    int** ucpy=new int*[J+1];
     double** c=new double*[J+1];                                       // scaling function coefficients
     double** d=new double*[J+1];                                       // detail function coefficients
-    int** map=new int*[J+1];                                            // pointer to deal with dynamic array indexing
     double** phi=new double*[3];                                 //
     phi[0]=new double[2*num_points];
     phi[1]=new double[2*num_points];   
@@ -54,7 +50,6 @@ int main(void) {
     for (j=0;j<=J;j++) {						                        //
 	int N=pow(2,j+1);						                            // ** need to change this ***
         u_old[j]=new double[N+1];                                       //
-        ucpy[j]=new int[N+1];
         u_new[j]=new double[N+1];                                       //
 	    x[j]=new double[N+1];						                    //
         c[j]=new double[N+1];                                           // scaling coefficients
@@ -77,7 +72,8 @@ int main(void) {
     //------- Perform forward wavelet transform ------------------------//
     //fwd_trans(x,u_old[J],c,d,J,1);
     //------- Reconstruct function using wavelets ----------------------//    
-    phi[0]=scaling_subd(x,1,2,J,1);
+    phi[0]=scaling_subd(x,4,16,J,3);
+
  /*   phi[1]=scaling_subd(x,0,1,J,1);
     phi[2]=scaling_subd(x,0,2,J,1);
     double* sum1=new double[2*num_points];
