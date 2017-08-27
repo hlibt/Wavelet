@@ -6,7 +6,7 @@ using namespace std;
 
 double* scaling_subd(double** x,int j,int m,int Jmax,int N) {
     
-    //------------------------------------------------------------------//
+    //----------------------------------------------------------------------//
     // Information: scaling_subd performs the interpolating subdivision algorithm
     //              in order to determine the scaling functions phi_j,m sampled at the 
     //              specific locations of x_Jmax,k. 
@@ -19,48 +19,64 @@ double* scaling_subd(double** x,int j,int m,int Jmax,int N) {
     //              N - half the number of nearest points to use in subdivision scheme
     // Output:
     //              phi_j,m(x_Jmax,k)
-    //------------------------------------------------------------------//     
-                                                                        //
-    double w;                                                           // the lagrange polynomial evaluated at interp point
-    double** f=new double*[Jmax];                                       // function at points for interpolating subdivision
-    for (int i=0;i<=Jmax;i++) {                                         //
-        int n=pow(2,i+1)+1;                                             // number of points at level j
-        f[i]=new double[n];                                             // intialize columns of f
-    }                                                                   //
-    int n=pow(2,j+1)+1;                                                 //
-    for (int i=0;i<n;i++) {                                             //
-        f[j][i]=kronecker_delta(i,m);                                   // set coefficients to kronecker delta function
-    }                                                                   //
-    for (int jstar=j;jstar<Jmax;jstar++) {                              // begin inverse transform process
-        int n=pow(2,jstar+1)+1;                                         // number of points at level jstar 
-        for (int i=0;i<n;i++) {                                         // loop through all points in grid at level jstar
-            f[jstar+1][2*i]=f[jstar][i];                                // even points remain the same
-            double sum=0.;                                              // summation variable
-            for (int l=-N+1;l<=N;l++) {                                 // 
-                if ( l+i >=0 && l+i < n ) {                             //
-                    double c=x[jstar+1][2*i+1];                         // constant
-                    w=lagrange_interp(c,x[jstar],i+l,-N+1+i,N+i,n);     //
-                    cout << w << endl;
-                    sum+=w*f[jstar][l+i];                               //
-                }
-            }                                                           //
-            f[jstar+1][2*i+1]=sum;                                      // odd points
-        }                                                               //
-    }                                                                   //
-    return f[Jmax];                                                     // the final scaling function at sampled points
-}                                                                       //
+    //----------------------------------------------------------------------//     
+                                                                            //
+    double** f=new double*[Jmax];                                           // function at points for interpolating subdivision
+    for (int i=0;i<=Jmax;i++) {                                             //
+        int n=pow(2,i+1)+1;                                                 // number of points at level j
+        f[i]=new double[n];                                                 // intialize columns of f
+    }                                                                       //
+    int n=pow(2,j+1)+1;                                                     // number of points of phi at j level
+    for (int i=0;i<n;i++) {                                                 // 
+        f[j][i]=kronecker_delta(i,m);                                       // set coefficients to at level j to kronecker delta function
+    }                                                                       //
+    for (int jstar=j;jstar<Jmax;jstar++) {                                  // begin inverse transform process started from level j
+        int iPnts=setN(N,jstar);                                            // set number of interp points based on the level j
+        int n=pow(2,jstar+1)+1;                                             // number of points at level jstar 
+        for (int i=0;i<n-1;i++) {                                           // loop through all points but last in grid at level jstar
+            double xEval=x[jstar+1][2*i+1];                                 // grid point for polynomial to be evaluated at
+            f[jstar+1][2*i]=f[jstar][i];                                    // even points remain the same
+            f[jstar+1][2*i+1]=lagrInterp(xEval,x[jstar],f[jstar],i,iPnts,n);// odd points
+        }                                                                   //
+        f[jstar+1][2*(n-1)]=f[jstar][n-1];                                  // last even point is the same
+    }                                                                       //
+    return f[Jmax];                                                         // the final scaling function at sampled points
+}                                                                       
 
-double lagrange_interp(double eval_point,double* x,int i,int N1,int N2,int n) {
-    double prod=1.;
-    for (int k=N1;k<=N2;k++) {
-        if ( k>=0 && k<n ) {
-            if (k==i) {
+double lagrInterp(double x,double* gridPnts,double* funcPnts,int i,int n,int maxN) {
+    double sum=0.;
+    int leftPnt=-n+1+i;
+    int rightPnt=n+i;
+    if ( leftPnt < 0 ) {
+        rightPnt+=abs(0-leftPnt);
+        leftPnt+=abs(0-leftPnt);
+    } else if ( rightPnt > maxN-1 ) {
+        leftPnt-=abs((maxN-1)-rightPnt);
+        rightPnt-=abs((maxN-1)-rightPnt);
+    }   
+    for (int l=leftPnt;l<=rightPnt;l++) {
+        double product=1.;
+        for (int k=leftPnt;k<=rightPnt;k++) {
+            if (k==l) {
             } else {
-                prod*=(eval_point-x[k])/(x[i]-x[k]);
+                product*=(x-gridPnts[k])/(gridPnts[l]-gridPnts[k]);
             }
         }
+        sum+=product*funcPnts[l];
+    }    
+    return sum;
+}
+
+int setN(int n, int j) {
+    if (j==0) {
+        return 1;
+    } else if (j==1 && n>2) {
+        return 2;
+    } else if (j==2 && n>3) {
+        return 3;
+    } else {
+        return n;
     }
-    return prod;
 }
 
 double kronecker_delta(int k, int m) {
@@ -69,4 +85,4 @@ double kronecker_delta(int k, int m) {
     } else {
         return 0.;
     }
-}
+}   
