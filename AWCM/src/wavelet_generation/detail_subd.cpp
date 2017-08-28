@@ -4,7 +4,7 @@
 #include "wavelet_generation.hpp"
 using namespace std;
 
-double* detail_subd(double** x,int j,int m,int Jmax,int N) {
+void detail_subd(double** f,double** x,int j,int m,int Jmax,int N) {
     
     //------------------------------------------------------------------//
     // Information: scaling_subd performs the interpolating subdivision algorithm
@@ -21,16 +21,14 @@ double* detail_subd(double** x,int j,int m,int Jmax,int N) {
     //              phi_j,m(x_Jmax,k)
     //------------------------------------------------------------------//     
                                                                         //
-    double** c=new double*[Jmax];                                       // scaling function coefficients
     double** d=new double*[Jmax];                                       // detail function coefficients
     for (int i=0;i<=Jmax;i++) {                                         //
         int n=pow(2,i+1)+1;                                             // number of points at level j
-        c[i]=new double[n];                                             // intialize columns of c
         d[i]=new double[n];                                             // initialize columns of d
     }                                                                   //
     int n=pow(2,j+1)+1;                                                 //
     for (int i=0;i<n;i++) {                                             //
-        c[j][i]=0;                                                      // set 'scaling' coefficients to zero
+        f[j][i]=0;                                                      // set 'scaling' coefficients to zero
     }                                                                   //
     for (int jstar=j;jstar<Jmax;jstar++) {                              // 
         int n=pow(2,jstar+1)+1;                                         //
@@ -42,12 +40,13 @@ double* detail_subd(double** x,int j,int m,int Jmax,int N) {
         int n=pow(2,jstar+1)+1;                                         // number of points at level jstar
         int iPnts=setN(N,jstar);                                        // set number of interp points based on level j
         for (int i=0;i<n-1;i++) {                                       // loop through all points but the last at level j
-            double xEval=x[jstar+1][2*i+1];
-            c[jstar+1][2*i]=c[jstar][i];                                // even points stay the same
-            c[jstar+1][2*i+1]=2*d[jstar][i]+lagrInterp(xEval,x[jstar],  // odd points
-                                c[jstar],i,iPnts,n);                    // 
+            double xEval=x[jstar+1][2*i+1];                             // set the point to be evaluated at lagrange polynomial
+            f[jstar+1][2*i]=f[jstar][i];                                // even points stay the same
+            f[jstar+1][2*i+1]=2.*d[jstar][i]+lagrInterp(xEval,x[jstar], // odd points
+                                f[jstar],i,iPnts,n);                    // 
         }                                                               //
-        c[jstar+1][2*(n-1)]=c[jstar][n-1];                              // last even point
+        f[jstar+1][2*(n-1)]=f[jstar][n-1];                              // last even point
     }                                                                   //
-    return c[Jmax];                                                     // the final scaling function at sampled points
-}                                                                       //
+    delete[] d;                                                         // delete dynamic memory
+    return;                                                             // 
+}                                                                       

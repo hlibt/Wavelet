@@ -4,7 +4,7 @@
 #include "wavelet_generation.hpp"
 using namespace std;
 
-double* scaling_subd(double** x,int j,int m,int Jmax,int N) {
+void scaling_subd(double** f,double** x,int j,int m,int Jmax,int N) {
     
     //----------------------------------------------------------------------//
     // Information: scaling_subd performs the interpolating subdivision algorithm
@@ -21,11 +21,6 @@ double* scaling_subd(double** x,int j,int m,int Jmax,int N) {
     //              phi_j,m(x_Jmax,k)
     //----------------------------------------------------------------------//     
                                                                             //
-    double** f=new double*[Jmax];                                           // function at points for interpolating subdivision
-    for (int i=0;i<=Jmax;i++) {                                             //
-        int n=pow(2,i+1)+1;                                                 // number of points at level j
-        f[i]=new double[n];                                                 // intialize columns of f
-    }                                                                       //
     int n=pow(2,j+1)+1;                                                     // number of points of phi at j level
     for (int i=0;i<n;i++) {                                                 // 
         f[j][i]=kronecker_delta(i,m);                                       // set coefficients to at level j to kronecker delta function
@@ -40,7 +35,7 @@ double* scaling_subd(double** x,int j,int m,int Jmax,int N) {
         }                                                                   //
         f[jstar+1][2*(n-1)]=f[jstar][n-1];                                  // last even point is the same
     }                                                                       //
-    return f[Jmax];                                                         // the final scaling function at sampled points
+    return;
 }                                                                       
 
 double lagrInterp(double x,double* gridPnts,double* funcPnts,int i,int n,int maxN) {

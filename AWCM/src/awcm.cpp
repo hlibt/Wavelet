@@ -67,26 +67,33 @@ int main(void) {
         }                                                       	    //
     }                                                           	    //
     //------- Perform forward wavelet transform ------------------------//
-    fwd_trans(x,u_old[J],c,d,J,3);
+    fwd_trans(x,u_old[J],c,d,J,1);
     //------- Reconstruct function using wavelets ----------------------//    
+    double** phi=new double*[J+1];
+    double** psi=new double*[J+1];
+    for (int i=0;i<=J;i++) {
+        int N=pow(2,i+1)+1;
+        phi[i]=new double[N];
+        psi[i]=new double[N];
+    }
     for (j=0;j<J;j++) {
         int N=pow(2,j+1)+1;
-        double* phi=new double[2*num_points+1];
-        double* psi=new double[2*num_points+1];
         for (int l=0;l<N;l++) {
-            if (j==0) {
-                phi=scaling_subd(x,j,l,J,1);
-            }
-            psi=detail_subd(x,j,l,J,3);
+            scaling_subd(phi,x,j,l,J,1);
+            detail_subd(psi,x,j,l,J,1);
             for (i=0;i<=2*num_points;i++) {
                 if (j==0) {
-                    u_new[J][i]+=c[j][l]*phi[i]+d[j][l]*psi[i];
+                    u_new[J][i]+=c[j][l]*phi[J][i]+d[j][l]*psi[J][i];
                 } else {
-                    u_new[J][i]+=d[j][l]*psi[i];
+                    u_new[J][i]+=d[j][l]*psi[J][i];
                 }
             }
+            phi[j][l]=0.;
+            psi[j][l]=0.;
         }
     }
+    delete[] phi;
+    delete[] psi;
     //------- Output data to file --------------------------------------//
     ofstream output;                            	
     char fn[25];                               		 
@@ -96,6 +103,11 @@ int main(void) {
         output<<x[J][t]<<" "<<u_new[J][t]<<endl;     
     }
     output.close(); 
+    delete[] x;
+    delete[] c;
+    delete[] d;
+    delete[] u_old;
+    delete[] u_new;
     return 0; 
 }
 
