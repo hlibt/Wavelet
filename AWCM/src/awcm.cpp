@@ -25,9 +25,9 @@ void time_stamp(int time,double diff,double dt);
 
 int main(void) {
     //------- General parameters ---------------------------------------//
-    int num_points=256;                                                 // number of level j=Jmax collocation points
+    int num_points=128;                                                 // number of level j=Jmax collocation points
     int J=log2(num_points);                                            	// maximum scale level
-    double threshold=pow(10.,-2);                                 	// error tolerance for wavelet coefficients
+    double threshold=pow(10.,-3);                                 	    // error tolerance for wavelet coefficients
     int i;                                                              // counter variable for spatial index
     int j;                                                          	// j is the counter variable for wavelet level
     int k;                                                          	// k is the counter variable for spatial index
@@ -41,15 +41,17 @@ int main(void) {
     double** u_old=new double*[J+1];	            	                // solution at current/previous timestep
     double** u_new=new double*[J+1];				            	    // solution after time integration
     double** x=new double*[J+1];			            		        // dyadic points
-    double** c=new double*[J+1];                                       // scaling function coefficients
-    double** d=new double*[J+1];                                       // detail function coefficients
+    double** c=new double*[J+1];                                        // scaling function coefficients
+    double** d=new double*[J+1];                                        // detail function coefficients
+    int** coeff=new int*[J+1];
     for (j=0;j<=J;j++) {						                        //
-	int N=pow(2,j+1);						                            // ** need to change this ***
+	int N=pow(2,j+1);						                            // 
         u_old[j]=new double[N+1];                                       //
         u_new[j]=new double[N+1];                                       //
 	    x[j]=new double[N+1];						                    //
         c[j]=new double[N+1];                                           // scaling coefficients
         d[j]=new double[N+1];                                           // detail coefficients
+        coeff[j]=new int[N+1];
     }									                                //
     //------- Populate dyadic grid -------------------------------------//
     for (j=0;j<=J;j++) {                                        	    //
@@ -68,6 +70,17 @@ int main(void) {
     }                                                           	    //
     //------- Perform forward wavelet transform ------------------------//
     fwd_trans(x,u_old[J],c,d,J,1);
+    //------- Remove coefficients below the threshold ------------------//
+    for (j=0;j<=J;j++) {
+        int n=pow(2,j+1)+1;
+        for (i=0;i<n;i++) {
+            if ( abs(d[j][i]) < threshold ) {
+                coeff[j][i]=-5;
+            } else {
+                coeff[j][i]=j;
+            }
+        }
+    }
     //------- Reconstruct function using wavelets ----------------------//    
     double** phi=new double*[J+1];
     double** psi=new double*[J+1];
@@ -94,7 +107,19 @@ int main(void) {
     }
     delete[] phi;
     delete[] psi;
-    //------- Output data to file --------------------------------------//
+    //------- Output coefficients above threshold ---------------------//
+    for (j=0;j<=J;j++) {
+        int n=pow(2,j+1)+1;
+        ofstream output;                            	
+        char fn[25];                               		 
+        snprintf(fn,sizeof fn,"coeff%d.dat",j); 			
+        output.open(fn);                            	 
+        for (int t=0;t<n;t++) {  
+            output<<x[j][t]<<" "<<coeff[j][t]<<endl;     
+        }
+        output.close(); 
+    }
+    //------- Output solution to file ---------------------------------//
     ofstream output;                            	
     char fn[25];                               		 
     snprintf(fn,sizeof fn,"solution.dat"); 			

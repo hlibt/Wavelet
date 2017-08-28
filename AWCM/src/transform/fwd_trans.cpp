@@ -30,7 +30,7 @@ void fwd_trans(double** x,double* u,double** scalCoeff,double** detCoeff,int Jma
         for (int i=0;i<n;i++) {                                         // 
             scalCoeff[j][i]=scalCoeff[j+1][2*i];                        // even scaling coeff's the same
         }                                                               //
-        for (int i=0;i<n-1;i++) {                                       //
+        for (int i=0;i<n;i++) {                                       //
             double xEval=x[j+1][2*i+1];                                 // point for polynomials to be evaluated 
             detCoeff[j][i]=.5*(scalCoeff[j+1][2*i+1]-                   // set detail coefficients
                         lagrInterp(xEval,x[j],scalCoeff[j],i,iPnts,n)); //
