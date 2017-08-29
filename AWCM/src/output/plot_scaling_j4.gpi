@@ -1,0 +1,5 @@
+set term png
+set output "scaling_j0.png"
+plot "scaling_j0.dat" with lines
+replot
+set term x11
