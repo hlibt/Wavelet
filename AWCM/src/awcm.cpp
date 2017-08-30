@@ -25,9 +25,10 @@ void time_stamp(int time,double diff,double dt);
 
 int main(void) {
     //------- General parameters ---------------------------------------//
-    int num_points=128;                                                 // number of level j=Jmax collocation points
+    int num_points=256;                                                 // number of level j=Jmax collocation points
+    int interpPnts=3;                                                   // half the number of points used for interpolation
     int J=log2(num_points);                                            	// maximum scale level
-    double threshold=pow(10.,-3);                                 	    // error tolerance for wavelet coefficients
+    double threshold=pow(10.,-5);                              	    // error tolerance for wavelet coefficients
     int i;                                                              // counter variable for spatial index
     int j;                                                          	// j is the counter variable for wavelet level
     int k;                                                          	// k is the counter variable for spatial index
@@ -57,7 +58,7 @@ int main(void) {
     for (j=0;j<=J;j++) {                                        	    //
         int N=pow(2,j);                                                 //
         for (k=-N;k<=N;k++) {                                    	    //
-            x[j][k+N]=pow(2.,-j)*k;                             	    // values of x on dyadic grid
+            x[j][k+N]=.5*pow(2.,-j)*k;                             	    // values of x on dyadic grid
         }                                                       	    //
     }                                                           	    //
     //------- Sample initial function on grid Gt -----------------------//
@@ -69,14 +70,18 @@ int main(void) {
         }                                                       	    //
     }                                                           	    //
     //------- Perform forward wavelet transform ------------------------//
-    fwd_trans(x,u_old[J],c,d,J,1);
+    fwd_trans(x,u_old[J],c,d,J,interpPnts);
     //------- Remove coefficients below the threshold ------------------//
     for (j=0;j<=J;j++) {
         int n=pow(2,j+1)+1;
         for (i=0;i<n;i++) {
             if ( abs(d[j][i]) < threshold ) {
                 coeff[j][i]=-5;
+                d[j][i]=0.;
             } else {
+                coeff[j][i]=j;
+            }
+            if ( j==0 ) {
                 coeff[j][i]=j;
             }
         }
@@ -92,8 +97,10 @@ int main(void) {
     for (j=0;j<J;j++) {
         int N=pow(2,j+1)+1;
         for (int l=0;l<N;l++) {
-            scaling_subd(phi,x,j,l,J,1);
-            detail_subd(psi,x,j,l,J,1);
+            if (j==0) {
+                scaling_subd(phi,x,j,l,J,interpPnts);
+            }
+            detail_subd(psi,x,j,l,J,interpPnts);
             for (i=0;i<=2*num_points;i++) {
                 if (j==0) {
                     u_new[J][i]+=c[j][l]*phi[J][i]+d[j][l]*psi[J][i];
@@ -121,8 +128,9 @@ int main(void) {
     }
     //------- Output solution to file ---------------------------------//
     ofstream output;                            	
-    char fn[25];                               		 
-    snprintf(fn,sizeof fn,"solution.dat"); 			
+    char fn[30];                               		 
+//    snprintf(fn,sizeof fn,"output/solution.dat"); 		
+    snprintf(fn,sizeof fn,"output/solution_epminus5.dat"); 			
     output.open(fn);                            	 
     for (int t=0;t<=2*num_points;t++) {  
         output<<x[J][t]<<" "<<u_new[J][t]<<endl;     

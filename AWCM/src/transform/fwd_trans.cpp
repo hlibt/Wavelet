@@ -26,15 +26,17 @@ void fwd_trans(double** x,double* u,double** scalCoeff,double** detCoeff,int Jma
     }                                                                   //
     for (int j=Jmax-1;j>=0;j--) {                                       // begin forward transform process
         int n=pow(2,j+1)+1;                                             // number of points at level j
-        int iPnts=setN(N,j);                                            // set number of interp points based on level j
         for (int i=0;i<n;i++) {                                         // 
             scalCoeff[j][i]=scalCoeff[j+1][2*i];                        // even scaling coeff's the same
         }                                                               //
-        for (int i=0;i<n;i++) {                                       //
+        for (int i=0;i<n-1;i++) {                                       //
             double xEval=x[j+1][2*i+1];                                 // point for polynomials to be evaluated 
             detCoeff[j][i]=.5*(scalCoeff[j+1][2*i+1]-                   // set detail coefficients
-                        lagrInterp(xEval,x[j],scalCoeff[j],i,iPnts,n)); //
+                        lagrInterp(xEval,x[j],scalCoeff[j],i,N,n));     //
         }                                                               //
+        double xEval=x[j+1][2*(n-2)+1];                                 //
+        detCoeff[j][n-1]=.5*(scalCoeff[j+1][2*(n-1)-1]-                 // set last detail coefficient
+                        lagrInterp(xEval,x[j],scalCoeff[j],n-1,N,n));   //
     }                                                                   //
     return;                                                             //
 }  

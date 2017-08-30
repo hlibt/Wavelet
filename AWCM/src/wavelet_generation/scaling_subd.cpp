@@ -26,12 +26,11 @@ void scaling_subd(double** f,double** x,int j,int m,int Jmax,int N) {
         f[j][i]=kronecker_delta(i,m);                                       // set coefficients to at level j to kronecker delta function
     }                                                                       //
     for (int jstar=j;jstar<Jmax;jstar++) {                                  // begin inverse transform process started from level j
-        int iPnts=setN(N,jstar);                                            // set number of interp points based on the level j
         int n=pow(2,jstar+1)+1;                                             // number of points at level jstar 
         for (int i=0;i<n-1;i++) {                                           // loop through all points but last in grid at level jstar
             double xEval=x[jstar+1][2*i+1];                                 // grid point for polynomial to be evaluated at
             f[jstar+1][2*i]=f[jstar][i];                                    // even points remain the same
-            f[jstar+1][2*i+1]=lagrInterp(xEval,x[jstar],f[jstar],i,iPnts,n);// odd points
+            f[jstar+1][2*i+1]=lagrInterp(xEval,x[jstar],f[jstar],i,N,n);    // odd points
         }                                                                   //
         f[jstar+1][2*(n-1)]=f[jstar][n-1];                                  // last even point is the same
     }                                                                       //
@@ -52,15 +51,6 @@ double lagrInterp(double x,double* gridPnts,double* funcPnts,int i,int n,int max
         leftPnt=-n+1+i;
         rightPnt=n+1;
     }
-/*
-    if ( leftPnt < 0 ) {
-        rightPnt+=abs(0-leftPnt);
-        leftPnt+=abs(0-leftPnt);
-    } else if ( rightPnt > maxN-1 ) {
-        leftPnt-=abs((maxN-1)-rightPnt);
-        rightPnt-=abs((maxN-1)-rightPnt);
-    } 
-*/
     for (int l=leftPnt;l<=rightPnt;l++) {
         double product=1.;
         for (int k=leftPnt;k<=rightPnt;k++) {
@@ -72,18 +62,6 @@ double lagrInterp(double x,double* gridPnts,double* funcPnts,int i,int n,int max
         sum+=product*funcPnts[l];
     }
     return sum;
-}
-
-int setN(int n, int j) {
-    if (j==0) {
-        return 1;
-    } else if (j==1 && n>2) {
-        return 2;
-    } else if (j==2 && n>3) {
-        return 3;
-    } else {
-        return n;
-    }
 }
 
 double kronecker_delta(int k, int m) {
