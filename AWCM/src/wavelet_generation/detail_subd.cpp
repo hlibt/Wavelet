@@ -2,6 +2,7 @@
 #include <cmath>
 #include <math.h>
 #include "wavelet_generation.hpp"
+#include "../interpolation/interpolation.hpp"
 using namespace std;
 
 void detail_subd(double** f,double** x,int j,int m,int Jmax,int N) {
@@ -20,7 +21,7 @@ void detail_subd(double** f,double** x,int j,int m,int Jmax,int N) {
     //              psi_j,m(x_Jmax,k)
     //------------------------------------------------------------------//     
                                                                         //
-    double** d=new double*[Jmax];                                       // detail function coefficients
+    double** d=new double*[Jmax+1];                                     // detail function coefficients
     for (int i=0;i<=Jmax;i++) {                                         //
         int n=pow(2,i+1)+1;                                             // number of points at level j
         d[i]=new double[n];                                             // initialize columns of d

@@ -1,7 +1,7 @@
 #include <iostream>
 #include <cmath>
 #include <math.h>
-#include "../wavelet_generation/wavelet_generation.hpp"
+#include "../interpolation/interpolation.hpp"
 using namespace std;
 
 void fwd_trans(double** x,double* u,double** scalCoeff,double** detCoeff,int Jmax,int N) {
@@ -14,8 +14,8 @@ void fwd_trans(double** x,double* u,double** scalCoeff,double** detCoeff,int Jma
     // Input: 
     //              x     - grid at each level j
     //              u     - solution at finest resolution Jmax
-    //              c     - scaling coeff's 
-    //              d     - detail coeff's
+    //              scalCoeff - scaling coeff's 
+    //              detCoeff - detail coeff's
     //              Jmax  - maximum grid level
     //              N     - half the number of nearest neighbors to use
     //------------------------------------------------------------------//     
@@ -34,9 +34,6 @@ void fwd_trans(double** x,double* u,double** scalCoeff,double** detCoeff,int Jma
             detCoeff[j][i]=.5*(scalCoeff[j+1][2*i+1]-                   // set detail coefficients
                         lagrInterp(xEval,x[j],scalCoeff[j],i,N,n));     //
         }                                                               //
-        double xEval=x[j+1][2*(n-2)+1];                                 //
-        detCoeff[j][n-1]=.5*(scalCoeff[j+1][2*(n-1)-1]-                 // set last detail coefficient
-                        lagrInterp(xEval,x[j],scalCoeff[j],n-1,N,n));   //
     }                                                                   //
     return;                                                             //
 }  

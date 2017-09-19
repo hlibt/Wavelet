@@ -2,6 +2,7 @@
 #include <cmath>
 #include <math.h>
 #include "wavelet_generation.hpp"
+#include "../interpolation/interpolation.hpp"
 using namespace std;
 
 void scaling_subd(double** f,double** x,int j,int m,int Jmax,int N) {
@@ -36,33 +37,6 @@ void scaling_subd(double** f,double** x,int j,int m,int Jmax,int N) {
     }                                                                       //
     return;
 }                                                                       
-
-double lagrInterp(double x,double* gridPnts,double* funcPnts,int i,int n,int maxN) {
-    double sum=0.;
-    int leftPnt=-n+1+i;
-    int rightPnt=n+i;
-    while ( leftPnt < 0 ) {
-        n--;
-        leftPnt=-n+1+i;
-        rightPnt=n+i;
-    }
-    while ( rightPnt > (maxN-1) ) {
-        n--;
-        leftPnt=-n+1+i;
-        rightPnt=n+1;
-    }
-    for (int l=leftPnt;l<=rightPnt;l++) {
-        double product=1.;
-        for (int k=leftPnt;k<=rightPnt;k++) {
-            if (k==l) {
-            } else {
-                product*=(x-gridPnts[k])/(gridPnts[l]-gridPnts[k]);
-            }
-        }
-        sum+=product*funcPnts[l];
-    }
-    return sum;
-}
 
 double kronecker_delta(int k, int m) {
     if (k==m) {
