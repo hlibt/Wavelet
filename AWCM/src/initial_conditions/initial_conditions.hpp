@@ -1,5 +1,4 @@
 #include <math.h>
-#define PI 3.14159265
 
 class initial_condition {
     public:  
@@ -8,7 +7,7 @@ class initial_condition {
 
 // Initial condition:
 double initial_condition::f(double x) {
-    return cos(80*PI*x)*exp(-64*x*x);  
-//    return cos(PI*x)  ;
+    return cos(80*M_PI*x)*exp(-64*x*x);  
+//    return cos(M_PI*x)  ;
 //    return x*x;
 }
