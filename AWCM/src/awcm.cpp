@@ -10,6 +10,7 @@
 #include "transform/transform.hpp"
 #include "interpolation/interpolation.hpp"
 using namespace std;
+void diffWave(double** f,double** df,double h,int J,int N);
 
     //------------------------------------------------------------------------------//
     //                                                                              //
@@ -23,7 +24,7 @@ using namespace std;
 
 int main(void) {
     //------- General parameters ---------------------------------------//
-    int numPoints=512;                                                  // number of level j=Jmax collocation points
+    int numPoints=128;                                                   // number of level j=Jmax collocation points
     int interpPnts=2;                                                   // half the number of points used for interpolation
     int J=log2(numPoints);                                           	// maximum scale level
     double threshold=pow(10.,-4);                               	    // error tolerance for wavelet coefficients
@@ -87,10 +88,14 @@ int main(void) {
     //------- Reconstruct function using wavelets ----------------------//    
     double** phi=new double*[J+1];
     double** psi=new double*[J+1];
+    double** Dphi=new double*[J+1];
+    double** Dpsi=new double*[J+1];
     for (int i=0;i<=J;i++) {
         int N=pow(2,i+1)+1;
         phi[i]=new double[N];
         psi[i]=new double[N];
+        Dphi[i]=new double[N];
+        Dpsi[i]=new double[N];
     }
     for (j=0;j<J;j++) {
         int N=pow(2,j+1)+1;
@@ -99,6 +104,8 @@ int main(void) {
                 scaling_subd(phi,x,j,l,J,interpPnts);
             }
             detail_subd(psi,x,j,l,J,interpPnts);
+            diffWave(phi,Dphi,abs(x[J][1]-x[J][0]),J,pow(2,J+1)+1);
+            diffWave(psi,Dpsi,abs(x[J][1]-x[J][0]),J,pow(2,J+1)+1);
             for (i=0;i<=2*numPoints;i++) {
                 if (j==0) {
                     U_new[J][i]+=c[j][l]*phi[J][i];
@@ -109,10 +116,14 @@ int main(void) {
             }
             phi[j][l]=0.;
             psi[j][l]=0.;
+            Dphi[j][l]=0.;
+            Dpsi[j][l]=0.;
         }
     }
     delete[] phi;
     delete[] psi;
+    delete[] Dphi;
+    delete[] Dpsi;
     //------- Output solution to file ---------------------------------//
     ofstream output;                            	
     char fn[30];                               		 
@@ -153,39 +164,11 @@ int main(void) {
     return 0; 
 }
 
-/*    for (j=0;j<J;j++) {
-        int n=pow(2,j+1)+1;
-        for (k=0;k<n;k++) {
-            if ( mask[j+1][2*k] == true ) {
-            } else {
-                double* xstar=new double[2*interpPnts];               
-                double* fstar=new double[2*interpPnts];
-                double searchWidth=0.0001;
-                int numFound=0;
-                do { 
-                    numFound=0;
-                    for (int jstar=J;jstar>=0;jstar--) {
-                        int N=pow(2,jstar+1)+1;
-                        for (int kstar=0;kstar<N;kstar++) {
-                            double diff=abs(x[j][k]-x[jstar][kstar]);
-                            if ( mask[jstar][kstar] == true && diff < searchWidth && numFound < 2*interpPnts ) {
-                                xstar[numFound]=x[jstar][kstar];
-                                fstar[numFound]=u_old[jstar][kstar];
-                                numFound++;
-                            }
-                        }
-                    }
-                    searchWidth+=0.0001;
-                } while ( numFound < 2*interpPnts ); // end while 
-                cout<<"x is "<<x[j][k]<<endl;
-                cout<<xstar[0]<<endl;
-                cout<<xstar[1]<<endl;
-                cout<<xstar[2]<<endl;
-                cout<<xstar[3]<<endl;
-                cout<<"end"<<endl; 
-                // calculate derivative with lagrange
-                delete[] xstar;
-                delete[] fstar;
-            }   
-        }
-    }  // end for  */
+void diffWave(double** f,double** df,double h,int J,int N) {
+    df[J][0]=(-3.*f[J][0]+4.*f[J][1]-f[J][2])/(2.*h);
+    for (int i=1;i<N-1;i++) {
+        df[J][i]=(f[J][i+1]-f[J][i-1])/(2.*h);
+    }
+    df[J][N-1]=(3.*f[J][N-1]-4.*f[J][N-2]+f[J][N-2])/(2.*h);
+    return;
+}
