@@ -6,7 +6,6 @@
 #include <cmath>
 #include "matrix_solvers/BiCGSTAB.h"
 #include "initial_conditions/initial_conditions.hpp"
-#include "wavelet_generation/wavelet_generation.hpp"
 #include "transform/transform.hpp"
 #include "interpolation/interpolation.hpp"
 using namespace std;
@@ -24,8 +23,8 @@ void diffWave(double** f,double** df,double h,int J,int N);
 
 int main(void) {
     //------- General parameters ---------------------------------------//
-    int numPoints=128;                                                   // number of level j=Jmax collocation points
-    int interpPnts=2;                                                   // half the number of points used for interpolation
+    int numPoints=2;                                                    // number of level j=Jmax collocation points
+    int interpPnts=1;                                                   // half the number of points used for interpolation
     int J=log2(numPoints);                                           	// maximum scale level
     double threshold=pow(10.,-4);                               	    // error tolerance for wavelet coefficients
     int i;                                                              // counter variable for spatial index
@@ -34,23 +33,23 @@ int main(void) {
     //------- Class definitions ----------------------------------------//
     initial_condition IC;                                           	// declare 'initial condition' class variable
     //------- Declare arrays -------------------------------------------//
-    double** U_old=new double*[J+1];            	                    // solution variable at last or current timestep
-    double** U_new=new double*[J+1];                                    // solution variable at next or current timestep
+    double* Du1=new double[2*numPoints];                                // first derivative of the solution
+    double* u_new=new double[2*numPoints];                              // solution at t+dt timestep
+    double** u_old=new double*[J+1];            	                    // solution variable current timestep
     double** x=new double*[J+1];			            		        // dyadic grid storage
     double** c=new double*[J+1];                                        // scaling function coefficients
     double** d=new double*[J];                                          // detail function coefficients
     bool** mask=new bool*[J];                                           // mask referencing all active grid points 
     for (j=0;j<=J;j++) {						                        //
     	int N=pow(2,j+1)+1;			    	                            // 
-        U_old[j]=new double[N];                                         // solution variable old
-        U_new[j]=new double[N];                                         // solution variable new
+        u_old[j]=new double[N];                                         // solution variable old
 	    x[j]=new double[N];  						                    // dyadic grid storage
         c[j]=new double[N];                                             // scaling coefficients
+        mask[j]=new bool[N];                                            // mask containing true for kept coefficients
     }									                                //
     for (j=0;j<J;j++) {                                                 //
         int N=pow(2,j+1);                                               //
         d[j]=new double[N];                                             // detail coefficient
-        mask[j]=new bool[N];                                            //
     }                                                                   //
     //------- Define timestep size -------------------------------------//
     int num_steps=1000;                                         	    // number of timesteps     
@@ -68,23 +67,32 @@ int main(void) {
     for (j=0;j<=J;j++) {                                        	    //
         int N=pow(2,j+1)+1;                                             //
         for (k=0;k<N;k++) {                                        	    //
-            U_old[j][k]=IC.f(x[j][k]);                             	    // evaluate initial condition at collocation points 
+            u_old[j][k]=IC.f(x[j][k]);                             	    // evaluate initial condition at collocation points 
+            mask[j][k]=true;                                            // use loop also to initialize mask
         }                                                       	    //
     }                                                           	    //
     //------- Perform forward wavelet transform ------------------------//
-    fwd_trans(x,U_old[J],c,d,J,interpPnts);                             //
+    fwd_trans(x,u_old[J],c,d,J,interpPnts);                             //
     //------- Remove coefficients below the threshold ------------------//
     for (j=0;j<J;j++) {                                                 
         int N=pow(2,j+1);                                               
         for (k=0;k<N;k++) {                                              
             if ( abs(d[j][k]) < threshold ) {
-                mask[j][k]=false;
+                mask[j+1][2*k+1]=false;
             } else {
-                mask[j][k]=true;
+                mask[j+1][2*k+1]=true;
             }
         }
     }
     //------- Calculate first spatial derivative -----------------------//
+    for (j=J;j>0;j--) {
+        int N=pow(2,j+1);
+        for (k=0;k<N;k++) {
+            if (mask[j][k]==false) {
+                double xEval=x[j][k];
+                Du1[k]=lagrInterpD1(xEval,x[j],u_old[j],interpPnts);
+        }
+    }
     //------- Reconstruct function using wavelets ----------------------//    
     double** phi=new double*[J+1];
     double** psi=new double*[J+1];
@@ -108,10 +116,10 @@ int main(void) {
             diffWave(psi,Dpsi,abs(x[J][1]-x[J][0]),J,pow(2,J+1)+1);
             for (i=0;i<=2*numPoints;i++) {
                 if (j==0) {
-                    U_new[J][i]+=c[j][l]*phi[J][i];
+                    u_new[i]+=c[j][l]*phi[J][i];
                 } 
                 if (l<N-1) {
-                    U_new[J][i]+=d[j][l]*psi[J][i];
+                    u_new[i]+=d[j][l]*psi[J][i];
                 }
             }
             phi[j][l]=0.;
@@ -130,7 +138,7 @@ int main(void) {
     snprintf(fn,sizeof fn,"solution.dat"); 			
     output.open(fn);                            	 
     for (int t=0;t<=2*numPoints;t++) {  
-        output<<x[J][t]<<" "<<U_new[J][t]<<endl;     
+        output<<x[J][t]<<" "<<U_new[t]<<endl;     
     }
     output.close();
     //------- Output coefficient plot ---------------------------------//
@@ -158,9 +166,10 @@ int main(void) {
     delete[] x;
     delete[] c;
     delete[] d;
-    delete[] U_old;
-    delete[] U_new;
+    delete[] u_old;
+    delete[] u_new;
     delete[] mask;
+    delete[] Du1;
     return 0; 
 }
 

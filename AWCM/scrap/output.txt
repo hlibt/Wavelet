@@ -1,8 +1,0 @@
-    ofstream output;                            	
-    char fn[20];                               		 
-    snprintf(fn,sizeof fn,"detail.dat"); 			
-    output.open(fn);                            	 
-    for (int t=0;t<=2*num_points;t++) {  
-        output<<x[J][t]<<" "<<phi[t]<<endl;     
-    }
-    output.close();   
