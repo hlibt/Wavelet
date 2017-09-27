@@ -1,8 +1,7 @@
 #include <iostream>
 #include <cmath>
 #include <math.h>
-#include "wavelet_generation.hpp"
-#include "../interpolation/interpolation.hpp"
+#include "interpolation.hpp"
 
 void scaling_subd(double** f,double** x,int j,int m,int Jmax,int N) {
     

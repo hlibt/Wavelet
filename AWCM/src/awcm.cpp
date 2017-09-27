@@ -85,12 +85,14 @@ int main(void) {
         }
     }
     //------- Calculate first spatial derivative -----------------------//
-    for (j=J;j>0;j--) {
-        int N=pow(2,j+1);
-        for (k=0;k<N;k++) {
-            if (mask[j][k]==false) {
-                double xEval=x[j][k];
-                Du1[k]=lagrInterpD1(xEval,x[j],u_old[j],interpPnts);
+    for (j=J-1;j>=0;j--) {
+        int N=pow(2,j+1)+1;
+        for (k=0;k<N-1;k++) {
+            if (mask[j+1][2*k+1]==false) {
+                double xEval=x[j+1][2*k+1];
+                Du1[k]=lagrInterpD1(xEval,x[j],c[j],k,interpPnts,N);
+		        cout<<"x is "<<x[j+1][2*k+1]<<" Du is "<<Du1[k]<<endl;
+            }
         }
     }
     //------- Reconstruct function using wavelets ----------------------//    
@@ -138,7 +140,7 @@ int main(void) {
     snprintf(fn,sizeof fn,"solution.dat"); 			
     output.open(fn);                            	 
     for (int t=0;t<=2*numPoints;t++) {  
-        output<<x[J][t]<<" "<<U_new[t]<<endl;     
+        output<<x[J][t]<<" "<<u_new[t]<<endl;     
     }
     output.close();
     //------- Output coefficient plot ---------------------------------//
