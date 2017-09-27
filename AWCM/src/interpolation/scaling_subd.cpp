@@ -2,6 +2,7 @@
 #include <cmath>
 #include <math.h>
 #include "interpolation.hpp"
+#include "../global.hpp"
 
 void scaling_subd(double** f,double** x,int j,int m,int Jmax,int N) {
     

@@ -1,12 +1,12 @@
 clc, clf, clear all
 
-data0=load('solution0.dat')
-data1=load('solution1.dat')
-data2=load('solution2.dat')
-data3=load('solution3.dat')
-data4=load('solution4.dat')
-data5=load('solution5.dat')
-data6=load('solution6.dat')
+data0=load('coeff0.dat')
+data1=load('coeff1.dat')
+data2=load('coeff2.dat')
+data3=load('coeff3.dat')
+data4=load('coeff4.dat')
+data5=load('coeff5.dat')
+data6=load('coeff6.dat')
 
 
 h=figure(1)
@@ -28,5 +28,3 @@ set(h(1),'MarkerEdgeColor','k','MarkerFaceColor','k')
 set(gca,'ygrid','on')
 
 xlabel('$d_{k}^{j}$','Interpreter','LaTex')
-
-  
