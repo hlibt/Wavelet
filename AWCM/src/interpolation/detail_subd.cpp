@@ -22,21 +22,21 @@ void detail_subd(double** f,double** x,int j,int m,int Jmax,int N) {
                                                                         //
     double** d=new double*[Jmax+1];                                     // detail function coefficients
     for (int i=0;i<=Jmax;i++) {                                         //
-        int n=pow(2,i+1)+1;                                             // number of points at level j
+        int n=jPnts(i);                                                 // number of points at level j
         d[i]=new double[n];                                             // initialize columns of d
     }                                                                   //
-    int n=pow(2,j+1)+1;                                                 //
+    int n=jPnts(j);                                                     //
     for (int i=0;i<n;i++) {                                             //
         f[j][i]=0;                                                      // set 'scaling' coefficients to zero
     }                                                                   //
     for (int jstar=j;jstar<Jmax;jstar++) {                              // 
-        int n=pow(2,jstar+1)+1;                                         //
+        int n=jPnts(jstar);                                             //
         for (int i=0;i<n;i++) {                                         //
             d[jstar][i]=kronecker_delta(jstar,j)*kronecker_delta(i,m);  // set 'detail' coefficients
         }                                                               //
     }                                                                   //
     for (int jstar=j;jstar<Jmax;jstar++) {                              // begin inverse transform process
-        int n=pow(2,jstar+1)+1;                                         // number of points at level jstar
+        int n=jPnts(jstar);                                             // number of points at level jstar
         for (int i=0;i<n-1;i++) {                                       // loop through all points but the last at level j
             double xEval=x[jstar+1][2*i+1];                             // set the point to be evaluated at lagrange polynomial
             f[jstar+1][2*i]=f[jstar][i];                                // even points stay the same

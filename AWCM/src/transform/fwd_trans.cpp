@@ -2,6 +2,7 @@
 #include <cmath>
 #include <math.h>
 #include "../interpolation/interpolation.hpp"
+#include "../global.hpp"
 using namespace std;
 
 void fwd_trans(double** x,double* u,double** scalCoeff,double** detCoeff,int Jmax,int N) {
@@ -20,12 +21,12 @@ void fwd_trans(double** x,double* u,double** scalCoeff,double** detCoeff,int Jma
     //              N     - half the number of nearest neighbors to use
     //------------------------------------------------------------------//     
                                                                         //
-    int n=pow(2,Jmax+1)+1;                                              //
+    int n=jPnts(Jmax);                                                  //
     for (int i=0;i<n;i++) {                                             //
         scalCoeff[Jmax][i]=u[i];                                        // set scaling coefficients to zero
     }                                                                   //
     for (int j=Jmax-1;j>=0;j--) {                                       // begin forward transform process
-        int n=pow(2,j+1)+1;                                             // number of points at level j
+        int n=jPnts(j);                                                 // number of points at level j
         for (int i=0;i<n;i++) {                                         // 
             scalCoeff[j][i]=scalCoeff[j+1][2*i];                        // even scaling coeff's the same
         }                                                               //

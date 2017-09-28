@@ -29,11 +29,11 @@ int inline jPnts(int j) {return pow(2,j+shift)+1;}
 int main(void) {
     //------- General parameters ---------------------------------------//
     //int numPoints=32;                                                 // number of level j=Jmax collocation points
-    shift=1;
-    int J=5;
-    int interpPnts=3;                                                   // half the number of points used for interpolation
+    shift=2;
+    int J=6;
+    int interpPnts=2;                                                   // half the number of points used for interpolation
     //int J=log2(numPoints);                                           	// maximum scale level
-    double threshold=pow(10.,-5);                               	    // error tolerance for wavelet coefficients
+    double threshold=.5*pow(10.,-2);                               	    // error tolerance for wavelet coefficients
     int i;                                                              // counter variable for spatial index
     int j;                                                          	// j is the counter variable for wavelet level
     int k;                                                          	// k is the counter variable for spatial index
@@ -41,16 +41,16 @@ int main(void) {
     initial_condition IC;                                           	// declare 'initial condition' class variable
     //------- Declare arrays -------------------------------------------//
     int N=jPnts(J);                                                     //
-    double* Du1=new double[N];                                          // first derivative of the solution
-    double* u_new=new double[N];                                        // solution at t+dt timestep
-    double** u_old=new double*[J+1];            	                    // solution variable current timestep
+    double** u=new double*[J+1];                	                    // solution variable current timestep
+    double** ux=new double*[J+1];                                       // first derivative of the solution wrt x
     double** x=new double*[J+1];			            		        // dyadic grid storage
     double** c=new double*[J+1];                                        // scaling function coefficients
     double** d=new double*[J];                                          // detail function coefficients
     bool** mask=new bool*[J];                                           // mask referencing all active grid points 
     for (j=0;j<=J;j++) {						                        //
     	int N=jPnts(j); 			    	                            // 
-        u_old[j]=new double[N];                                         // solution variable old
+        u[j]=new double[N];                                             // solution variable old
+        ux[j]=new double[N];                                            // first derivative
 	    x[j]=new double[N];  						                    // dyadic grid storage
         c[j]=new double[N];                                             // scaling coefficients
         mask[j]=new bool[N];                                            // mask containing true for kept coefficients
@@ -68,43 +68,38 @@ int main(void) {
     for (j=0;j<=J;j++) {                                        	    //
         int N=jPnts(j-1)-1;                                             //
         for (k=-N;k<=N;k++) {                                    	    //
-            x[j][k+N]=pow(2.,-j)*k;                             	    // values of x on dyadic grid
+            x[j][k+N]=2.*pow(2.,-(j+shift))*k;                 	        // values of x on dyadic grid
         }                                                       	    //
     }                                                           	    //
     //------- Sample initial function on grid Gt -----------------------//
     for (j=0;j<=J;j++) {                                        	    //
         int N=jPnts(j);                                                 //
         for (k=0;k<N;k++) {                                        	    //
-            u_old[j][k]=IC.f(x[j][k]);                             	    // evaluate initial condition at collocation points 
-            mask[j][k]=false;                                            // use loop also to initialize mask
+            u[j][k]=IC.f(x[j][k]);                                	    // evaluate initial condition at collocation points 
         }                                                       	    //
     }                                                           	    //
     //------- Perform forward wavelet transform ------------------------//
-    fwd_trans(x,u_old[J],c,d,J,interpPnts);                             //
+    fwd_trans(x,u[J],c,d,J,interpPnts);                                 //
     //------- Remove coefficients below the threshold ------------------//
     for (j=0;j<J;j++) {                                                 
         int N=jPnts(j);                                               
         for (k=0;k<N;k++) {                                              
-            if ( abs(d[j][k]) < threshold ) {
-                mask[j+1][2*k+1]=false;
-            } else {
-                mask[j+1][2*k+1]=true;
-            }
+            if (abs(d[j][k])<threshold) mask[j+1][2*k+1]=false;
+            else mask[j+1][2*k+1]=true;
         }
     }
     //------- Calculate first spatial derivative -----------------------//
-/*    for (j=J-1;j>=0;j--) {
+    for (j=J-1;j>=0;j--) {
         int N=jPnts(j);
         for (k=0;k<N-1;k++) {
             if (mask[j+1][2*k+1]==false) {
                 double xEval=x[j+1][2*k+1];
-                Du1[k]=lagrInterpD1(xEval,x[j],c[j],k,interpPnts,N);
-		        cout<<"x is "<<x[j+1][2*k+1]<<" Du is "<<Du1[k]<<endl;
+                ux[j+1][2*k+1]=lagrInterpD1(xEval,x[j],c[j],k,interpPnts,N);
             }
         }
     } 
     //------- Reconstruct function using wavelets ----------------------//    
-    double** phi=new double*[J+1];
+/*    double** phi=new double*[J+1];
     double** psi=new double*[J+1];
     double** Dphi=new double*[J+1];
     double** Dpsi=new double*[J+1];
@@ -135,16 +130,16 @@ int main(void) {
     delete[] phi;
     delete[] psi;
     delete[] Dphi;
-    delete[] Dpsi;
+    delete[] Dpsi; */
     //------- Output solution to file ---------------------------------//
     ofstream output;                            	
     char fn[30];                               		 
     snprintf(fn,sizeof fn,"output/solution.dat"); 			
     output.open(fn);                            	 
-    for (int i=0;i<jPnts(J);i++) {  
-        output<<x[J][i]<<" "<<u_new[i]<<endl;     
+    for (int i=0;i<jPnts(4);i++) {  
+        output<<x[4][i]<<" "<<ux[4][i]<<endl;     
     }
-    output.close(); */
+    output.close(); 
     //------- Output coefficient plot ---------------------------------//
     for (j=0;j<J;j++) {
         ofstream output;
@@ -165,14 +160,12 @@ int main(void) {
             }
         }
         output.close();
-    }
+    } 
     delete[] x;
     delete[] c;
     delete[] d;
-    delete[] u_old;
-    delete[] u_new;
-    delete[] mask;
-    delete[] Du1;
+    delete[] u;
+    delete[] ux; 
     return 0; 
 }
 
