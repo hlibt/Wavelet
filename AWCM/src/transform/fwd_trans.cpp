@@ -21,10 +21,6 @@ void fwd_trans(double** x,double* u,double** scalCoeff,double** detCoeff,int Jma
     //              N     - half the number of nearest neighbors to use
     //------------------------------------------------------------------//     
                                                                         //
-    int n=jPnts(Jmax);                                                  //
-    for (int i=0;i<n;i++) {                                             //
-        scalCoeff[Jmax][i]=u[i];                                        // set scaling coefficients to zero
-    }                                                                   //
     for (int j=Jmax-1;j>=0;j--) {                                       // begin forward transform process
         int n=jPnts(j);                                                 // number of points at level j
         for (int i=0;i<n;i++) {                                         // 

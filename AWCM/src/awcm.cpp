@@ -30,10 +30,10 @@ int main(void) {
     //------- General parameters ---------------------------------------//
     //int numPoints=32;                                                 // number of level j=Jmax collocation points
     shift=2;
-    int J=6;
+    int J=4;
     int interpPnts=2;                                                   // half the number of points used for interpolation
     //int J=log2(numPoints);                                           	// maximum scale level
-    double threshold=.5*pow(10.,-2);                               	    // error tolerance for wavelet coefficients
+    double threshold=pow(10.,-4);                               	    // error tolerance for wavelet coefficients
     int i;                                                              // counter variable for spatial index
     int j;                                                          	// j is the counter variable for wavelet level
     int k;                                                          	// k is the counter variable for spatial index
@@ -69,15 +69,11 @@ int main(void) {
         int N=jPnts(j-1)-1;                                             //
         for (k=-N;k<=N;k++) {                                    	    //
             x[j][k+N]=2.*pow(2.,-(j+shift))*k;                 	        // values of x on dyadic grid
+            mask[j][k+N]=true;                                          //
         }                                                       	    //
     }                                                           	    //
     //------- Sample initial function on grid Gt -----------------------//
-    for (j=0;j<=J;j++) {                                        	    //
-        int N=jPnts(j);                                                 //
-        for (k=0;k<N;k++) {                                        	    //
-            u[j][k]=IC.f(x[j][k]);                                	    // evaluate initial condition at collocation points 
-        }                                                       	    //
-    }                                                           	    //
+    for (k=0;k<N;k++) c[J][k]=IC.f(x[J][k]);                      	    // evaluate initial condition at collocation points 
     //------- Perform forward wavelet transform ------------------------//
     fwd_trans(x,u[J],c,d,J,interpPnts);                                 //
     //------- Remove coefficients below the threshold ------------------//
@@ -92,52 +88,45 @@ int main(void) {
     for (j=J-1;j>=0;j--) {
         int N=jPnts(j);
         for (k=0;k<N-1;k++) {
-            if (mask[j+1][2*k+1]==false) {
+            if (mask[j+1][2*k+1]==false && (mask[j][k+1]==true || mask[j][k-1]==true)) {
+                cout<<"j="<<j<<", k="<<k<<endl;
                 double xEval=x[j+1][2*k+1];
                 ux[j+1][2*k+1]=lagrInterpD1(xEval,x[j],c[j],k,interpPnts,N);
+                xEval=x[j][k];
+                ux[j+1][2*k]=lagrInterpD1(xEval,x[j],c[j],k,interpPnts,N);
             }
         }
     } 
     //------- Reconstruct function using wavelets ----------------------//    
-/*    double** phi=new double*[J+1];
+    double** phi=new double*[J+1];
     double** psi=new double*[J+1];
-    double** Dphi=new double*[J+1];
-    double** Dpsi=new double*[J+1];
-    for (int j=0;i<=J;i++) {
+    for (int j=0;j<=J;j++) {
         int N=jPnts(j);
         phi[j]=new double[N];
         psi[j]=new double[N];
-        Dphi[j]=new double[N];
-        Dpsi[j]=new double[N];
     }
     for (j=0;j<J;j++) {
         int N=jPnts(j);
         for (int l=0;l<N;l++) {
             if (j==0) scaling_subd(phi,x,j,l,J,interpPnts);
             detail_subd(psi,x,j,l,J,interpPnts);
-            diffWave(phi,Dphi,abs(x[J][1]-x[J][0]),J,jPnts(J));
-            diffWave(psi,Dpsi,abs(x[J][1]-x[J][0]),J,jPnts(J));
             for (i=0;i<jPnts(J);i++) {
-                if (j==0) u_new[i]+=c[j][l]*phi[J][i]; 
-                if (l<N-1) u_new[i]+=d[j][l]*psi[J][i];
+                if (j==0) u[J][i]+=c[j][l]*phi[J][i];
+                if (l<N-1) u[J][i]+=d[j][l]*psi[J][i]; 
             }
             phi[j][l]=0.;
             psi[j][l]=0.;
-            Dphi[j][l]=0.;
-            Dpsi[j][l]=0.;
         }
     }
     delete[] phi;
     delete[] psi;
-    delete[] Dphi;
-    delete[] Dpsi; */
     //------- Output solution to file ---------------------------------//
     ofstream output;                            	
     char fn[30];                               		 
     snprintf(fn,sizeof fn,"output/solution.dat"); 			
     output.open(fn);                            	 
-    for (int i=0;i<jPnts(4);i++) {  
-        output<<x[4][i]<<" "<<ux[4][i]<<endl;     
+    for (int i=0;i<jPnts(J);i++) {  
+        output<<x[J][i]<<" "<<ux[J][i]<<endl;     
     }
     output.close(); 
     //------- Output coefficient plot ---------------------------------//
