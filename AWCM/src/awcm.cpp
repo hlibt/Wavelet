@@ -29,11 +29,11 @@ int inline jPnts(int j) {return pow(2,j+shift)+1;}
 int main(void) {
     //------- General parameters ---------------------------------------//
     //int numPoints=32;                                                 // number of level j=Jmax collocation points
-    shift=2;
-    int J=4;
+    shift=2;                                                            // increases number of points of level j=0
+    int J=7;                                                            // number of scalines in the system
     int interpPnts=2;                                                   // half the number of points used for interpolation
     //int J=log2(numPoints);                                           	// maximum scale level
-    double threshold=pow(10.,-4);                               	    // error tolerance for wavelet coefficients
+    double threshold=.2*pow(10.,-2);                               	    // error tolerance for wavelet coefficients
     int i;                                                              // counter variable for spatial index
     int j;                                                          	// j is the counter variable for wavelet level
     int k;                                                          	// k is the counter variable for spatial index
@@ -69,7 +69,7 @@ int main(void) {
         int N=jPnts(j-1)-1;                                             //
         for (k=-N;k<=N;k++) {                                    	    //
             x[j][k+N]=2.*pow(2.,-(j+shift))*k;                 	        // values of x on dyadic grid
-            mask[j][k+N]=true;                                          //
+            mask[j][k+N]=false;                                         //
         }                                                       	    //
     }                                                           	    //
     //------- Sample initial function on grid Gt -----------------------//
@@ -84,19 +84,38 @@ int main(void) {
             else mask[j+1][2*k+1]=true;
         }
     }
-    //------- Calculate first spatial derivative -----------------------//
-    for (j=J-1;j>=0;j--) {
-        int N=jPnts(j);
-        for (k=0;k<N-1;k++) {
-            if (mask[j+1][2*k+1]==false && (mask[j][k+1]==true || mask[j][k-1]==true)) {
-                cout<<"j="<<j<<", k="<<k<<endl;
-                double xEval=x[j+1][2*k+1];
-                ux[j+1][2*k+1]=lagrInterpD1(xEval,x[j],c[j],k,interpPnts,N);
-                xEval=x[j][k];
+/*    //------- Calculate spatial derivatives ----------------------------//
+    for (j=J-1;j>=0;j--) {                                              // start from one level below finest resolution
+        int N=jPnts(j);                                                 // number of points at current level
+        for (k=0;k<N-1;k++) {                                           // loop through points at current level
+            if (mask[j+1][2*k+1]==false && (mask[j][k+2]==true ||       // check if function is well approximated at x[j][k]
+                        mask[j][k-2]==true || mask[j][k-1] ||           //
+                        mask[j][k+1])) {                                //
+                double xEval=x[j][k];                                   // compute the point where derivative is to be evaluated
                 ux[j+1][2*k]=lagrInterpD1(xEval,x[j],c[j],k,interpPnts,N);
+                cout<<"j="<<j+1<<", k="<<2*k+1<<endl;
+                xEval=x[j+1][2*k+1];
+                ux[j+1][2*k+1]=lagrInterpD1(xEval,x[j],c[j],k,interpPnts,N);
             }
         }
-    } 
+        double xEval=x[j][N-1];
+        if (mask[j][N-2]==true && mask[j+1][2*(N-1)-1]==false) {
+            ux[j+1][2*(N-1)]=lagrInterpD1(xEval,x[j],c[j],N-2,interpPnts,N);
+        }
+    } */
+    //------- Calculate spatial derivatives ----------------------------//
+    for (j=0;j<J;j++) {                                              // start from one level below finest resolution
+        int N=jPnts(j);                                                 // number of points at current level
+        for (k=0;k<N-1;k++) {                                           // loop through interior points at current level
+            if (mask[j+1][2*k+1]==false) {                              //
+                int gridMultplr=pow(2,J-j)*k;                           //     
+                double xEval=x[j][k];                                   // evaluation point
+                ux[J][gridMultplr]=lagrInterpD1(xEval,x[j],c[j],        //
+                        k,interpPnts,N);                                //
+                gridMultplr=
+            }                                                           //
+        }                                                               //
+    }                                                                   //
     //------- Reconstruct function using wavelets ----------------------//    
     double** phi=new double*[J+1];
     double** psi=new double*[J+1];
@@ -121,14 +140,16 @@ int main(void) {
     delete[] phi;
     delete[] psi;
     //------- Output solution to file ---------------------------------//
-    ofstream output;                            	
-    char fn[30];                               		 
-    snprintf(fn,sizeof fn,"output/solution.dat"); 			
-    output.open(fn);                            	 
-    for (int i=0;i<jPnts(J);i++) {  
-        output<<x[J][i]<<" "<<ux[J][i]<<endl;     
+    for (j=0;j<=J;j++) {
+        ofstream output;                            	
+        char fn[30];                               		 
+        snprintf(fn,sizeof fn,"output/derivative%d.dat",j); 			
+        output.open(fn);                            	 
+        for (int i=0;i<jPnts(j);i++) {  
+            output<<x[j][i]<<" "<<ux[j][i]<<endl;     
+        }
+        output.close(); 
     }
-    output.close(); 
     //------- Output coefficient plot ---------------------------------//
     for (j=0;j<J;j++) {
         ofstream output;
