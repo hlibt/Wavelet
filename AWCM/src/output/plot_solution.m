@@ -1,10 +1,13 @@
 clc, clear all, clf
 
 % input data:
-D=load('solution.dat');
+D=load('derivative.dat');
 x=D(:,1);
+for i=2:length(x)
+    h=x(i)-x(i-1)
+end
 u=D(:,2);
 figure(1)
-% utrue=-pi*sin(pi*x);
-plot(x,u,'b')
-% axis([-1 1 -1.2 1.2])
+for i=1:length(x)
+    plot(x(i),u(i),'bo'), hold on
+end

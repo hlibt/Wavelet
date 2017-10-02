@@ -28,12 +28,10 @@ int inline jPnts(int j) {return pow(2,j+shift)+1;}
 
 int main(void) {
     //------- General parameters ---------------------------------------//
-    //int numPoints=32;                                                 // number of level j=Jmax collocation points
     shift=2;                                                            // increases number of points of level j=0
-    int J=7;                                                            // number of scalines in the system
+    int J=4;                                                            // number of scalines in the system
     int interpPnts=2;                                                   // half the number of points used for interpolation
-    //int J=log2(numPoints);                                           	// maximum scale level
-    double threshold=.2*pow(10.,-2);                               	    // error tolerance for wavelet coefficients
+    double threshold=2*pow(10.,-3);                               	    // error tolerance for wavelet coefficients
     int i;                                                              // counter variable for spatial index
     int j;                                                          	// j is the counter variable for wavelet level
     int k;                                                          	// k is the counter variable for spatial index
@@ -41,16 +39,16 @@ int main(void) {
     initial_condition IC;                                           	// declare 'initial condition' class variable
     //------- Declare arrays -------------------------------------------//
     int N=jPnts(J);                                                     //
-    double** u=new double*[J+1];                	                    // solution variable current timestep
-    double** ux=new double*[J+1];                                       // first derivative of the solution wrt x
+    double* u=new double[N];                      	                    // solution variable current timestep
+    double* ux=new double[N];                                           // first derivative of the solution wrt x
+    bool* activPnt=new bool[N];                                         // shows which points are active in grid
+    for (k=0;k<N;k++) activPnt[k]=false;                                // set initially all points false
     double** x=new double*[J+1];			            		        // dyadic grid storage
     double** c=new double*[J+1];                                        // scaling function coefficients
     double** d=new double*[J];                                          // detail function coefficients
-    bool** mask=new bool*[J];                                           // mask referencing all active grid points 
+    bool** mask=new bool*[J];                                           // mask denoting where detail coefficients are kept 
     for (j=0;j<=J;j++) {						                        //
-    	int N=jPnts(j); 			    	                            // 
-        u[j]=new double[N];                                             // solution variable old
-        ux[j]=new double[N];                                            // first derivative
+    	int N=jPnts(j); 			    	                            // number of points at level j
 	    x[j]=new double[N];  						                    // dyadic grid storage
         c[j]=new double[N];                                             // scaling coefficients
         mask[j]=new bool[N];                                            // mask containing true for kept coefficients
@@ -60,7 +58,7 @@ int main(void) {
         d[j]=new double[N];                                             // detail coefficient
     }                                                                   //
     //------- Define timestep size -------------------------------------//
-    int num_steps=1000;                                         	    // number of timesteps     
+    int num_steps=40;                                            	    // number of timesteps     
     double ti=0.;                                               	    // initial simulation time  
     double tf=1.;                                               	    // final simulation time     
     double dt=(tf-ti)/num_steps;                                 	    // timestep size
@@ -69,55 +67,58 @@ int main(void) {
         int N=jPnts(j-1)-1;                                             //
         for (k=-N;k<=N;k++) {                                    	    //
             x[j][k+N]=2.*pow(2.,-(j+shift))*k;                 	        // values of x on dyadic grid
-            mask[j][k+N]=false;                                         //
         }                                                       	    //
     }                                                           	    //
     //------- Sample initial function on grid Gt -----------------------//
     for (k=0;k<N;k++) c[J][k]=IC.f(x[J][k]);                      	    // evaluate initial condition at collocation points 
     //------- Perform forward wavelet transform ------------------------//
-    fwd_trans(x,u[J],c,d,J,interpPnts);                                 //
+    fwd_trans(x,u,c,d,J,interpPnts);                                    //
     //------- Remove coefficients below the threshold ------------------//
-    for (j=0;j<J;j++) {                                                 
-        int N=jPnts(j);                                               
-        for (k=0;k<N;k++) {                                              
-            if (abs(d[j][k])<threshold) mask[j+1][2*k+1]=false;
-            else mask[j+1][2*k+1]=true;
-        }
-    }
-/*    //------- Calculate spatial derivatives ----------------------------//
-    for (j=J-1;j>=0;j--) {                                              // start from one level below finest resolution
-        int N=jPnts(j);                                                 // number of points at current level
-        for (k=0;k<N-1;k++) {                                           // loop through points at current level
-            if (mask[j+1][2*k+1]==false && (mask[j][k+2]==true ||       // check if function is well approximated at x[j][k]
-                        mask[j][k-2]==true || mask[j][k-1] ||           //
-                        mask[j][k+1])) {                                //
-                double xEval=x[j][k];                                   // compute the point where derivative is to be evaluated
-                ux[j+1][2*k]=lagrInterpD1(xEval,x[j],c[j],k,interpPnts,N);
-                cout<<"j="<<j+1<<", k="<<2*k+1<<endl;
-                xEval=x[j+1][2*k+1];
-                ux[j+1][2*k+1]=lagrInterpD1(xEval,x[j],c[j],k,interpPnts,N);
-            }
-        }
-        double xEval=x[j][N-1];
-        if (mask[j][N-2]==true && mask[j+1][2*(N-1)-1]==false) {
-            ux[j+1][2*(N-1)]=lagrInterpD1(xEval,x[j],c[j],N-2,interpPnts,N);
-        }
-    } */
-    //------- Calculate spatial derivatives ----------------------------//
-    for (j=0;j<J;j++) {                                              // start from one level below finest resolution
-        int N=jPnts(j);                                                 // number of points at current level
-        for (k=0;k<N-1;k++) {                                           // loop through interior points at current level
-            if (mask[j+1][2*k+1]==false) {                              //
-                int gridMultplr=pow(2,J-j)*k;                           //     
-                double xEval=x[j][k];                                   // evaluation point
-                ux[J][gridMultplr]=lagrInterpD1(xEval,x[j],c[j],        //
-                        k,interpPnts,N);                                //
-                gridMultplr=
-            }                                                           //
+    for (j=0;j<J;j++) {                                                 //
+        int N=jPnts(j);                                                 //
+        for (k=0;k<N;k++) {                                             //
+            if (abs(d[j][k])<threshold) mask[j+1][2*k+1]=false;         //
+            else mask[j+1][2*k+1]=true;                                 //
         }                                                               //
     }                                                                   //
+    //------- Calculate spatial derivatives ----------------------------//
+    for (j=0;j<J;j++) {                                                 // start from coarsest resolution
+        int N=jPnts(j);                                                 // number of points at current level
+        int gridMultplr=pow(2,J-j);                                     // constant needed to get to same point at higher level
+        if (mask[j+1][1]==false && activPnt[0]==false) {                // check condition for k=0 at level j
+            double xEval=x[j][0];                                       // evaluation point
+            ux[0]=lagrInterpD1(xEval,x[j],c[j],0,interpPnts,N);         //
+            activPnt[0]=true;                                           // denote this as active point
+        }                                                               //
+        for (k=1;k<N-1;k++) {                                           // loop through interior points at current level
+            if ( (mask[j+1][2*k+1]==false && mask[j+1][2*k-1]==false)   // check if function is well approximated
+                    && activPnt[gridMultplr*k]==false ) {               // check if point is not already calculated
+                double xEval=x[j][k];                                   // evaluation point
+                double aprx1=lagrInterpD1(xEval,x[j],c[j],              // compute derivative based on left interpolant
+                        k-1,interpPnts,N);                              //
+                double aprx2=lagrInterpD1(xEval,x[j],c[j],              // compute derivative based on right interpolant
+                        k,interpPnts,N);                                //
+                ux[gridMultplr*k]=.5*(aprx1+aprx2);                     // average the two interpolants :)
+                activPnt[gridMultplr*k]=true;                           //
+            }                                                           //
+        }                                                               //
+        if (mask[j+1][2*(N-1)-1]==false &&                              // check condition for last grid point on level j
+                activPnt[gridMultplr*(N-1)]==false) {                   // check if point has not already been calculated
+            double xEval=x[j][N-1];                                     // 
+            ux[gridMultplr*(N-1)]=lagrInterpD1(xEval,x[j],c[j],         // base interpolant of second to last point in j
+                        N-1,interpPnts,N);                              //
+            activPnt[gridMultplr*(N-1)]=true;                           // denote this as active point
+        }                                                               //
+    }                                                                   //
+    for (k=0;k<jPnts(J);k++) {                                          //
+        if ( mask[J][k]==true && activPnt[k]==false) {                  // check if interpolant based on level beneath is good
+            double xEval=x[j][k];                                       //
+            ux[k]=lagrInterpD1(xEval,x[j],c[j],k,interpPnts,jPnts(J));  // compute derivative
+            activPnt[k]=true;                                           // signify that derivative computed here
+        }                                                               //
+    }
     //------- Reconstruct function using wavelets ----------------------//    
-    double** phi=new double*[J+1];
+/*    double** phi=new double*[J+1];
     double** psi=new double*[J+1];
     for (int j=0;j<=J;j++) {
         int N=jPnts(j);
@@ -130,28 +131,26 @@ int main(void) {
             if (j==0) scaling_subd(phi,x,j,l,J,interpPnts);
             detail_subd(psi,x,j,l,J,interpPnts);
             for (i=0;i<jPnts(J);i++) {
-                if (j==0) u[J][i]+=c[j][l]*phi[J][i];
-                if (l<N-1) u[J][i]+=d[j][l]*psi[J][i]; 
+                if (j==0) u[i]+=c[j][l]*phi[J][i];
+                if (l<N-1) u[i]+=d[j][l]*psi[J][i]; 
             }
             phi[j][l]=0.;
             psi[j][l]=0.;
         }
     }
     delete[] phi;
-    delete[] psi;
+    delete[] psi; */
     //------- Output solution to file ---------------------------------//
-    for (j=0;j<=J;j++) {
-        ofstream output;                            	
-        char fn[30];                               		 
-        snprintf(fn,sizeof fn,"output/derivative%d.dat",j); 			
-        output.open(fn);                            	 
-        for (int i=0;i<jPnts(j);i++) {  
-            output<<x[j][i]<<" "<<ux[j][i]<<endl;     
-        }
-        output.close(); 
+    ofstream output;                            	
+    char fn[30];                               		 
+    snprintf(fn,sizeof fn,"output/derivative.dat"); 			
+    output.open(fn);                            	 
+    for (int i=0;i<jPnts(J);i++) {  
+        if (activPnt[i]==true) {output<<x[J][i]<<" "<<ux[i]<<endl;}
     }
+    output.close(); 
     //------- Output coefficient plot ---------------------------------//
-    for (j=0;j<J;j++) {
+    for (j=0;j<=J;j++) {
         ofstream output;
         char fn[25];
         snprintf(fn,sizeof fn,"output/coeff%d.dat",j);
@@ -176,6 +175,7 @@ int main(void) {
     delete[] d;
     delete[] u;
     delete[] ux; 
+    delete[] activPnt;
     return 0; 
 }
 

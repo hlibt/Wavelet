@@ -22,5 +22,5 @@ lagrInterpD1.o: interpolation/lagrInterpD1.cpp
 	g++ -c interpolation/lagrInterpD1.cpp -I -I/interpolation   
 
 clean:
-	rm *o awcm
+	rm *o
 
