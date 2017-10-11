@@ -27,10 +27,10 @@ int inline jPnts(int j) {return pow(2,j+shift)+1;}
 
 int main(void) {
     //------- General parameters ---------------------------------------//
-    shift=2;                                                            // increases number of points of level j=0
-    int J=8;                                                            // number of scalines in the system
-    int interpPnts=2;                                                   // half the number of points used for interpolation
-    double threshold=pow(10.,-5);                               	    // error tolerance for wavelet coefficients
+    shift=3;                                                            // increases number of points of level j=0
+    int J=6;                                                            // number of scales in the system
+    int interpPnts=3;                                                   // half the number of points used for interpolation
+    double threshold=.5*pow(10.,-5);                               	    // error tolerance for wavelet coefficients
     int i;                                                              // counter variable for spatial index
     int j;                                                          	// j is the counter variable for wavelet level
     int k;                                                          	// k is the counter variable for spatial index
@@ -41,7 +41,6 @@ int main(void) {
     double* u=new double[N];                      	                    // solution variable current timestep
     double* ux=new double[N];                                           // first derivative of the solution wrt x
     bool* activPnt=new bool[N];                                         // shows which points are active in grid
-    for (k=0;k<N;k++) activPnt[k]=false;                                // set initially all points false
     double** x=new double*[J+1];			            		        // dyadic grid storage
     double** c=new double*[J+1];                                        // scaling function coefficients
     bool** mask=new bool*[J+1];                                         // mask denoting where detail coefficients are kept 
@@ -65,24 +64,28 @@ int main(void) {
     for (j=0;j<=J;j++) {                                        	    //
         int N=jPnts(j-1)-1;                                             //
         for (k=-N;k<=N;k++) {                                    	    //
-            x[j][k+N]=2.*pow(2.,-(j+shift))*k;                 	        // values of x on dyadic grid
-            if (j==0) mask[j][k+N]=true;                                // all collocation points at j=0 are kept in mask
+            x[j][k+N]=2.*pow(2.,-(j+shift))*static_cast<double>(k);     // values of x on dyadic grid
         }                                                       	    //
     }                                                           	    //
     //------- Sample initial function on grid Gt -----------------------//
-    for (k=0;k<N;k++) c[J][k]=IC.f(x[J][k]);                      	    // evaluate initial condition at collocation points 
+    for (k=0;k<jPnts(J);k++) c[J][k]=IC.f(x[J][k]);                	    // evaluate initial condition at collocation points 
     //------- Perform forward wavelet transform ------------------------//
-    fwd_trans(x,u,c,d,J,interpPnts);                                    //
+    fwd_trans(x,c,d,J,interpPnts);                                      //
     //------- Remove coefficients below the threshold ------------------//
     for (j=0;j<J;j++) {                                                 //
         int N=jPnts(j);                                                 //
         for (k=0;k<N;k++) {                                             //
-            if (abs(d[j][k])<threshold) mask[j+1][2*k+1]=false;         //
-            else mask[j+1][2*k+1]=true;                                 //
+            if (abs(d[j][k])<threshold) mask[j+1][2*k+1]=false;         // knock out points below threshold
+            else mask[j+1][2*k+1]=true;                                 // keep points above threshold, include in mask
         }                                                               //
     }                                                                   //
+    //------- Include coarsest scaling coeff's in mask -----------------//
+    for (j=0;j<=J;j++) {                                                 //
+        int gridMultplr=pow(2,j-0);                                     //
+        for (k=0;k<jPnts(0);k++) mask[j][gridMultplr*k]=true;           // all scaling coefficients at coarsest level included
+    }                                                                   //
     //------- Extend mask recursively ----------------------------------//
-    for (j=J-1;j>0;j--) {
+    for (j=J-2;j>0;j--) {
         int N=jPnts(j);
         for (k=0;k<N-1;k++) {
             if (mask[j+1][2*k+1]==true) {
@@ -96,7 +99,9 @@ int main(void) {
                     leftPnt--;
                     rightPnt--;
                 }
-                for (int l=leftPnt;l<=rightPnt;l++) mask[j][k+l]=true;
+                for (int l=leftPnt;l<=rightPnt;l++) {
+                    mask[j][k+l]=true;
+                }
             }
         }
     }
@@ -142,7 +147,9 @@ int main(void) {
     snprintf(fn1,sizeof fn1,"output/solution.dat"); 			
     output1.open(fn1);                            	 
     for (int i=0;i<jPnts(J);i++) {  
-        if (activPnt[i]==true) {output1<<x[J][i]<<" "<<u[i]<<endl;}
+        if (activPnt[i]==true) {
+            output1<<x[J][i]<<" "<<c[J][i]<<endl;
+        }
     }
     output1.close(); 
     //------- Output derivative to file -------------------------------//

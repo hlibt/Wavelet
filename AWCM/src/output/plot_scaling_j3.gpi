@@ -1,9 +1,0 @@
-set term latex
-set output "../../../weekly_progress/image/scaling_j3.tex"
-unset key
-set format xy "$%g$"
-set xlabel '$x$'
-set ylabel '$\phi(x)$'
-plot "scaling_j3.dat" with lines
-# title "{/Symbol f}^{3}(x)"
-set term x11
