@@ -9,7 +9,6 @@
 #include "transform/transform.hpp"
 #include "interpolation/interpolation.hpp"
 using namespace std;
-void diffWave(double** f,double** df,double h,int J,int N);
 
     //------------------------------------------------------------------------------//
     //                                                                              //
@@ -29,9 +28,9 @@ int inline jPnts(int j) {return pow(2,j+shift)+1;}
 int main(void) {
     //------- General parameters ---------------------------------------//
     shift=2;                                                            // increases number of points of level j=0
-    int J=4;                                                            // number of scalines in the system
+    int J=3;                                                            // number of scalines in the system
     int interpPnts=2;                                                   // half the number of points used for interpolation
-    double threshold=2*pow(10.,-3);                               	    // error tolerance for wavelet coefficients
+    double threshold=.2*pow(10.,-3);                               	    // error tolerance for wavelet coefficients
     int i;                                                              // counter variable for spatial index
     int j;                                                          	// j is the counter variable for wavelet level
     int k;                                                          	// k is the counter variable for spatial index
@@ -90,8 +89,10 @@ int main(void) {
             ux[0]=lagrInterpD1(xEval,x[j],c[j],0,interpPnts,N);         //
             activPnt[0]=true;                                           // denote this as active point
         }                                                               //
+        // interior odd points
         for (k=1;k<N-1;k++) {                                           // loop through interior points at current level
             if ( (mask[j+1][2*k+1]==false && mask[j+1][2*k-1]==false)   // check if function is well approximated
+                    && k%2==1 && mask[j][k]==true                       //
                     && activPnt[gridMultplr*k]==false ) {               // check if point is not already calculated
                 double xEval=x[j][k];                                   // evaluation point
                 double aprx1=lagrInterpD1(xEval,x[j],c[j],              // compute derivative based on left interpolant
@@ -102,6 +103,19 @@ int main(void) {
                 activPnt[gridMultplr*k]=true;                           //
             }                                                           //
         }                                                               //
+/*        // interior even points
+        for (k=1;k<N-1;k++) {                                           // loop through interior points at current level
+            if ( (mask[j+1][2*k+1]==false && mask[j+1][2*k-1]==false)   // check if function is well approximated
+                    && k%2==0 && activPnt[gridMultplr*k]==false ) {               // check if point is not already calculated
+                double xEval=x[j][k];                                   // evaluation point
+                double aprx1=lagrInterpD1(xEval,x[j],c[j],              // compute derivative based on left interpolant
+                        k-1,interpPnts,N);                              //
+                double aprx2=lagrInterpD1(xEval,x[j],c[j],              // compute derivative based on right interpolant
+                        k,interpPnts,N);                                //
+                ux[gridMultplr*k]=.5*(aprx1+aprx2);                     // average the two interpolants :)
+                activPnt[gridMultplr*k]=true;                           //
+            }                                                           //
+        } */                                                              //
         if (mask[j+1][2*(N-1)-1]==false &&                              // check condition for last grid point on level j
                 activPnt[gridMultplr*(N-1)]==false) {                   // check if point has not already been calculated
             double xEval=x[j][N-1];                                     // 
@@ -110,15 +124,27 @@ int main(void) {
             activPnt[gridMultplr*(N-1)]=true;                           // denote this as active point
         }                                                               //
     }                                                                   //
-    for (k=0;k<jPnts(J);k++) {                                          //
+    // the remaining code is for the highest level J
+    if (activPnt[0]==false) {                                           // calculate ux at left bound
+        double xEval=x[J][0];                                           // left bound grid point
+        ux[0]=lagrInterpD1(xEval,x[J],c[J],0,interpPnts,jPnts(J));      // 
+        activPnt[0]=true;                                               //
+    }                                                                   //
+    for (k=1;k<jPnts(J)-1;k++) {                                        //
         if ( mask[J][k]==true && activPnt[k]==false) {                  // check if interpolant based on level beneath is good
-            double xEval=x[j][k];                                       //
-            ux[k]=lagrInterpD1(xEval,x[j],c[j],k,interpPnts,jPnts(J));  // compute derivative
+            double xEval=x[J][k];                                       //
+            ux[k]=lagrInterpD1(xEval,x[J],c[J],k,interpPnts,jPnts(J));  // compute derivative
             activPnt[k]=true;                                           // signify that derivative computed here
         }                                                               //
-    }
+    }                                                                   //
+    if (activPnt[jPnts(J)-1]==false) {                                  // check last boundary point
+        double xEval=x[J][jPnts(J)-1]=x[J][jPnts(J)-1];                 //
+        ux[jPnts(J)-1]=lagrInterpD1(xEval,x[J],c[J],jPnts(J)-1,         //
+                interpPnts,jPnts(J));                                   //
+        activPnt[jPnts(J)-1]=true;                                      //
+    }                                                                   //
     //------- Reconstruct function using wavelets ----------------------//    
-/*    double** phi=new double*[J+1];
+    double** phi=new double*[J+1];
     double** psi=new double*[J+1];
     for (int j=0;j<=J;j++) {
         int N=jPnts(j);
@@ -139,16 +165,25 @@ int main(void) {
         }
     }
     delete[] phi;
-    delete[] psi; */
-    //------- Output solution to file ---------------------------------//
-    ofstream output;                            	
+    delete[] psi;
+    //------- Output solution to file ----------------------------------//
+    ofstream output1;                            	
+    char fn1[30];                               		 
+    snprintf(fn1,sizeof fn1,"output/solution.dat"); 			
+    output1.open(fn1);                            	 
+    for (int i=0;i<jPnts(J);i++) {  
+        if (activPnt[i]==true) {output1<<x[J][i]<<" "<<u[i]<<endl;}
+    }
+    output1.close(); 
+    //------- Output derivative to file -------------------------------//
+    ofstream output2;                            	
     char fn[30];                               		 
     snprintf(fn,sizeof fn,"output/derivative.dat"); 			
-    output.open(fn);                            	 
+    output2.open(fn);                            	 
     for (int i=0;i<jPnts(J);i++) {  
-        if (activPnt[i]==true) {output<<x[J][i]<<" "<<ux[i]<<endl;}
+        if (activPnt[i]==true) {output2<<x[J][i]<<" "<<ux[i]<<endl;}
     }
-    output.close(); 
+    output2.close(); 
     //------- Output coefficient plot ---------------------------------//
     for (j=0;j<=J;j++) {
         ofstream output;
@@ -177,13 +212,4 @@ int main(void) {
     delete[] ux; 
     delete[] activPnt;
     return 0; 
-}
-
-void diffWave(double** f,double** df,double h,int J,int N) {
-    df[J][0]=(-3.*f[J][0]+4.*f[J][1]-f[J][2])/(2.*h);
-    for (int i=1;i<N-1;i++) {
-        df[J][i]=(f[J][i+1]-f[J][i-1])/(2.*h);
-    }
-    df[J][N-1]=(3.*f[J][N-1]-4.*f[J][N-2]+f[J][N-2])/(2.*h);
-    return;
 }
