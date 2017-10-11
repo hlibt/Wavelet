@@ -28,9 +28,9 @@ int inline jPnts(int j) {return pow(2,j+shift)+1;}
 int main(void) {
     //------- General parameters ---------------------------------------//
     shift=2;                                                            // increases number of points of level j=0
-    int J=3;                                                            // number of scalines in the system
+    int J=8;                                                            // number of scalines in the system
     int interpPnts=2;                                                   // half the number of points used for interpolation
-    double threshold=.2*pow(10.,-3);                               	    // error tolerance for wavelet coefficients
+    double threshold=pow(10.,-5);                               	    // error tolerance for wavelet coefficients
     int i;                                                              // counter variable for spatial index
     int j;                                                          	// j is the counter variable for wavelet level
     int k;                                                          	// k is the counter variable for spatial index
@@ -44,8 +44,8 @@ int main(void) {
     for (k=0;k<N;k++) activPnt[k]=false;                                // set initially all points false
     double** x=new double*[J+1];			            		        // dyadic grid storage
     double** c=new double*[J+1];                                        // scaling function coefficients
+    bool** mask=new bool*[J+1];                                         // mask denoting where detail coefficients are kept 
     double** d=new double*[J];                                          // detail function coefficients
-    bool** mask=new bool*[J];                                           // mask denoting where detail coefficients are kept 
     for (j=0;j<=J;j++) {						                        //
     	int N=jPnts(j); 			    	                            // number of points at level j
 	    x[j]=new double[N];  						                    // dyadic grid storage
@@ -66,6 +66,7 @@ int main(void) {
         int N=jPnts(j-1)-1;                                             //
         for (k=-N;k<=N;k++) {                                    	    //
             x[j][k+N]=2.*pow(2.,-(j+shift))*k;                 	        // values of x on dyadic grid
+            if (j==0) mask[j][k+N]=true;                                // all collocation points at j=0 are kept in mask
         }                                                       	    //
     }                                                           	    //
     //------- Sample initial function on grid Gt -----------------------//
@@ -80,68 +81,37 @@ int main(void) {
             else mask[j+1][2*k+1]=true;                                 //
         }                                                               //
     }                                                                   //
+    //------- Extend mask recursively ----------------------------------//
+    for (j=J-1;j>0;j--) {
+        int N=jPnts(j);
+        for (k=0;k<N-1;k++) {
+            if (mask[j+1][2*k+1]==true) {
+                int leftPnt=-interpPnts+1+k;
+                int rightPnt=interpPnts+k;
+                while ( leftPnt < 0 ) {
+                    leftPnt++;
+                    rightPnt++;
+                }
+                while ( rightPnt > (N-1) ) {
+                    leftPnt--;
+                    rightPnt--;
+                }
+                for (int l=leftPnt;l<=rightPnt;l++) mask[j][k+l]=true;
+            }
+        }
+    }
     //------- Calculate spatial derivatives ----------------------------//
-    for (j=0;j<J;j++) {                                                 // start from coarsest resolution
+    for (j=0;j<=J;j++) {                                                // 
         int N=jPnts(j);                                                 // number of points at current level
         int gridMultplr=pow(2,J-j);                                     // constant needed to get to same point at higher level
-        if (mask[j+1][1]==false && activPnt[0]==false) {                // check condition for k=0 at level j
-            double xEval=x[j][0];                                       // evaluation point
-            ux[0]=lagrInterpD1(xEval,x[j],c[j],0,interpPnts,N);         //
-            activPnt[0]=true;                                           // denote this as active point
-        }                                                               //
-        // interior odd points
-        for (k=1;k<N-1;k++) {                                           // loop through interior points at current level
-            if ( (mask[j+1][2*k+1]==false && mask[j+1][2*k-1]==false)   // check if function is well approximated
-                    && k%2==1 && mask[j][k]==true                       //
-                    && activPnt[gridMultplr*k]==false ) {               // check if point is not already calculated
+        for (k=0;k<N;k++) {                                             //
+            if (mask[j][k]==true) {                                     // check if point in mask
                 double xEval=x[j][k];                                   // evaluation point
-                double aprx1=lagrInterpD1(xEval,x[j],c[j],              // compute derivative based on left interpolant
-                        k-1,interpPnts,N);                              //
-                double aprx2=lagrInterpD1(xEval,x[j],c[j],              // compute derivative based on right interpolant
-                        k,interpPnts,N);                                //
-                ux[gridMultplr*k]=.5*(aprx1+aprx2);                     // average the two interpolants :)
-                activPnt[gridMultplr*k]=true;                           //
+                ux[gridMultplr*k]=lagrInterpD1(xEval,x[j],c[j],k,       // compute derivative from lagrange polynomial
+                                    interpPnts,N);                      //
+                activPnt[gridMultplr*k]=true;                           // represent this point at solution time
             }                                                           //
         }                                                               //
-/*        // interior even points
-        for (k=1;k<N-1;k++) {                                           // loop through interior points at current level
-            if ( (mask[j+1][2*k+1]==false && mask[j+1][2*k-1]==false)   // check if function is well approximated
-                    && k%2==0 && activPnt[gridMultplr*k]==false ) {               // check if point is not already calculated
-                double xEval=x[j][k];                                   // evaluation point
-                double aprx1=lagrInterpD1(xEval,x[j],c[j],              // compute derivative based on left interpolant
-                        k-1,interpPnts,N);                              //
-                double aprx2=lagrInterpD1(xEval,x[j],c[j],              // compute derivative based on right interpolant
-                        k,interpPnts,N);                                //
-                ux[gridMultplr*k]=.5*(aprx1+aprx2);                     // average the two interpolants :)
-                activPnt[gridMultplr*k]=true;                           //
-            }                                                           //
-        } */                                                              //
-        if (mask[j+1][2*(N-1)-1]==false &&                              // check condition for last grid point on level j
-                activPnt[gridMultplr*(N-1)]==false) {                   // check if point has not already been calculated
-            double xEval=x[j][N-1];                                     // 
-            ux[gridMultplr*(N-1)]=lagrInterpD1(xEval,x[j],c[j],         // base interpolant of second to last point in j
-                        N-1,interpPnts,N);                              //
-            activPnt[gridMultplr*(N-1)]=true;                           // denote this as active point
-        }                                                               //
-    }                                                                   //
-    // the remaining code is for the highest level J
-    if (activPnt[0]==false) {                                           // calculate ux at left bound
-        double xEval=x[J][0];                                           // left bound grid point
-        ux[0]=lagrInterpD1(xEval,x[J],c[J],0,interpPnts,jPnts(J));      // 
-        activPnt[0]=true;                                               //
-    }                                                                   //
-    for (k=1;k<jPnts(J)-1;k++) {                                        //
-        if ( mask[J][k]==true && activPnt[k]==false) {                  // check if interpolant based on level beneath is good
-            double xEval=x[J][k];                                       //
-            ux[k]=lagrInterpD1(xEval,x[J],c[J],k,interpPnts,jPnts(J));  // compute derivative
-            activPnt[k]=true;                                           // signify that derivative computed here
-        }                                                               //
-    }                                                                   //
-    if (activPnt[jPnts(J)-1]==false) {                                  // check last boundary point
-        double xEval=x[J][jPnts(J)-1]=x[J][jPnts(J)-1];                 //
-        ux[jPnts(J)-1]=lagrInterpD1(xEval,x[J],c[J],jPnts(J)-1,         //
-                interpPnts,jPnts(J));                                   //
-        activPnt[jPnts(J)-1]=true;                                      //
     }                                                                   //
     //------- Reconstruct function using wavelets ----------------------//    
     double** phi=new double*[J+1];
