@@ -82,32 +82,8 @@ int main(void) {
             else mask[j+1][2*k+1]=true;                                 // keep points above threshold, include in mask
         }                                                               //
     }                                                                   //
-/*    //------- Include coarsest scaling coeff's in mask -----------------//
-    for (j=0;j<=J;j++) {                                                 //
-        int gridMultplr=pow(2,j-0);                                     //
-        for (k=0;k<jPnts(0);k++) mask[j][gridMultplr*k]=true;           // all scaling coefficients at coarsest level included
-    }                                                                   // */
-/*    //------- Extend mask recursively ----------------------------------//
-    for (j=J-2;j>0;j--) {
-        int N=jPnts(j);
-        for (k=0;k<N-1;k++) {
-            if (mask[j+1][2*k+1]==true) {
-                int leftPnt=-interpPnts+1+k;
-                int rightPnt=interpPnts+k;
-                while ( leftPnt < 0 ) {
-                    leftPnt++;
-                    rightPnt++;
-                }
-                while ( rightPnt > (N-1) ) {
-                    leftPnt--;
-                    rightPnt--;
-                }
-                for (int l=leftPnt;l<=rightPnt;l++) {
-                    mask[j][k+l]=true;
-                }
-            }
-        }
-    } */
+    //------- Include coarsest scaling coeff's in mask -----------------//
+        for (k=0;k<jPnts(0);k++) mask[j][k]=true;           // all scaling coefficients at coarsest level included
     //------- Calculate spatial derivatives ----------------------------//
     for (j=0;j<J;j++) {                                                 // 
         int N=jPnts(j);                                                 // number of points at current level

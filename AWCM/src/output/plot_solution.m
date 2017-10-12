@@ -10,5 +10,5 @@ xtru=linspace(-1,1,4000);
 utru=cos(80*pi*xtru).*exp(-64*xtru.^2);
 figure(1)
 % plot(x,u,'bo-',x,ux,'r+-')
-plot(x,u,'b-')
+plot(x,u,'bo-')
 % plot(xtru,utru,'r-')
