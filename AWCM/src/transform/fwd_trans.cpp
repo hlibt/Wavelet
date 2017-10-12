@@ -20,7 +20,7 @@ void fwd_trans(double** x,double** scalCoeff,double** detCoeff,int Jmax,int N) {
     //              Jmax  - maximum grid level
     //              N     - half the number of nearest neighbors to use
     //------------------------------------------------------------------//     
-                                                                        //
+    
     for (int j=Jmax-1;j>=0;j--) {                                       // begin forward transform process
         int n=jPnts(j);                                                 // number of points at level j
         for (int i=0;i<n;i++) {                                         // 

@@ -5,9 +5,10 @@
 #include <math.h>
 #include <cmath>
 #include "matrix_solvers/BiCGSTAB.h"
-#include "initial_conditions/initial_conditions.hpp"
+#include "conditions/conditions.hpp"
 #include "transform/transform.hpp"
 #include "interpolation/interpolation.hpp"
+#include "phys_driver/phys_driver.hpp"
 using namespace std;
 
     //------------------------------------------------------------------------------//
@@ -26,22 +27,28 @@ int shift;
 int inline jPnts(int j) {return pow(2,j+shift)+1;}
 
 int main(void) {
-    //------- General parameters ---------------------------------------//
+    //------- Grid and tolerance parameters ----------------------------//
     shift=2;                                                            // increases number of points of level j=0
-    int J=10;                                                            // number of scales in the system
+    int J=10;                                                           // number of scales in the system
     int interpPnts=2;                                                   // half the number of points used for interpolation
-    double threshold=pow(10.,-3);                               	    // error tolerance for wavelet coefficients
+    double threshold=pow(10.,-4);                               	    // error tolerance for wavelet coefficients
     int i;                                                              // counter variable for spatial index
-    int j;                                                          	// j is the counter variable for wavelet level
-    int k;                                                          	// k is the counter variable for spatial index
-    //------- Class definitions ----------------------------------------//
-    initial_condition IC;                                           	// declare 'initial condition' class variable
+    int j;                                                          	// j usually indicates decomposition scale
+    int k;                                                          	// k is another variable for spatial index
+    //------- Define timestep size -------------------------------------//
+    int num_steps=40;                                            	    // number of timesteps     
+    double ti=0.;                                               	    // initial simulation time  
+    double tf=1.;                                               	    // final simulation time     
+    double dt=(tf-ti)/num_steps;                                 	    // timestep size
+    //------- Class declarations ---------------------------------------//
+    initial_condition initCondition;                                    //
     //------- Declare arrays -------------------------------------------//
-    int N=jPnts(J);                                                     //
+    int N=jPnts(J);                                                     // number of points at each level j
     double* u=new double[N];                      	                    // solution variable current timestep
     double* ux=new double[N];                                           // first derivative of the solution wrt x
-    bool* activPnt=new bool[N];                                         // shows which points are active in grid
-    double** x=new double*[J+1];			            		        // dyadic grid storage
+    double* uxx=new double[N];                                          // second spatial derivative
+    bool* activPnt=new bool[N];                                         // denotes points active on grid for output
+    double** x=new double*[J+1];			            		        // dyadic grid storage (explicit storage)
     double** c=new double*[J+1];                                        // scaling function coefficients
     bool** mask=new bool*[J+1];                                         // mask denoting where detail coefficients are kept 
     double** d=new double*[J];                                          // detail function coefficients
@@ -55,11 +62,6 @@ int main(void) {
         int N=jPnts(j)-1;                                               //
         d[j]=new double[N];                                             // detail coefficient
     }                                                                   //
-    //------- Define timestep size -------------------------------------//
-    int num_steps=40;                                            	    // number of timesteps     
-    double ti=0.;                                               	    // initial simulation time  
-    double tf=1.;                                               	    // final simulation time     
-    double dt=(tf-ti)/num_steps;                                 	    // timestep size
     //------- Populate dyadic grid -------------------------------------//
     for (j=0;j<=J;j++) {                                        	    //
         int N=jPnts(j-1)-1;                                             //
@@ -67,23 +69,14 @@ int main(void) {
             x[j][k+N]=2.*pow(2.,-(j+shift))*static_cast<double>(k);     // values of x on dyadic grid
         }                                                       	    //
     }                                                           	    //
-    //------- Sample initial function on grid Gt -----------------------//
-    for (k=0;k<jPnts(J);k++) c[J][k]=IC.f(x[J][k]);                	    // evaluate initial condition at collocation points 
+    //------- Initially set c's to initial condition -------------------//
+    for (k=0;k<jPnts(J);k++) c[J][k]=initCondition.f(x[J][k]);          // 
     //------- Perform forward wavelet transform ------------------------//
-    fwd_trans(x,c,d,J,interpPnts);                                      //
+    fwd_trans(x,c,d,J,interpPnts);                                      // decompose signal into c's and d's
     //------- Remove coefficients below the threshold ------------------//
-    for (j=0;j<J;j++) {                                                 //
-        int N=jPnts(j);                                                 //
-        for (k=0;k<N-1;k++) {                                           //
-            if (abs(d[j][k])<threshold) {                       
-                mask[j+1][2*k+1]=false;         // knock out points below threshold
-                d[j][k]=0.;
-            }
-            else mask[j+1][2*k+1]=true;                                 // keep points above threshold, include in mask
-        }                                                               //
-    }                                                                   //
+    thresholding(d,mask,threshold,J);                                   // knock out small d's
     //------- Include coarsest scaling coeff's in mask -----------------//
-        for (k=0;k<jPnts(0);k++) mask[j][k]=true;           // all scaling coefficients at coarsest level included
+    for (k=0;k<jPnts(0);k++) mask[0][k]=true;                           // scaling coefficients at coarsest level included
     //------- Calculate spatial derivatives ----------------------------//
     for (j=0;j<J;j++) {                                                 // 
         int N=jPnts(j);                                                 // number of points at current level
@@ -93,33 +86,14 @@ int main(void) {
                 double xEval=x[j][k];                                   // evaluation point
                 ux[gridMultplr*k]=lagrInterpD1(xEval,x[j],c[j],k,       // compute derivative from lagrange polynomial
                                     interpPnts,N);                      //
+                uxx[gridMultplr*k]=lagrInterpD2(xEval,x[j],c[j],k,       // compute derivative from lagrange polynomial
+                                    interpPnts,N);                      //
                 activPnt[gridMultplr*k]=true;                           // represent this point at solution time
             }                                                           //
         }                                                               //
     }                                                                   //
     //------- Reconstruct function using wavelets ----------------------//    
-    double** phi=new double*[J+1];
-    double** psi=new double*[J+1];
-    for (int j=0;j<=J;j++) {
-        int N=jPnts(j);
-        phi[j]=new double[N];
-        psi[j]=new double[N];
-    }
-    for (j=0;j<J;j++) {
-        int N=jPnts(j);
-        for (int l=0;l<N;l++) {
-            if (j==0) scaling_subd(phi,x,j,l,J,interpPnts);
-            detail_subd(psi,x,j,l,J,interpPnts);
-            for (i=0;i<jPnts(J);i++) {
-                if (j==0) u[i]+=c[j][l]*phi[J][i];
-                if (l<N-1) u[i]+=d[j][l]*psi[J][i]; 
-            }
-            phi[j][l]=0.;
-            psi[j][l]=0.;
-        }
-    }
-    delete[] phi;
-    delete[] psi;
+    reconstruction(x,u,c,d,J,interpPnts);                               // build the solution using wavelets
     //------- Output solution to file ----------------------------------//
     ofstream output1;                            	
     char fn1[30];                               		 
@@ -137,7 +111,7 @@ int main(void) {
     snprintf(fn,sizeof fn,"output/derivative.dat"); 			
     output2.open(fn);                            	 
     for (int i=0;i<jPnts(J);i++) {  
-        if (activPnt[i]==true) {output2<<x[J][i]<<" "<<ux[i]<<endl;}
+        if (activPnt[i]==true) {output2<<x[J][i]<<" "<<uxx[i]<<endl;}
     }
     output2.close(); 
     //------- Output coefficient plot ---------------------------------//
