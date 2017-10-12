@@ -30,7 +30,7 @@ int main(void) {
     shift=3;                                                            // increases number of points of level j=0
     int J=6;                                                            // number of scales in the system
     int interpPnts=3;                                                   // half the number of points used for interpolation
-    double threshold=.5*pow(10.,-5);                               	    // error tolerance for wavelet coefficients
+    double threshold=.5*pow(10.,-2);                               	    // error tolerance for wavelet coefficients
     int i;                                                              // counter variable for spatial index
     int j;                                                          	// j is the counter variable for wavelet level
     int k;                                                          	// k is the counter variable for spatial index
