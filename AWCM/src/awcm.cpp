@@ -28,9 +28,9 @@ int inline jPnts(int j) {return pow(2,j+shift)+1;}
 int main(void) {
     //------- General parameters ---------------------------------------//
     shift=3;                                                            // increases number of points of level j=0
-    int J=6;                                                            // number of scales in the system
+    int J=8;                                                            // number of scales in the system
     int interpPnts=3;                                                   // half the number of points used for interpolation
-    double threshold=.5*pow(10.,-2);                               	    // error tolerance for wavelet coefficients
+    double threshold=.5*pow(10.,-4);                               	    // error tolerance for wavelet coefficients
     int i;                                                              // counter variable for spatial index
     int j;                                                          	// j is the counter variable for wavelet level
     int k;                                                          	// k is the counter variable for spatial index
@@ -106,13 +106,26 @@ int main(void) {
         }
     }
     //------- Calculate spatial derivatives ----------------------------//
-    for (j=0;j<=J;j++) {                                                // 
+    for (j=0;j<J;j++) {                                                 // 
         int N=jPnts(j);                                                 // number of points at current level
         int gridMultplr=pow(2,J-j);                                     // constant needed to get to same point at higher level
         for (k=0;k<N;k++) {                                             //
             if (mask[j][k]==true) {                                     // check if point in mask
                 double xEval=x[j][k];                                   // evaluation point
                 ux[gridMultplr*k]=lagrInterpD1(xEval,x[j],c[j],k,       // compute derivative from lagrange polynomial
+                                    interpPnts,N);                      //
+                activPnt[gridMultplr*k]=true;                           // represent this point at solution time
+            }                                                           //
+        }                                                               //
+    }                                                                   //
+    //------- Calculate second derivative ------------------------------//
+    for (j=0;j<J;j++) {                                                 // 
+        int N=jPnts(j);                                                 // number of points at current level
+        int gridMultplr=pow(2,J-j);                                     // constant needed to get to same point at higher level
+        for (k=0;k<N;k++) {                                             //
+            if (mask[j][k]==true) {                                     // check if point in mask
+                double xEval=x[j][k];                                   // evaluation point
+                uxx[gridMultplr*k]=lagrInterpD2(xEval,x[j],c[j],k,      // compute derivative from lagrange polynomial
                                     interpPnts,N);                      //
                 activPnt[gridMultplr*k]=true;                           // represent this point at solution time
             }                                                           //
