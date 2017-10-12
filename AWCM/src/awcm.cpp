@@ -27,10 +27,17 @@ int inline jPnts(int j) {return pow(2,j+shift)+1;}
 
 int main(void) {
     //------- General parameters ---------------------------------------//
+<<<<<<< HEAD
     shift=3;                                                            // increases number of points of level j=0
     int J=8;                                                            // number of scales in the system
     int interpPnts=3;                                                   // half the number of points used for interpolation
     double threshold=.5*pow(10.,-4);                               	    // error tolerance for wavelet coefficients
+=======
+    shift=2;                                                            // increases number of points of level j=0
+    int J=10;                                                            // number of scales in the system
+    int interpPnts=2;                                                   // half the number of points used for interpolation
+    double threshold=pow(10.,-3);                               	    // error tolerance for wavelet coefficients
+>>>>>>> fa413aa2a4c1cb7b44ef9ae9e9e0975556d75844
     int i;                                                              // counter variable for spatial index
     int j;                                                          	// j is the counter variable for wavelet level
     int k;                                                          	// k is the counter variable for spatial index
@@ -74,6 +81,7 @@ int main(void) {
     //------- Remove coefficients below the threshold ------------------//
     for (j=0;j<J;j++) {                                                 //
         int N=jPnts(j);                                                 //
+<<<<<<< HEAD
         for (k=0;k<N;k++) {                                             //
             if (abs(d[j][k])<threshold) mask[j+1][2*k+1]=false;         // knock out points below threshold
             else mask[j+1][2*k+1]=true;                                 // keep points above threshold, include in mask
@@ -85,6 +93,22 @@ int main(void) {
         for (k=0;k<jPnts(0);k++) mask[j][gridMultplr*k]=true;           // all scaling coefficients at coarsest level included
     }                                                                   //
     //------- Extend mask recursively ----------------------------------//
+=======
+        for (k=0;k<N-1;k++) {                                           //
+            if (abs(d[j][k])<threshold) {                       
+                mask[j+1][2*k+1]=false;         // knock out points below threshold
+                d[j][k]=0.;
+            }
+            else mask[j+1][2*k+1]=true;                                 // keep points above threshold, include in mask
+        }                                                               //
+    }                                                                   //
+/*    //------- Include coarsest scaling coeff's in mask -----------------//
+    for (j=0;j<=J;j++) {                                                 //
+        int gridMultplr=pow(2,j-0);                                     //
+        for (k=0;k<jPnts(0);k++) mask[j][gridMultplr*k]=true;           // all scaling coefficients at coarsest level included
+    }                                                                   // */
+/*    //------- Extend mask recursively ----------------------------------//
+>>>>>>> fa413aa2a4c1cb7b44ef9ae9e9e0975556d75844
     for (j=J-2;j>0;j--) {
         int N=jPnts(j);
         for (k=0;k<N-1;k++) {
@@ -104,13 +128,18 @@ int main(void) {
                 }
             }
         }
+<<<<<<< HEAD
     }
+=======
+    } */
+>>>>>>> fa413aa2a4c1cb7b44ef9ae9e9e0975556d75844
     //------- Calculate spatial derivatives ----------------------------//
     for (j=0;j<J;j++) {                                                 // 
         int N=jPnts(j);                                                 // number of points at current level
         int gridMultplr=pow(2,J-j);                                     // constant needed to get to same point at higher level
         for (k=0;k<N;k++) {                                             //
             if (mask[j][k]==true) {                                     // check if point in mask
+<<<<<<< HEAD
                 double xEval=x[j][k];                                   // evaluation point
                 ux[gridMultplr*k]=lagrInterpD1(xEval,x[j],c[j],k,       // compute derivative from lagrange polynomial
                                     interpPnts,N);                      //
@@ -126,6 +155,10 @@ int main(void) {
             if (mask[j][k]==true) {                                     // check if point in mask
                 double xEval=x[j][k];                                   // evaluation point
                 uxx[gridMultplr*k]=lagrInterpD2(xEval,x[j],c[j],k,      // compute derivative from lagrange polynomial
+=======
+                double xEval=x[j][k];                                   // evaluation point
+                ux[gridMultplr*k]=lagrInterpD1(xEval,x[j],c[j],k,       // compute derivative from lagrange polynomial
+>>>>>>> fa413aa2a4c1cb7b44ef9ae9e9e0975556d75844
                                     interpPnts,N);                      //
                 activPnt[gridMultplr*k]=true;                           // represent this point at solution time
             }                                                           //
@@ -161,7 +194,11 @@ int main(void) {
     output1.open(fn1);                            	 
     for (int i=0;i<jPnts(J);i++) {  
         if (activPnt[i]==true) {
+<<<<<<< HEAD
             output1<<x[J][i]<<" "<<c[J][i]<<endl;
+=======
+            output1<<x[J][i]<<" "<<u[i]<<endl;
+>>>>>>> fa413aa2a4c1cb7b44ef9ae9e9e0975556d75844
         }
     }
     output1.close(); 
