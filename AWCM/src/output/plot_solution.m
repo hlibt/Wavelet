@@ -6,9 +6,8 @@ u=U(:,2);
 D=load('derivative.dat');
 x=D(:,1);
 ux=D(:,2);
-xtru=linspace(-1,1,4000);
-utru=cos(80*pi*xtru).*exp(-64*xtru.^2);
+xtru=linspace(-1,1,400);
+utru=-pi^2*cos(pi*xtru);
 figure(1)
-plot(x,u,'bo-',x,ux,'r+-')
-% plot(x,u,'bo-')
-% plot(xtru,utru,'r-')
+plot(x,ux,'b+-',xtru,utru,'r'), hold on
+plot(x,u,'bo-'), hold on

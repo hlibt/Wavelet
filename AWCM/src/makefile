@@ -1,7 +1,7 @@
 all: awcm
 
-awcm: awcm.o scaling_subd.o detail_subd.o fwd_trans.o lagrInterp.o lagrInterpD1.o lagrInterpD2.o reconstruction.o thresholding.o
-	g++ -o awcm awcm.o scaling_subd.o detail_subd.o fwd_trans.o lagrInterp.o lagrInterpD1.o lagrInterpD2.o reconstruction.o thresholding.o -I.
+awcm: awcm.o scaling_subd.o detail_subd.o fwd_trans.o lagrInterp.o lagrInterpD1.o lagrInterpD2.o reconstruction.o thresholding.o RK4.o
+	g++ -o awcm awcm.o scaling_subd.o detail_subd.o fwd_trans.o lagrInterp.o lagrInterpD1.o lagrInterpD2.o reconstruction.o thresholding.o RK4.o -I.
 
 awcm.o: awcm.cpp conditions/conditions.hpp phys_driver/phys_driver.hpp transform/transform.hpp
 	g++ -c awcm.cpp -I.
@@ -29,6 +29,9 @@ thresholding.o: phys_driver/thresholding.cpp
 
 reconstruction.o: transform/reconstruction.cpp
 	g++ -c transform/reconstruction.cpp -I. -I/transform/
+
+RK4.o: phys_driver/RK4.cpp
+	g++ -c phys_driver/RK4.cpp -I. -I/phys_driver/
 
 clean:
 	rm *o

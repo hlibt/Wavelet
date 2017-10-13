@@ -10,6 +10,7 @@
 #include "interpolation/interpolation.hpp"
 #include "phys_driver/phys_driver.hpp"
 using namespace std;
+void output(double* X,double* U,bool* ACTIVE,int Jmax);
 
     //------------------------------------------------------------------------------//
     //                                                                              //
@@ -28,10 +29,10 @@ int inline jPnts(int j) {return pow(2,j+shift)+1;}
 
 int main(void) {
     //------- Grid and tolerance parameters ----------------------------//
-    shift=2;                                                            // increases number of points of level j=0
-    int J=10;                                                           // number of scales in the system
-    int interpPnts=2;                                                   // half the number of points used for interpolation
-    double threshold=pow(10.,-4);                               	    // error tolerance for wavelet coefficients
+    shift=3;                                                            // increases number of points of level j=0
+    int J=6;                                                            // number of scales in the system
+    int interpPnts=3;                                                   // half the number of points used for interpolation
+    double threshold=pow(10.,-16);                                	    // error tolerance for wavelet coefficients
     int i;                                                              // counter variable for spatial index
     int j;                                                          	// j usually indicates decomposition scale
     int k;                                                          	// k is another variable for spatial index
@@ -78,6 +79,7 @@ int main(void) {
     //------- Include coarsest scaling coeff's in mask -----------------//
     for (k=0;k<jPnts(0);k++) mask[0][k]=true;                           // scaling coefficients at coarsest level included
     //------- Calculate spatial derivatives ----------------------------//
+    int counter=0.;                                                     //
     for (j=0;j<J;j++) {                                                 // 
         int N=jPnts(j);                                                 // number of points at current level
         int gridMultplr=pow(2,J-j);                                     // constant needed to get to same point at higher level
@@ -89,57 +91,49 @@ int main(void) {
                 uxx[gridMultplr*k]=lagrInterpD2(xEval,x[j],c[j],k,       // compute derivative from lagrange polynomial
                                     interpPnts,N);                      //
                 activPnt[gridMultplr*k]=true;                           // represent this point at solution time
+                counter++;                                              //
             }                                                           //
         }                                                               //
     }                                                                   //
     //------- Reconstruct function using wavelets ----------------------//    
     reconstruction(x,u,c,d,J,interpPnts);                               // build the solution using wavelets
     //------- Output solution to file ----------------------------------//
-    ofstream output1;                            	
-    char fn1[30];                               		 
-    snprintf(fn1,sizeof fn1,"output/solution.dat"); 			
-    output1.open(fn1);                            	 
-    for (int i=0;i<jPnts(J);i++) {  
+    output(x[J],ux,activPnt,J);                                         //
+    //------- Setup rhs of pde -----------------------------------------//
+    double* rhs=new double[counter];                                    //
+    double alp=0.1;
+    k=0;
+    for (i=0;i<jPnts(J);i++) {
         if (activPnt[i]==true) {
-            output1<<x[J][i]<<" "<<u[i]<<endl;
+            rhs[k]=-u[i]*ux[i]+alp*uxx[i];
+            k++;
         }
     }
-    output1.close(); 
-    //------- Output derivative to file -------------------------------//
-    ofstream output2;                            	
-    char fn[30];                               		 
-    snprintf(fn,sizeof fn,"output/derivative.dat"); 			
-    output2.open(fn);                            	 
-    for (int i=0;i<jPnts(J);i++) {  
-        if (activPnt[i]==true) {output2<<x[J][i]<<" "<<uxx[i]<<endl;}
-    }
-    output2.close(); 
-    //------- Output coefficient plot ---------------------------------//
-    for (j=0;j<=J;j++) {
-        ofstream output;
-        char fn[25];
-        snprintf(fn,sizeof fn,"output/coeff%d.dat",j);
-        output.open(fn);
-        if (j==0) {
-            for (int i=0;i<jPnts(j);i++) {
-                output<<x[j][i]<<" "<<0<<endl;
-            }
-        } else {
-            for (int i=0;i<jPnts(j);i++) {
-                if(mask[j][i]==true) {
-                    output<<x[j][i]<<" "<<j<<endl;
-                } else { 
-                    output<<x[j][i]<<" "<<-10<<endl;
-                }
-            }
-        }
-        output.close();
-    } 
+    //------- Advance in time ------------------------------------------//
+//    RK4(rhs,dt,counter);
+//    for (i=0;i<counter;i++) cout<<rhs[i]<<endl;
+    //------- Cleanup --------------------------------------------------//
+//    output(x[J],rhs,activPnt);                                          //
     delete[] x;
     delete[] c;
     delete[] d;
     delete[] u;
     delete[] ux; 
+    delete[] uxx;
+    delete[] rhs;
     delete[] activPnt;
     return 0; 
+}
+
+void output(double* X,double* U,bool* ACTIVE,int Jmax) {
+    ofstream output1;                            	
+    char fn1[30];                               		 
+    snprintf(fn1,sizeof fn1,"output/J6_N3_ux.dat"); 			
+    output1.open(fn1);                            	 
+    for (int i=0;i<jPnts(Jmax);i++) {  
+        if (ACTIVE[i]==true) {
+            output1<<X[i]<<" "<<U[i]<<endl;
+        }
+    }
+    output1.close(); 
 }

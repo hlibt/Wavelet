@@ -26,30 +26,26 @@ double lagrInterpD2(double x,double* gridPnts,double* funcPnts,int i,int n,int m
             rightPnt=n+1;
         } 
     }
-    for (int j=leftPnt;j<=rightPnt;j++) {
-        double sum=0.;
-        for (int k=leftPnt;k<=rightPnt;k++) {
-            if (k!=j) {
-                double sum1=0.;
-                double sum2=0.;
-                for (int l=leftPnt;l<=rightPnt;l++) {
-                    if (l!=k && l!=j) {
-                        double productUpper=1.;
-                        for (int lstar=leftPnt;lstar<=rightPnt;lstar++) {
-                            if (lstar!=j && lstar!=l) {
-                                productUpper*=gridPnts[l]*gridPnts[lstar];
-                            }    
+    for (int i=leftPnt;i<=rightPnt;i++) {
+        double sumOuter=0.;
+        for (int l=leftPnt;l<=rightPnt;l++) {
+            if (l!=i) {
+                double sumInner=0.;
+                for (int m=leftPnt;m<=rightPnt;m++) {
+                    if (m!=i && m!=l) {
+                        double product=1.;
+                        for (int k=leftPnt;k<=rightPnt;k++) {
+                            if (k!=i && k!=l && k!=m) {
+                                product*=(x-gridPnts[k])/(gridPnts[i]-gridPnts[k]);
+                            }
                         }
-                        sum1+=gridPnts[l];
-                        sum2+=productUpper;
+                        sumInner+=product/(gridPnts[i]-gridPnts[m]);
                     }
                 }
-                sum+=3.*pow(x,2.)-2.*x*sum1+sum2;
+                sumOuter+=sumInner/(gridPnts[i]-gridPnts[l]);
             }
         }
-        double productLower=1.;
-        for (int k=leftPnt;k<=rightPnt;k++) {if (k!=j) productLower*=(gridPnts[j]-gridPnts[k]);}
-        lagrDerivative+=funcPnts[j]*sum/productLower;
+        lagrDerivative+=funcPnts[i]*sumOuter;
     }
     return lagrDerivative;
 }
