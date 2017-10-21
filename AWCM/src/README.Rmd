@@ -1,0 +1,29 @@
+---
+title: "README"
+author: "Brandon Gusto"
+date: "10/18/2017"
+output: html_document
+---
+
+# Introduction
+The following programs within the AWCM directory are numerical algorithms for solving partial 
+differential equations. Specifically, the method used is the Adaptive Wavelet Collocation Method. This 
+method was contributed to by the efforts cited in the References section. 
+
+# File structure
+Currently, the `AWCM/src/` directory contains a number of sub-directories and files necessary for compilation.
+The current file structure looks like 
+
+```{r,eval=FALSE}
+ |--- awcm.cpp 
+ |--- makefile
+ |--- global.hpp
+ |--- conditions/
+      > /conditions.hpp
+ |--- interpolation/
+      > /scaling_subd.cpp
+      > /detail_subd.cpp
+      > /lagrInterp.cpp
+      > /lagrInterpD1.cpp
+      > /lagrInterpD2.cpp
+ ```

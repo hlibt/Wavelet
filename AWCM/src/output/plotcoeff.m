@@ -11,9 +11,11 @@ data7=load('coeff7.dat')
 data8=load('coeff8.dat')
 data9=load('coeff9.dat')
 data10=load('coeff10.dat')
+data11=load('coeff11.dat')
+% data12=load('coeff12.dat')
 
 h=figure(1);
-axis([-1 1 0 11]); hold on
+axis([-1 1 0 10]); hold on
 
 h=plot(data0(:,1),data0(:,2),'ko'), hold on
 set(h(1),'MarkerEdgeColor','k','MarkerFaceColor','k')
@@ -37,8 +39,13 @@ h=plot(data9(:,1),data9(:,2),'ko'), hold on
 set(h(1),'MarkerEdgeColor','k','MarkerFaceColor','k')
 h=plot(data10(:,1),data10(:,2),'ko'), hold on
 set(h(1),'MarkerEdgeColor','k','MarkerFaceColor','k')
+h=plot(data11(:,1),data11(:,2),'ko'), hold on
+set(h(1),'MarkerEdgeColor','k','MarkerFaceColor','k')
+% h=plot(data12(:,1),data12(:,2),'ko'), hold on
+% set(h(1),'MarkerEdgeColor','k','MarkerFaceColor','k')
+
 set(gca,'ygrid','on')
-set(gca,'Ytick',0:1:11);
+set(gca,'Ytick',0:10);
 
 ylabel('$j$','Interpreter','LaTex')
 xlabel('$x_{k}^{j}$','Interpreter','Latex')

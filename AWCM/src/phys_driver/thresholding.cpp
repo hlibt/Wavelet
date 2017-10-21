@@ -7,7 +7,6 @@
 using namespace std;
 
 void thresholding(double** detCoeff,bool** mask,double epsilon,int Jmax) {
-
     for (int j=0;j<Jmax;j++) {                                          //
         int N=jPnts(j);                                                 //
         for (int k=0;k<N-1;k++) {                                       //

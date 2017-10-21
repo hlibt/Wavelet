@@ -16,49 +16,65 @@
 %\usepackage{doublespace}
 
 \begin{document}
-\title{Weekly Status Report}
-\author{Development of a 1D Adaptive Wavelet Collocation Code \\
-Brandon Gusto \\}
-\date{Week Beginning 8/28/2017}
+\title{Development of a One-Dimensional Adaptive Wavelet Collocation Algorithm for Solving Partial Differential Equations}
+\author{Brandon Gusto \\}
 
 \maketitle
 %
-\section{Summary of method}
+\section{Summary of Method}
 The adaptive wavelet collocation method for differential equations has a number of merits which may make it a viable
-alternative to traditional finite element, finite volume, or high order finite difference methods for certain problems. 
+alternative to traditional finite element, finite volume, or finite difference methods for certain problems. 
 Some important advantages include the following:
 \begin{itemize}
-    \item the multiresolution properties of wavelets allow for natural grid adaptation
-    \item the existence of a fast $\mathcal{O}(\mathcal{N})$ scheme for computation of wavelet coefficients and 
-          spatial derivatives
-    \item the ability of second-generation wavelets to adapt to complex geometries
-\end{itemize}
+    \item the multi-resolution properties of wavelets allow for natural grid adaptation
+\end{itemize} 
+Probably the most attractive quality of wavelets for solving partial differential equations (PDEs) or systems of PDEs is for their
+tremendous ability to compress data. For problems with isolated structures on a large background of relatively 
+homogenous data, the adaptive wavelet algorithm can achieve over ninety percent data compression, while still approximating the solution with reasonable accuracy. For problems such as combustion which have length scales ranging from the size of an engine block, all the way down to the Kolmogorov scale which governs the size of the smallest eddies, and time scales ranging from microseconds for turbulence down to nanoseconds for combustion, the wavelet algorithm is a game changer.
+
+\subsection{Wavelets}
+
 \subsection{Dyadic Grid}
-The method makes use of a dyadic grid. Each grid level is defined by 
+In developing an adaptive wavelet collocation algorithm, an appropriate numerical grid should be described. Given the 
+multi-resolution properties of wavelets previously described, a grid with a multi-resolution structure is fitting. This 
+is called a dyadic grid, and it should have as many levels as their are scales in a given problem. It can consist of 
+either uniform or non-uniform
+spacing of points. In the case of equally spaced grid points, let each grid level $j = 0, \dots, J$ be computed by 
+\begin{align}
+x^{j}_{k} &= 2^{-(j+\delta)} k,\text{ } \text{ } \text{ }  \text{ for $k=0,\dots,2^{j+\delta}$ },
+\end{align}
+where $\delta$ is some integer shifting parameter, allowing one to dictate that the coarsest level of resolution have 
+smaller spacing than $1$ as in the case where $\delta=0$. From here forth we keep in mind that the 
+number of grid points at each level may be shifted at will based on a fixed choice of $\delta$. 
+The grid levels are formally defined by 
 \begin{equation}
-    \mathcal{G}^j= \{ x_{k}^{j} \in \Omega : k \in \mathcal{K}^j \}, j \in \mathcal{Z},
+    \mathcal{G}^j= \{ x_{k}^{j} \in \Omega : k \in \mathcal{K}^j \}, \text{ } j \in \mathcal{Z},
 \end{equation}
-where $\mathcal{K}^j$ is the integer set representing the spatial locations in the grid at level $j$. The grids are 
-nested, implying that $\mathcal{G}^{j} \subset \mathcal{G}^{j+1}$. In other words, the points at level $x^{j}$ are 
-a perfect subset of the points at level $x^{j+1}$. This can also be demonstrated by the relation that 
+where $\mathcal{K}^{j}$ is the integer set representing the spatial locations in the grid at level $j$. The grids are 
+nested, implying that $\mathcal{G}^{j} \subset \mathcal{G}^{j+1}$. In other words, the points at level $x^{j}$ are a perfect 
+subset of the points at level $x^{j+1}$. This can also be demonstrated by the relation that 
 $x_{k}^{j}=x_{2k}^{j+1}$.
+
 \subsection{Interpolating Subdivision}
 The interpolating subdivision scheme is central to the second-generation wavelet collocation approach. The scheme is used to
-approximate values at odd points $x_{2k+1}^{j+1}$ by constructing interpolating polynomials of order $2N-1$ with the points
-at grid level $j$. Lagrange polynomials are used, and the method can be used with a uniform grid or with 
-nonuniform points such as Chebychev points. The interpolating scheme is 
+approximate values at odd points $x_{2k+1}^{j+1}$ by using $2N$ nearest points to construct interpolating polynomials of 
+order $2N-1$. Lagrange polynomials are used, and the method can be used with a uniform grid or with 
+nonuniform points such as Chebyshev points. The interpolating scheme is 
 \begin{equation}
-    f^j(x_{2k+1}^{j+1})=\sum_{l=-N+1}^{N} w_{k,l}^{j} f(x_{k+l}^{j}),
+    f(x_{2k+1}^{j+1})=\sum_{l=-N+1}^{N} w_{k,l}^{j} f(x_{k+l}^{j}), \label{interp}
 \end{equation}
-where the coefficients $w_{k,l}^{j}$ are the lagrange polynomials $L_{2N,k+l}(x)$ evaluated at $x=x_{2k+1}^{j+1}$. The 
-lagrange polynomial in this notation is given by 
+where the coefficients $w_{k,l}^{j}$ are general interpolating coefficients. In this algorithm, Lagrange 
+polynomials $L_{k+l}(x_{2k+1}^{j+1})$ are used. The 
+Lagrange polynomial in this notation is given by 
 \begin{equation}
-    L_{2N,k+l}(x)=\prod_{ \substack{ i=k-(N+1) \\ i\neq k+l } }^{k+2N} \frac{x-x_i}{x_{k+l}-x_i}
+    L_{k+l}(x)=\prod_{ \substack{ i=k-N+1 \\ i\neq k+l } }^{k+N} \frac{x-x_i}{x_{k+l}-x_i}.
 \end{equation}
-For a uniform grid, the coefficients should be constant irrespective of the grid level $j$.
-\subsection{Fast Wavelet Transform}
-The existence of a fast wavelet transform is one of the more attractive qualities of the method. The transform makes use of the 
-interpolating subdivision algorithm for the calculation of the scaling and detail wavelet coefficients. The forward wavelet transform is given by
+The accuracy of such an interpolation is of $\mathcal{O}(2N)$.  For example, if $N=2$, this implies that 
+as the grid spacing between construction points halves, there is a reduction in global error of a factor of 16. 
+
+\subsection{Forward Wavelet Transform}
+The existence of a fast wavelet transform is one of the attractive qualities of the method. The transform makes use of the 
+interpolating subdivision algorithm (\ref{interp}) for the calculation of the scaling and detail wavelet coefficients. The forward wavelet transform is given by
 \begin{equation}
 	\begin{split}
 		d_{k}^{j} &= \frac{1}{2} \left( c_{2k+1}^{j+1}-\sum_{l} w_{k,l}^{j} c_{2k+2l}^{j+1} \right), \\
@@ -72,30 +88,36 @@ and the inverse transform is given by
 		c_{2k}^{j+1} &= c_{k}^{j}.
 	\end{split}
 \end{equation}
-Note that this second-generation wavelet transform does not include the lifting scheme. When using the lifting scheme,
-polynomials are also constructed from odd to even points.
-\subsection{Wavelet Construction}
-The construction of second-generation wavelets makes use of the dyadic grid. The interpolating subdivision scheme is 
-used to interpolate functional values defined at points on level $j$, to odd points (i.e. $x_{2k+1}^{j+1}$) at the next
-higher level of resolution. This scheme is used to construct the scaling and detail wavelet functions. Examples of the scaling and detail functions are shown in Figure 1 and Figure 2 respectively.
-The computation of the wavelet functions is done using the inverse wavelet transform. To obtain the scaling function $\phi_{m}^{j}(x)$, from (5) set $c_{k}^{j}=\delta_{k,m}, \forall k \in \mathcal{K}^j$, where $\delta_{k,m}$ is the Kronecker delta function defined by
+
+\subsection{Construction of Scaling Functions and Wavelets}
+
+\subsubsection{Scaling Functions}
+The construction of second-generation interpolating wavelets makes use of the interpolating subdivision algorithm. 
+The scheme is used to interpolate functional values defined at points on level $j$, to odd points (i.e. $x_{2k+1}^{j+1}$) 
+at the next higher level of resolution. This scheme is used to construct the scaling and detail wavelet functions. 
+Examples of the scaling and detail functions are shown in Figure 1 and Figure 2 respectively.
+To obtain the scaling function $\phi_{m}^{j}(x)$, from (5) set $c_{k}^{j}=\delta_{k,m}, \forall k \in \mathcal{K}^j$, where $\delta_{k,m}$ is the Kronecker delta function defined by
 \[ \delta_{k,m} = \begin{cases} 
       1 & k=m \\
       0 & k \neq m.
    \end{cases}
 \]
-Then let all $d_{l}^{j'}=0, \forall l \in \mathcal{L}^{j'}$ and perform the inverse transform up to an arbitrarily high level of resolution $J$. The wavelet $\psi_{l}^{j}$ is computed by setting $d_{m}^{j'} = \delta_{j',j} \delta_{l,m}, \forall l \in \mathcal{L}^{j}, \forall j \geq j$, and also $c_{k}^{j}, \forall k \in \mathcal{K}^j$. Then perform the inverse wavelet transform up to an arbitrarily high level of resolution $J$.
+Then let all $d_{l}^{j'}=0, \forall l \in \mathcal{L}^{j'}, \forall j' \geq j$ and perform the inverse transform up to an arbitrarily high level of resolution $J$. 
+
+\subsubsection{Wavelets}
+The wavelet $\psi_{l}^{j}$ is computed by setting $d_{m}^{j'} = \delta_{j',j} \delta_{l,m}, \forall l \in \mathcal{L}^{j}, \forall j \geq j$, and also $c_{k}^{j}, \forall k \in \mathcal{K}^j$. Then perform the inverse wavelet transform up to an arbitrarily high level of resolution $J$.
+
 \begin{figure}
 	\center
 	\input{../image/scaling_j3.tex}
-	\caption{An example of a scaling wavelet, $\phi(x)$, for $N=3$.}
+	\caption{An example of a scaling function, $\phi(x)$, for $N=3$.}
 \end{figure}
 \begin{figure}
 	\center
 	\input{../image/detail_j3.tex}
-	\caption{An example of a daughter wavelet, $\psi(x)$, for $N=3$.}
+	\caption{An example of a wavelet, $\psi(x)$, for $N=3$.}
 \end{figure}
-\subsection{Approximation of Functions}
+\subsection{Wavelet Approximation of Functions}
 The approximation of a function $f(x)$ is done by setting the scaling coefficients at the arbitrary maximum level of resolution $J$ to the function itself. Once the function is sampled this way on $\mathcal{G}^J$, the forward wavelet transform is 
 performed down to the coarsest level of resolution. The function is then represented by 
 \begin{equation}
@@ -114,42 +136,29 @@ $\epsilon$.
 	\caption{Approximation of $f(x)=\cos{(80 \pi x)} \exp{(-64 x^2)},$ with $N=3$ and 256 points on $\mathcal{G}^J$. All coefficients are kept.}
 \end{figure}
 
-\begin{figure}[H]
-	\center
-	\input{../image/solution_epminus5.tex}
-	\caption{Approximation of $f(x)$ with $\epsilon=10^{-5}$.}
-\end{figure}
+\subsection{Calculation of Spatial Derivatives}
+The calculation of spatial derivatives involves analyzing the detail coefficients, as they are a measure of how well the 
+given function is approximated by the local interpolant. If a point $x_{k}^{j}$ on level $j$ of the dyadic grid, does not have 
+detail coefficients above the threshold at points $x_{2k+1}^{j+1}$ or $x_{2k-1}^{j+1}$, then the given function's error is
+bounded by the thresholding parameter $\epsilon$.  Thus a stencil consisting of the same points
+which constructed the underlying polynomial should result in an accurate result at that point, 
+within some constant multiple of the tolerance $\epsilon$.
 
-\begin{figure}[H]
-	\center
-	\input{../image/coeffs_epminus5.tex}
-	\caption{Coefficients kept with $\epsilon=10^{-5}$.}
-\end{figure}
-
-\begin{figure}[H]
-	\center
-	\input{../image/solution_epminus3.tex}
-	\caption{Approximation of $f(x)$ with $\epsilon=10^{-3}$.}
-\end{figure}
-
-\begin{figure}[H]
-	\center
-	\input{../image/coeffs_epminus3.tex}
-	\caption{Coefficients kept with $\epsilon=10^{-3}$.}
-\end{figure}
-\newpage
-\section{To Be Completed Soon}
-\begin{enumerate}
-	\item Implement code for calculating spatial derivatives. When a particular point on $\mathcal{G}^{j+1}$ is absent 
-		of its detail coefficient (due to the threshold, or $j+1$ is the maximum level of refinement), then the approximation 
-		from the interpolating polynomial constructed on $\mathcal{G}^j$ is good enough. Thus differentiating the local
-		polynomial is a good enough approximation to the derivative of the function at that location.
-	\item The issue of the detail coefficient at the last point in the grid must be solved. As can be seen in Figure 5 and 
-		Figure 7, the detail coefficients are not being calculated correctly at the very last index. This would depend on 
-		interpolating at a ghost point possibly, so I am determining the best way to deal with the issue.
-	\item The additional 'lifting' step requires adjustment of 3 lines of code in the program. One simply also constructs
-		interpolating polynomials from the odd points to the even points. I wanted to get the code working properly before 
-		moving on to this necessary step. 
-\end{enumerate}
+\subsubsection{Differentiating Lagrange Polynomials} 
+The computational complexity of constructing Lagrange interpolating polynomial coefficients is $\mathcal{O}(N)$. 
+Once these terms are known, the weights needed for computing spatial derivatives on the adaptive grid can be computed with only slightly more effort. This is also an $\mathcal{O}(N)$ operation. 
+The analytic formula for the coefficients is given by
+\begin{equation}
+    \frac{d}{dx} L_{k+l}(x) = L_{k+l}(x) \sum_{ \substack{ i=k-N+1 \\ i\neq k+l } }^{k+N} \frac{1}{x_{k+l}-x_i}.
+\end{equation}
+However once this coefficient is calculated for each point in the stencil, it must be multiplied by its functional value, 
+and all points are then summed again in the same way that the Lagrange polynomial is in the first place. 
+Thus the total complexity of computing derivatives this way is $\mathcal{O}(N^2)$, which is not desirable. The order of 
+accuracy for computing one spatial derivative this way is $\mathcal{O}((h^j)^{2N-1})$, where $h^j$ is the local grid spacing. 
+Note that for a stencil consisting of four points $(N=2)$, this method is not only computationally inefficient, but also 1 order 
+of accuracy worse than a comparable four-point centered finite difference scheme, which has $\mathcal{O}((h^j)^{2N})$
+accuracy. The only advantage of this method can be seen when the stencil is non-uniform, in which case the finite difference 
+coefficients would have to be computed either in an implicit sense, or by interpolation, as done here.
+\subsubsection{Finite Difference Scheme}
 
 \end{document}

@@ -20,10 +20,10 @@ void detail_subd(double** f,double** x,int j,int m,int Jmax,int N) {
     //              psi_j,m(x_Jmax,k)
     //------------------------------------------------------------------//     
                                                                         //
-    double** d=new double*[Jmax+1];                                     // detail function coefficients
-    for (int i=0;i<=Jmax;i++) {                                         //
+    double** d=new double*[Jmax];                                       // detail function coefficients
+    for (int i=0;i<Jmax;i++) {                                          //
         int n=jPnts(i);                                                 // number of points at level j
-        d[i]=new double[n];                                             // initialize columns of d
+        d[i]=new double[n-1];                                           // initialize columns of d
     }                                                                   //
     int n=jPnts(j);                                                     //
     for (int i=0;i<n;i++) {                                             //
@@ -31,7 +31,7 @@ void detail_subd(double** f,double** x,int j,int m,int Jmax,int N) {
     }                                                                   //
     for (int jstar=j;jstar<Jmax;jstar++) {                              // 
         int n=jPnts(jstar);                                             //
-        for (int i=0;i<n;i++) {                                         //
+        for (int i=0;i<n-1;i++) {                                       //
             d[jstar][i]=kronecker_delta(jstar,j)*kronecker_delta(i,m);  // set 'detail' coefficients
         }                                                               //
     }                                                                   //
