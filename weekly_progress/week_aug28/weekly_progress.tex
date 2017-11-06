@@ -16,30 +16,88 @@
 %\usepackage{doublespace}
 
 \begin{document}
-\title{Development of a One-Dimensional Adaptive Wavelet Collocation Algorithm for Solving Partial Differential Equations}
+\title{Implementing the Adaptive Wavelet Collocation Method for Analyzing Calcium Dynamics 
+in Astrocyte Branch Structures}
 \author{Brandon Gusto \\}
 
 \maketitle
 %
-\section{Summary of Method}
-The adaptive wavelet collocation method for differential equations has a number of merits which may make it a viable
-alternative to traditional finite element, finite volume, or finite difference methods for certain problems. 
-Some important advantages include the following:
+\section{Motivation for the Adaptive Wavelet Collocation Method}
+The adaptive wavelet collocation method (AWCM) for differential equations has a number of merits which make it an 
+attractive alternative to traditional finite element, finite volume, and finite difference methods for particular problems. The 
+AWCM has been successfully applied to parabolic, elliptic, and hyperbolic PDEs, in applications
+such as aeroacoustics, turbulence, flame interactions, and others. 
+Some important qualities of the method which make it so capable are that
 \begin{itemize}
-    \item the multi-resolution properties of wavelets allow for natural grid adaptation
+    \item wavelets are localized in space and scale
+    \item the wavelet basis forms a multiresolution analysis
 \end{itemize} 
 Probably the most attractive quality of wavelets for solving partial differential equations (PDEs) or systems of PDEs is for their
-tremendous ability to compress data. For problems with isolated structures on a large background of relatively 
-homogenous data, the adaptive wavelet algorithm can achieve over ninety percent data compression, while still approximating the solution with reasonable accuracy. For problems such as combustion which have length scales ranging from the size of an engine block, all the way down to the Kolmogorov scale which governs the size of the smallest eddies, and time scales ranging from microseconds for turbulence down to nanoseconds for combustion, the wavelet algorithm is a game changer.
+tremendous ability to adapt to sharp changes in the function (and mention compression...). 
+The wavelet basis is ideal for problems which have 
+ length scales ranging from the large structures such as parts of a vehicle, down to the Kolmogorov scale which governs 
+ the size of the smallest eddies in fluid turbulence; and time scales ranging from microseconds for turbulence down 
+ to nanoseconds for combustion or the propagation of a flame front.
 
-\subsection{Wavelets}
-
-\subsection{Dyadic Grid}
+\section{Wavelets}
+A wavelet is a mathematical function which can be used as a basis for representing either continuous functions or 
+discrete signals. There exist many other bases which have been utilized, most notably the Fourier
+basis composed of sine and cosine functions, which can perfectly approximate any smooth, periodic function. 
+Unlike the Fourier basis however, wavelets are functions with finite length, which give them certain advantages.
+Since the wavelet functions are localized in space, it is necessary to shift them around in order to approximate
+a function. This action is referred to as \textit{translation}. Furthermore, where functions exhibit large changes in a short interval,
+it would be nice to approximate that interval using an even smaller function. To do so requires \textit{dilation} of the original
+wavelet function. Let us say that we would like to double the resolution of the wavelet, or halve its interval of support.
+Then let us define a relationship between the general scaling function $\phi(x)$ and the translates of its dilation
+to $\phi(2x)$ using what is called the dilation equation given by
+\begin{equation}
+\phi(x) = \sum_{k=0}^{N} c_k \phi(2x-k).
+\label{dilation equation}
+\end{equation}
+The three pillars(?) of wavelets which make them such a useful tool for approximation are \textbf{Orthogonality}, \textbf{Compact Support}, and \textbf{Multiresolution Analysis}.
+\subsection{Orthogonality}
+The basis of wavelet functions constitute an orthonormal set. All translations and dilations of the mother wavelet $\psi(x)$
+are orthogonal to the scaling function $\phi(x)$, 
+\begin{equation}
+\int_{-\infty}^{\infty} \phi(x) \psi(x) dx = 0,
+\end{equation}
+and other wavelets
+\begin{equation}
+\int_{-\infty}^{\infty} \psi_{k}^{j}(x) \psi_{k'}^{j'}(x) dx = 0.
+\end{equation}
+\subsection{Compact Support}
+Wavelet functions have compact support, meaning that they are uniformly zero outside of a specified interval.
+This property is advantageous for approximating sharp signals, where one would like to represent the spike using only a small 
+handful of basis functions. The Fourier basis is not adequate for this purpose, since the support for the basis is global; 
+the sine and cosine functions have infinite length. While successively higher-frequency sine and cosine terms 
+can be superimposed, the result is the necessary storage of more basis functions which cancel them out away
+from the sharp signal. 
+\subsection{Multiresolution Analysis}
+Let us define the space which is spanned by the basis of scaling functions $\phi_{k}^{0}(x)$ at the coarsest
+level of resolution by $V_0$. We understand from the previous section that the set of wavelet functions are orthogonal 
+to the set of scaling functions, and so the space spanned by the basis of wavelet functions, denoted by $W_0$, is thusly
+orthogonal to $V_0$. From the dilation equation \ref{dilation equation}, it is evident that the refined space can be described
+by
+\begin{equation}
+V_1 = V_0 \oplus W_0,
+\end{equation}
+which indicates that the space spanned by $\phi(2x)$ can be described by the `summation' of the spaces spanned by
+$V_0$ and $W_0$. Considering successively finer approximation spaces $\phi(4x), \phi(8x), \dots, \phi(2^j x)$ yields 
+the spaces
+\begin{equation}
+V_j = V_0 \oplus W_0 \oplus W_1 \oplus \dots \oplus W_j.
+\end{equation}
+The spaces $V_j$ are nested, since the function $\phi(x)$ is a combination of $\phi(2x)$ and $\phi(2x-1)$. In mathematical
+terms, $V_0 \subset V_1 \subset \dots \subset V_j$.
+\subsection{Second-Generation Wavelets}
+Second-generation wavelets refer to the family of functions which are no longer defined as translates and dilations of 
+a single mother function. 
+\section{Dyadic Grid}
 In developing an adaptive wavelet collocation algorithm, an appropriate numerical grid should be described. Given the 
 multi-resolution properties of wavelets previously described, a grid with a multi-resolution structure is fitting. This 
-is called a dyadic grid, and it should have as many levels as their are scales in a given problem. It can consist of 
-either uniform or non-uniform
-spacing of points. In the case of equally spaced grid points, let each grid level $j = 0, \dots, J$ be computed by 
+is called a dyadic grid, and it should have as many levels as their are scales in the given problem. It can consist of 
+either uniform or non-uniform spacing of points. In the case of equally spaced grid points, 
+let each grid level $j = 0, \dots, J$ be computed by 
 \begin{align}
 x^{j}_{k} &= 2^{-(j+\delta)} k,\text{ } \text{ } \text{ }  \text{ for $k=0,\dots,2^{j+\delta}$ },
 \end{align}
@@ -51,9 +109,9 @@ The grid levels are formally defined by
     \mathcal{G}^j= \{ x_{k}^{j} \in \Omega : k \in \mathcal{K}^j \}, \text{ } j \in \mathcal{Z},
 \end{equation}
 where $\mathcal{K}^{j}$ is the integer set representing the spatial locations in the grid at level $j$. The grids are 
-nested, implying that $\mathcal{G}^{j} \subset \mathcal{G}^{j+1}$. In other words, the points at level $x^{j}$ are a perfect 
-subset of the points at level $x^{j+1}$. This can also be demonstrated by the relation that 
-$x_{k}^{j}=x_{2k}^{j+1}$.
+nested, implying that $\mathcal{G}^{j} \subset \mathcal{G}^{j+1}$. In other words, the points $x^{j}$ are a perfect 
+subset of the points $x^{j+1}$. This can be demonstrated by the relation that 
+$x_{k}^{j}=x_{2k}^{j+1}$ for $k \in \mathcal{K}^{j}$.
 
 \subsection{Interpolating Subdivision}
 The interpolating subdivision scheme is central to the second-generation wavelet collocation approach. The scheme is used to
@@ -61,16 +119,13 @@ approximate values at odd points $x_{2k+1}^{j+1}$ by using $2N$ nearest points t
 order $2N-1$. Lagrange polynomials are used, and the method can be used with a uniform grid or with 
 nonuniform points such as Chebyshev points. The interpolating scheme is 
 \begin{equation}
-    f(x_{2k+1}^{j+1})=\sum_{l=-N+1}^{N} w_{k,l}^{j} f(x_{k+l}^{j}), \label{interp}
+    f(x_{2k+1}^{j+1})=\sum_{l=-N+1}^{N} L_{k+l} f(x_{k+l}^{j}), \label{interp}
 \end{equation}
-where the coefficients $w_{k,l}^{j}$ are general interpolating coefficients. In this algorithm, Lagrange 
-polynomials $L_{k+l}(x_{2k+1}^{j+1})$ are used. The 
-Lagrange polynomial in this notation is given by 
+where the interpolating weights are Lagrange polynomial coefficients given by 
 \begin{equation}
     L_{k+l}(x)=\prod_{ \substack{ i=k-N+1 \\ i\neq k+l } }^{k+N} \frac{x-x_i}{x_{k+l}-x_i}.
 \end{equation}
-The accuracy of such an interpolation is of $\mathcal{O}(2N)$.  For example, if $N=2$, this implies that 
-as the grid spacing between construction points halves, there is a reduction in global error of a factor of 16. 
+Given a uniform grid spacing at level $j$ of $h^j$, the accuracy of such an interpolation is of $\mathcal{O}((h^{j})^{2N})$.  
 
 \subsection{Forward Wavelet Transform}
 The existence of a fast wavelet transform is one of the attractive qualities of the method. The transform makes use of the 
@@ -91,7 +146,7 @@ and the inverse transform is given by
 
 \subsection{Construction of Scaling Functions and Wavelets}
 
-\subsubsection{Scaling Functions}
+\subsection{Scaling Functions}
 The construction of second-generation interpolating wavelets makes use of the interpolating subdivision algorithm. 
 The scheme is used to interpolate functional values defined at points on level $j$, to odd points (i.e. $x_{2k+1}^{j+1}$) 
 at the next higher level of resolution. This scheme is used to construct the scaling and detail wavelet functions. 
@@ -104,7 +159,7 @@ To obtain the scaling function $\phi_{m}^{j}(x)$, from (5) set $c_{k}^{j}=\delta
 \]
 Then let all $d_{l}^{j'}=0, \forall l \in \mathcal{L}^{j'}, \forall j' \geq j$ and perform the inverse transform up to an arbitrarily high level of resolution $J$. 
 
-\subsubsection{Wavelets}
+\subsection{Wavelets}
 The wavelet $\psi_{l}^{j}$ is computed by setting $d_{m}^{j'} = \delta_{j',j} \delta_{l,m}, \forall l \in \mathcal{L}^{j}, \forall j \geq j$, and also $c_{k}^{j}, \forall k \in \mathcal{K}^j$. Then perform the inverse wavelet transform up to an arbitrarily high level of resolution $J$.
 
 \begin{figure}
@@ -117,7 +172,7 @@ The wavelet $\psi_{l}^{j}$ is computed by setting $d_{m}^{j'} = \delta_{j',j} \d
 	\input{../image/detail_j3.tex}
 	\caption{An example of a wavelet, $\psi(x)$, for $N=3$.}
 \end{figure}
-\subsection{Wavelet Approximation of Functions}
+\section{Approximation of Functions}
 The approximation of a function $f(x)$ is done by setting the scaling coefficients at the arbitrary maximum level of resolution $J$ to the function itself. Once the function is sampled this way on $\mathcal{G}^J$, the forward wavelet transform is 
 performed down to the coarsest level of resolution. The function is then represented by 
 \begin{equation}
@@ -136,7 +191,7 @@ $\epsilon$.
 	\caption{Approximation of $f(x)=\cos{(80 \pi x)} \exp{(-64 x^2)},$ with $N=3$ and 256 points on $\mathcal{G}^J$. All coefficients are kept.}
 \end{figure}
 
-\subsection{Calculation of Spatial Derivatives}
+\section{Calculation of Spatial Derivatives}
 The calculation of spatial derivatives involves analyzing the detail coefficients, as they are a measure of how well the 
 given function is approximated by the local interpolant. If a point $x_{k}^{j}$ on level $j$ of the dyadic grid, does not have 
 detail coefficients above the threshold at points $x_{2k+1}^{j+1}$ or $x_{2k-1}^{j+1}$, then the given function's error is
@@ -144,7 +199,7 @@ bounded by the thresholding parameter $\epsilon$.  Thus a stencil consisting of 
 which constructed the underlying polynomial should result in an accurate result at that point, 
 within some constant multiple of the tolerance $\epsilon$.
 
-\subsubsection{Differentiating Lagrange Polynomials} 
+\subsection{Differentiating Lagrange Polynomials} 
 The computational complexity of constructing Lagrange interpolating polynomial coefficients is $\mathcal{O}(N)$. 
 Once these terms are known, the weights needed for computing spatial derivatives on the adaptive grid can be computed with only slightly more effort. This is also an $\mathcal{O}(N)$ operation. 
 The analytic formula for the coefficients is given by
@@ -159,6 +214,13 @@ Note that for a stencil consisting of four points $(N=2)$, this method is not on
 of accuracy worse than a comparable four-point centered finite difference scheme, which has $\mathcal{O}((h^j)^{2N})$
 accuracy. The only advantage of this method can be seen when the stencil is non-uniform, in which case the finite difference 
 coefficients would have to be computed either in an implicit sense, or by interpolation, as done here.
-\subsubsection{Finite Difference Scheme}
+\subsection{Finite Difference Scheme}
+
+\section{Open Areas of Research / Project Ideas}
+\begin{itemize}
+	\item AWCM combined with level-set method 
+	\item Wavelet Finite Element in an Arbitrary Lagrangian-Eulerian formulation.
+	\item Single-precision implementation of AWCM for parallelization on GPU's.
+\end{itemize}
 
 \end{document}

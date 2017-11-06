@@ -29,6 +29,7 @@ int shift;
 int inline jPnts(int j) {return pow(2,j+shift)+1;}
 
 int main(void) {
+
     //------- Grid and tolerance parameters ----------------------------//
     shift=2;                                                            // increases number of points of level j=0
     int J=12;                                                           // number of scales in the system
@@ -37,13 +38,16 @@ int main(void) {
     int i;                                                              // counter variable for spatial index
     int j;                                                          	// j usually indicates decomposition scale
     int k;                                                          	// k is another variable for spatial index
+
     //------- Define timestep size -------------------------------------//
-    int num_steps=40000;                                            	    // number of timesteps     
+    int numsteps=40;                                            	    // number of timesteps     
     double ti=0.;                                               	    // initial simulation time  
     double tf=1.;                                               	    // final simulation time     
-    double dt=0.000000000000001;                                 	    // timestep size
+    double dt=(tf-ti)/numsteps;                                 	    // timestep size
+
     //------- Class declarations ---------------------------------------//
-    initial_condition initCondition;                                    //
+    initial_condition initCondition;                                    // class containing initial conditions
+
     //------- Declare arrays -------------------------------------------//
     int N=jPnts(J);                                                     // number of points at each level j
     double* u=new double[N];                      	                    // solution variable current timestep
@@ -65,6 +69,7 @@ int main(void) {
         int N=jPnts(j)-1;                                               //
         d[j]=new double[N];                                             // detail coefficient
     }                                                                   //
+
     //------- Populate dyadic grid -------------------------------------//
     for (j=0;j<=J;j++) {                                        	    //
         int N=jPnts(j-1)-1;                                             //
@@ -72,12 +77,16 @@ int main(void) {
             x[j][k+N]=2.*pow(2.,-(j+shift))*static_cast<double>(k);     // values of x on dyadic grid
         }                                                       	    //
     }                                                           	    //
+
     //------- Initially set c's to initial condition -------------------//
     for (k=0;k<jPnts(J);k++) c[J][k]=initCondition.f(x[J][k]);          // sample initial condition on finest scale 
+
     //------- Perform forward wavelet transform ------------------------//
     fwd_trans(x,c,d,J,interpPnts);                                      // decompose signal into c's and d's
+
     //------- Remove coefficients below the threshold ------------------//
     thresholding(d,mask,threshold,J);                                   // knock out small d's
+
     //------- Extend mask ----------------------------------------------//
     for (k=0;k<jPnts(0);k++) mask[0][k]=true;                           // scaling coefficients at coarsest level included in mask
     for (j=1;j<=J;j++) {                                                // 
@@ -89,7 +98,7 @@ int main(void) {
             }                                                           //
         }                                                               //
     }                                                                   //
-    for (j=J-1;j>0;j--) {                                               // 
+/*    for (j=J-1;j>0;j--) {                                               // 
         for (k=0;k<jPnts(j);k++) {                                      //
             if (k%2==1 && mask[j][k]==true) {                           //
                 int leftPnt=-interpPnts+1;  
@@ -108,6 +117,7 @@ int main(void) {
             }                                                           //
         }                                                               //
     }                                                                   //
+*/
     //------- Calculate spatial derivatives ----------------------------//
     for (j=0;j<J;j++) {                                                 // 
         int N=jPnts(j);                                                 // number of points at current level
@@ -142,26 +152,30 @@ int main(void) {
     }                                                                   //
     //------- Reconstruct function using wavelets ----------------------//    
     reconstruction(x,u,c,d,mask,J,interpPnts);                          // build the solution using wavelets
+
     //------- Output solution to file ----------------------------------//
     int t=1;
-    char u_Out[25];
-    char ux_Out[25];
-    char uxx_Out[25];
-    sprintf(u_Out, "output/u_t%d.dat",t);
-    sprintf(ux_Out, "output/ux_t%d.dat",t);
-    sprintf(uxx_Out, "output/uxx_t%d.dat",t);
+    char u_Out[45];
+    char ux_Out[45];
+    char uxx_Out[45];
+    sprintf(u_Out, "output/_soln_files/u_t%d.dat",t);
+    sprintf(ux_Out, "output/_soln_files/ux_t%d.dat",t);
+    sprintf(uxx_Out, "output/_soln_files/uxx_t%d.dat",t);
     output(u_Out,x[J],u,activPnt,J);
     output(ux_Out,x[J],ux,activPnt,J);
     output(uxx_Out,x[J],uxx,activPnt,J);
     coeffs_out(x,mask,J);
+
     //------- Setup rhs of pde -----------------------------------------//
     double* rhs=new double[jPnts(J)];                                   //
     double alp=0.00001;
     for (i=0;i<jPnts(J);i++) {
             rhs[i]=-u[i]*ux[i]+alp*uxx[i];
     }
+
     //------- Advance in time ------------------------------------------//
 //    RK4(u,rhs,activPnt,dt,jPnts(J));
+
     //------- Cleanup --------------------------------------------------//
     delete[] x;
     delete[] c;
@@ -189,8 +203,8 @@ void coeffs_out(double** x,bool** mask,int Jmax) {
     for (int j=0;j<Jmax;j++) {
         int N=jPnts(j);   
         ofstream output;
-        char fn[25];
-        snprintf(fn,sizeof fn,"output/coeff%d.dat",j);
+        char fn[45];
+        snprintf(fn,sizeof fn,"output/_coeff_files/coeff%d.dat",j);
         output.open(fn);
         if (j==0) {
             for (int t=0;t<N;t++) {
@@ -198,8 +212,7 @@ void coeffs_out(double** x,bool** mask,int Jmax) {
             }
         } else {
             for (int t=0;t<N;t++) {
-                if (mask[j][t]==true) {
-                        //&& t%2==1) {
+                if (mask[j][t]==true && t%2==1) {
                     output<<x[j][t]<<" "<<j<<endl;
                 } else { 
                     output<<x[j][t]<<" "<<-10<<endl;

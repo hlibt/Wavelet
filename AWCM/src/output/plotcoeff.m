@@ -1,53 +1,52 @@
 clc, clf, clear all
 
-data0=load('coeff0.dat')
-data1=load('coeff1.dat')
-data2=load('coeff2.dat')
-data3=load('coeff3.dat')
-data4=load('coeff4.dat')
-data5=load('coeff5.dat')
-data6=load('coeff6.dat')
-data7=load('coeff7.dat')
-data8=load('coeff8.dat')
-data9=load('coeff9.dat')
-data10=load('coeff10.dat')
-data11=load('coeff11.dat')
-% data12=load('coeff12.dat')
+%-----------------------------------------------%
+% This file plots the detail (wavelet)          %
+% coefficients on a dyadic grid. After the      %
+% thresholding process, many detail coeff's     %
+% will be removed from the grid, leaving a      %
+% sparse dyadic grid structure.                 %
+% INPUTS:                                       %
+%           - 'coeffi.dat' type files           %
+% OUTPUTS:                                      %
+%           - plot of the dyadic grid           %
+% AUTHOR:                                       %
+%           Brandon Gusto,                      %
+%           Department of Scientific Computing, %
+%           Florida State University            %
+%-----------------------------------------------%
 
-h=figure(1);
-axis([-1 1 0 10]); hold on
+% maximum level j to search for
+Jmax=13;
 
-h=plot(data0(:,1),data0(:,2),'ko'), hold on
-set(h(1),'MarkerEdgeColor','k','MarkerFaceColor','k')
-h=plot(data1(:,1),data1(:,2),'ko'), hold on
-set(h(1),'MarkerEdgeColor','k','MarkerFaceColor','k')
-h=plot(data2(:,1),data2(:,2),'ko'), hold on
-set(h(1),'MarkerEdgeColor','k','MarkerFaceColor','k')
-h=plot(data3(:,1),data3(:,2),'ko'), hold on
-set(h(1),'MarkerEdgeColor','k','MarkerFaceColor','k')
-h=plot(data4(:,1),data4(:,2),'ko'), hold on
-set(h(1),'MarkerEdgeColor','k','MarkerFaceColor','k')
-h=plot(data5(:,1),data5(:,2),'ko'), hold on
-set(h(1),'MarkerEdgeColor','k','MarkerFaceColor','k')
-h=plot(data6(:,1),data6(:,2),'ko'), hold on
-set(h(1),'MarkerEdgeColor','k','MarkerFaceColor','k')
-h=plot(data7(:,1),data7(:,2),'ko'), hold on
-set(h(1),'MarkerEdgeColor','k','MarkerFaceColor','k')
-h=plot(data8(:,1),data8(:,2),'ko'), hold on
-set(h(1),'MarkerEdgeColor','k','MarkerFaceColor','k')
-h=plot(data9(:,1),data9(:,2),'ko'), hold on
-set(h(1),'MarkerEdgeColor','k','MarkerFaceColor','k')
-h=plot(data10(:,1),data10(:,2),'ko'), hold on
-set(h(1),'MarkerEdgeColor','k','MarkerFaceColor','k')
-h=plot(data11(:,1),data11(:,2),'ko'), hold on
-set(h(1),'MarkerEdgeColor','k','MarkerFaceColor','k')
-% h=plot(data12(:,1),data12(:,2),'ko'), hold on
-% set(h(1),'MarkerEdgeColor','k','MarkerFaceColor','k')
+% check if input files exist, if so load them
+chkexist=zeros(Jmax);
+for j=0:Jmax
+    if exist(sprintf('_coeff_files/coeff%d.dat',j),'file')
+        data{j+1}=load(sprintf('_coeff_files/coeff%d.dat',j)); 
+        chkexist(j+1)=true;
+    end
+end
 
+% plot results
+figure(1);
+axis([-1 1 0 Jmax+1]); hold on
+for j=0:Jmax
+    if chkexist(j+1)==true
+        plot(data{j+1}(:,1),data{j+1}(:,2),'ko'); hold on
+        %set(h(1),'MarkerEdgeColor','k','MarkerFaceColor','k');
+    end
+end
+hold off
+
+% set fontsize
+fs=16;
+
+% set specific y tick marks
+set(gca,'fontsize',fs)
 set(gca,'ygrid','on')
-set(gca,'Ytick',0:10);
+set(gca,'Ytick',0:Jmax+1);
 
-ylabel('$j$','Interpreter','LaTex')
-xlabel('$x_{k}^{j}$','Interpreter','Latex')
-
-  
+% name the x and y labels
+ylabel('$j$','Interpreter','LaTex','fontsize',fs)
+xlabel('$x_{k}^{j}$','Interpreter','Latex','fontsize',fs)

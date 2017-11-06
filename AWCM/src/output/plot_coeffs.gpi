@@ -1,6 +1,0 @@
-set term png
-set output "coeffs.png"
-unset key
-plot "solution0.dat" with points ls 7, "solution1.dat", "solution2.dat", "solution3.dat", "solution4.dat", "solution5.dat", "solution6.dat" 
-replot
-set term x11

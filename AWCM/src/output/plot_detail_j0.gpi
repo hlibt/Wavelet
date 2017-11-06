@@ -1,5 +1,0 @@
-set term png
-set output "detail_j0.png"
-plot "detail_j0.dat" with lines title "{/Symbol y}^{0}(x)"
-replot
-set term x11

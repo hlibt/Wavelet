@@ -1,5 +1,0 @@
-set term png
-set output "detail_j2.png"
-plot "detail_j2.dat" with lines title "{/Symbol y}^{2}(x)"
-replot
-set term x11
