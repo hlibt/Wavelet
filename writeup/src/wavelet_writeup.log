@@ -1,10 +1,10 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.15 (TeX Live 2014) (preloaded format=pdflatex 2014.5.25)  3 NOV 2017 10:46
+This is pdfTeX, Version 3.14159265-2.6-1.40.15 (TeX Live 2014) (preloaded format=pdflatex 2014.5.25)  12 NOV 2017 02:01
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
  %&-line parsing enabled.
-**weekly_progress.tex
-(./weekly_progress.tex
+**wavelet_writeup.tex
+(./wavelet_writeup.tex
 LaTeX2e <2014/05/01>
 Babel <3.9k> and hyphenation patterns for 78 languages loaded.
 (/usr/local/texlive/2014/texmf-dist/tex/latex/base/article.cls
@@ -729,8 +729,8 @@ Package: titling 2009/09/04 v2.1d maketitle typesetting
 \thanksmargin=\skip52
 \droptitle=\skip53
 )
-(./weekly_progress.aux)
-\openout1 = `weekly_progress.aux'.
+(./wavelet_writeup.aux)
+\openout1 = `wavelet_writeup.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 18.
 LaTeX Font Info:    ... okay on input line 18.
@@ -786,27 +786,20 @@ File: omscmr.fd 1999/05/25 v2.5h Standard LaTeX font definitions
 )
 LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <10.95> not available
 (Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 32.
- [1
 
-{/usr/local/texlive/2014/texmf-var/fonts/map/pdftex/updmap/pdftex.map}]
-Overfull \hbox (1.1367pt too wide) in paragraph at lines 83--87
-\OT1/cmr/m/n/10.95 spanned by $\OML/cmm/m/it/10.95 V[]$ \OT1/cmr/m/n/10.95 and 
-$\OML/cmm/m/it/10.95 W[]$\OT1/cmr/m/n/10.95 . Con-sid-er-ing suc-ces-sively fin
-er ap-prox-i-ma-tion spaces $\OML/cmm/m/it/10.95 ^^^\OT1/cmr/m/n/10.95 (4\OML/c
-mm/m/it/10.95 x\OT1/cmr/m/n/10.95 )\OML/cmm/m/it/10.95 ; ^^^\OT1/cmr/m/n/10.95 
-(8\OML/cmm/m/it/10.95 x\OT1/cmr/m/n/10.95 )\OML/cmm/m/it/10.95 ; [] ; ^^^\OT1/c
-mr/m/n/10.95 (2[]\OML/cmm/m/it/10.95 x\OT1/cmr/m/n/10.95 )$
- []
-
-[2] [3] (../image/scaling_j3.tex
+(./plotting_scripts/haar_scaling.tex
 \plotpoint=\box45
-) (../image/detail_j3.tex) [4]
-(../image/solution.tex) [5] [6] [7] (./weekly_progress.aux) ) 
+) [1
+
+{/usr/local/texlive/2014/texmf-var/fonts/map/pdftex/updmap/pdftex.map}] (./plot
+ting_scripts/haar_wavelet.tex) [2]
+[3] [4] (../image/scaling_j3.tex) (../image/detail_j3.tex) [5] [6]
+(../image/solution.tex) [7] [8] [9] (./wavelet_writeup.aux) ) 
 Here is how much of TeX's memory you used:
- 24108 strings out of 493117
- 580002 string characters out of 6135433
- 859340 words of memory out of 5000000
- 27115 multiletter control sequences out of 15000+600000
+ 24120 strings out of 493117
+ 580230 string characters out of 6135433
+ 851339 words of memory out of 5000000
+ 27120 multiletter control sequences out of 15000+600000
  16334 words of font info for 60 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  62i,16n,76p,726b,609s stack positions out of 5000i,500n,10000p,200000b,80000s
@@ -826,10 +819,10 @@ nts/type1/public/amsfonts/cm/cmsy10.pfb></usr/local/texlive/2014/texmf-dist/fon
 ts/type1/public/amsfonts/cm/cmsy6.pfb></usr/local/texlive/2014/texmf-dist/fonts
 /type1/public/amsfonts/cm/cmsy8.pfb></usr/local/texlive/2014/texmf-dist/fonts/t
 ype1/public/amsfonts/cm/cmti10.pfb>
-Output written on weekly_progress.pdf (7 pages, 197424 bytes).
+Output written on wavelet_writeup.pdf (9 pages, 207537 bytes).
 PDF statistics:
- 91 PDF objects out of 1000 (max. 8388607)
- 66 compressed objects within 1 object stream
+ 97 PDF objects out of 1000 (max. 8388607)
+ 70 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
  13 words of extra memory for PDF output out of 10000 (max. 10000000)
 

@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <stdio.h>
+#include <vector>
 #include <iomanip>
 #include <math.h>
 #include <cmath>
@@ -9,7 +10,6 @@
 #include "transform/transform.hpp"
 #include "interpolation/interpolation.hpp"
 #include "phys_driver/phys_driver.hpp"
-using namespace std;
 void output(char* input,double* X,double* U,bool* ACTIVE,int Jmax);
 void coeffs_out(double** x,bool** mask,int Jmax);
 
@@ -48,44 +48,31 @@ int main(void) {
     //------- Class declarations ---------------------------------------//
     initial_condition initCondition;                                    // class containing initial conditions
 
-    //------- Declare arrays -------------------------------------------//
-    int N=jPnts(J);                                                     // number of points at each level j
-    double* u=new double[N];                      	                    // solution variable current timestep
-    double* ux=new double[N];                                           // first derivative of the solution wrt x
-    double* uxx=new double[N];                                          // second spatial derivative
-    bool* activPnt=new bool[N];                                         // denotes points active on grid for output
-    double** x=new double*[J+1];			            		        // dyadic grid storage (explicit storage)
-    double** c=new double*[J+1];                                        // scaling function coefficients
-    bool** mask=new bool*[J+1];                                         // mask denoting points necessary for building adaptive grid 
-    bool** D=new bool*[J];                                              // the collection of points where derivatives shall be computed
-    double** d=new double*[J];                                          // detail function coefficients
-    for (j=0;j<=J;j++) {						                        //
-    	int N=jPnts(j); 			    	                            // number of points at level j
-	    x[j]=new double[N];  						                    // dyadic grid storage
-        c[j]=new double[N];                                             // scaling coefficients
-        mask[j]=new bool[N];                                            // mask containing true for kept coefficients
-    }									                                //
-    for (j=0;j<J;j++) {                                                 //
-        int N=jPnts(j)-1;                                               //
-        d[j]=new double[N];                                             // detail coefficient
+    //------- Declare collocation points -------------------------------//
+    CollocationPoint** collPnt = new CollocationPoint*[J+1];            // collocation points as objects
+    for (j=0;j<=J;j++) {                                                //
+        int N = jPnts(j);                                               // number of points at level j
+        collPnt[i] = new CollocationPoint[N];                           // 
     }                                                                   //
-
+                        
     //------- Populate dyadic grid -------------------------------------//
     for (j=0;j<=J;j++) {                                        	    //
         int N=jPnts(j-1)-1;                                             //
         for (k=-N;k<=N;k++) {                                    	    //
-            x[j][k+N]=2.*pow(2.,-(j+shift))*static_cast<double>(k);     // values of x on dyadic grid
+            collPnt[j][k+N].x = 2. * pow(2.,-(j+shift)) * k;            // values of x on dyadic grid
         }                                                       	    //
     }                                                           	    //
 
     //------- Initially set c's to initial condition -------------------//
-    for (k=0;k<jPnts(J);k++) c[J][k]=initCondition.f(x[J][k]);          // sample initial condition on finest scale 
+    for (k=0;k<jPnts(J);k++) {                                          //
+        collPnt[J][k].scaling_coeff = initCondition.f(x[J][k]);         // sample initial condition on finest scale 
+    }                                                                   //
 
     //------- Perform forward wavelet transform ------------------------//
-    fwd_trans(x,c,d,J,interpPnts);                                      // decompose signal into c's and d's
+    fwd_trans(collPnt,J,interpPnts);                                    // decompose 'signal' into scaling and detail coefficients
 
     //------- Remove coefficients below the threshold ------------------//
-    thresholding(d,mask,threshold,J);                                   // knock out small d's
+    thresholding(collPnt,threshold,J);                                  // knock out small wavelet coefficients
 
     //------- Extend mask ----------------------------------------------//
     for (k=0;k<jPnts(0);k++) mask[0][k]=true;                           // scaling coefficients at coarsest level included in mask

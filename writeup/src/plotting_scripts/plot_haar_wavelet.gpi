@@ -1,0 +1,10 @@
+set term latex
+set output "haar_wavelet.tex"
+unset key
+set xrange [-0.2:1.2]
+set yrange [-1.2:1.2]
+set format xy "$%g$"
+set xlabel '$x$'
+set ylabel '$\psi(x)$'
+plot "haar_wavelet.dat" with lines
+set term x11
