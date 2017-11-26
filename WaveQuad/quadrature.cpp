@@ -29,10 +29,10 @@ int interpPnts;
 int main(void) {
 
     //------- Grid and tolerance parameters ----------------------------//
-    shift = 2;                                                          // increases number of points on level j=0 (global variable)
-    J = 7;                                                              // number of scales in the system
+    shift = 4;                                                          // increases number of points on level j=0 (global variable)
+    J = 4;                                                              // number of scales in the system
     interpPnts = 2;                                                     // half the number of points used for interpolation (2*interpPnts + 1)
-    double threshold = pow(10.,-6);                                	    // error tolerance for wavelet coefficients (determines accuracy of solution)
+    double threshold = pow(10.,-12);                                	    // error tolerance for wavelet coefficients (determines accuracy of solution)
     int i;                                                              // the usual counter variable for spatial index
     int j;                                                          	// j usually indicates decomposition scale
     int k;                                                          	// k is another variable used to denote spatial index
@@ -62,7 +62,8 @@ int main(void) {
     wavelet_integrals(collPnt);                                         // compute integrals of the wavelets
 
     //------- Reconstruct function using wavelets ----------------------//    
-    cout << integrate(collPnt)  << endl;                                               // compute integral of input function using wavelets
+    double I = integrate(collPnt);                                      // compute integral of input function using wavelets
+    printf( "The integral is %4.8f \n", I );                            // print out the solution to the screen
 
     //------- Cleanup --------------------------------------------------//
     delete[] collPnt;                                                   // delete collocation points from memory

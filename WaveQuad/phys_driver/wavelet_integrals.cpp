@@ -11,7 +11,7 @@ using namespace std;
 void wavelet_integrals(CollocationPoint** collPnt) {
 
     // number of trapezoid rule integration 
-    int Jtrap = 10;
+    int Jtrap = J;
     int Ntrap = jPnts( Jtrap );
 
     // create arrays
@@ -25,7 +25,7 @@ void wavelet_integrals(CollocationPoint** collPnt) {
         psi[j] = new double[N];
     }
     for (int j=0;j<=J;j++) {                                   
-        int N = jPnts(j);                                               
+        int N = ( jPnts(j) - 1 ) / 2;
         for (int k=-N;k<=N;k++) {                                      	//
             gridPnts[j][k+N] = 2. * pow(2.,-(j+shift)) * k;             // x-locations of each collocation point
         }                                                       	    //
@@ -38,20 +38,18 @@ void wavelet_integrals(CollocationPoint** collPnt) {
     double summation = 0.;
     for (int i=0;i<jPnts( Jtrap );i++) {
         if ( i == 0 || ( i == jPnts( Jtrap ) - 1 ) ) {
-            summation += phi[Jtrap][i] / 2;
+            summation += phi[Jtrap][i] / 2.;
         } else {
             summation += phi[Jtrap][i];
         }
-        cout << phi[Jtrap][i] << endl;
     }
     for (int i=0;i<jPnts(0);i++) {
-        collPnt[0][i].integral = summation;
+        collPnt[0][i].integral = summation * abs( collPnt[Jtrap][1].x - collPnt[Jtrap][0].x );
     }
-    cout << summation << endl;
 
     // generate wavelets at all levels and then compute integral
     for (int j=0;j<J;j++) {
-        detail_subd(psi,gridPnts,j,3,Jtrap,interpPnts);
+        detail_subd(psi,gridPnts,j,0,Jtrap,interpPnts);
         double summation = 0.;
         for (int i=0;i<jPnts( Jtrap );i++) {
             if ( i == 0 || ( i == jPnts( Jtrap ) - 1 ) ) {
@@ -62,9 +60,10 @@ void wavelet_integrals(CollocationPoint** collPnt) {
         }
         for (int i=0;i<jPnts(j+1);i++) {
             if ( i%2==1 ) {
-                collPnt[j+1][i].integral = summation;
+                collPnt[j+1][i].integral = summation * abs( collPnt[j][1].x - collPnt[j][0].x );
             }
         }
     }
         
 }
+

@@ -20,8 +20,8 @@ void fwd_trans(CollocationPoint** collPnt) {
     //              collPnt.x               - the x-location of the collocation point
     //              collPnt.scaling_coeff   - the scaling coefficients
     //              collPnt.detail_coeff    - the detail coefficients
-    //              Jmax                    - maximum grid level
-    //              N                       - half the number of interp. points
+    //              J                       - maximum grid level (global variable)
+    //              interpPnts              - half the number of interpolation points
     //--------------------------------------------------------------------------//     
     
     for (int i=0;i<jPnts(J);i++) {                                              // loop through the points at level Jmax
@@ -41,7 +41,7 @@ void fwd_trans(CollocationPoint** collPnt) {
             if ( i%2==1 ) {                                                     // detail coefficients only exist at odd points
             double xeval = collPnt[j][i].x;                                     // define the point for polynomials to be evaluated 
             collPnt[j][i].detail_coeff = .5*( collPnt[j][i].scaling_coeff       // compute detail coefficients
-                        - lagrInterp(xeval,collPnt[j-1],(i-1)/2,interpPnts,jPnts(j-1)) );//
+                        - lagrInterp(xeval,collPnt[j-1],(i-1)/2,jPnts(j-1)) );  //
             }                                                                   //
         }                                                                       //
     }                                                                           //
