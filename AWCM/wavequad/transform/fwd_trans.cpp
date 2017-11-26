@@ -1,12 +1,13 @@
 #include <iostream>
 #include <cmath>
 #include <math.h>
+#include <vector>
+#include "../CollocationPoint.hpp"
 #include "../interpolation/interpolation.hpp"
 #include "../global.hpp"
-#include "../CollocationPoint.hpp"
 using namespace std;
 
-void fwd_trans(CollocationPoint** collPnt,double* inputSig,int Jmax,int N) {
+void fwd_trans(CollocationPoint** collPnt) {
     
     //--------------------------------------------------------------------------//
     // Information: fwd_trans performs the forward wavelet                  
@@ -19,24 +20,29 @@ void fwd_trans(CollocationPoint** collPnt,double* inputSig,int Jmax,int N) {
     //              collPnt.x               - the x-location of the collocation point
     //              collPnt.scaling_coeff   - the scaling coefficients
     //              collPnt.detail_coeff    - the detail coefficients
-    //              inputSig                - the input function to be decomposed
     //              Jmax                    - maximum grid level
     //              N                       - half the number of interp. points
     //--------------------------------------------------------------------------//     
     
-    int n = jPnts(Jmax);                                                        // number of points at level Jmax
-    for (int i=0;i<n;i++) {                                                     // loop through the points at level Jmax
-        collPnt[Jmax][i].scaling_coeff = inputSig[i];                           // set the scaling coefficients at Jmax to the input
+    for (int i=0;i<jPnts(J);i++) {                                              // loop through the points at level Jmax
+        collPnt[J][i].scaling_coeff = integrand( collPnt[J][i].x );             // set the scaling coefficients at level J to the integrand
     };                                                                          //
-    for (int j=Jmax-1;j>=0;j--) {                                               // copy even coefficients from level j+1 to j
+    for (int j=J;j>0;j--) {                                                     // copy even coefficients from level j to j-1
         int n = jPnts(j);                                                       // 
         for (int i=0;i<n;i++) {                                                 // loop through points at level j
-            collPnt[j][i].scaling_coeff = collPnt[j+1][2*i].scaling_coeff;      // even scaling coeff's the same, just copy them
+            if (i%2==0) {                                                       //
+            collPnt[j-1][i/2].scaling_coeff = collPnt[j][i].scaling_coeff;      // even scaling coeff's the same, just copy them
+            }                                                                   //
         }                                                                       //
-        for (int i=0;i<n-1;i++) {                                               //
-            double xeval = collPnt[j+1][2*i+1].x;                               // define the point for polynomials to be evaluated 
-            collPnt[j][i].detail_coeff = .5*( collPnt[j+1][2*i+1].scaling_coeff // compute detail coefficients
-                        - lagrInterp(xeval,collPnt[j],i,N,n) );                 //
+    }                                                                           //
+    for (int j=J;j>0;j--) {                                                     //
+        int n = jPnts(j);                                                       //
+        for (int i=0;i<n;i++) {                                                 //
+            if ( i%2==1 ) {                                                     // detail coefficients only exist at odd points
+            double xeval = collPnt[j][i].x;                                     // define the point for polynomials to be evaluated 
+            collPnt[j][i].detail_coeff = .5*( collPnt[j][i].scaling_coeff       // compute detail coefficients
+                        - lagrInterp(xeval,collPnt[j-1],(i-1)/2,interpPnts,jPnts(j-1)) );//
+            }                                                                   //
         }                                                                       //
     }                                                                           //
     return;                                                                     //

@@ -3,7 +3,7 @@ all: awcm
 awcm: awcm.o scaling_subd.o detail_subd.o fwd_trans.o lagrInterp.o lagrInterpD1.o lagrInterpD2.o reconstruction.o thresholding.o RK4.o
 	g++ -o awcm awcm.o scaling_subd.o detail_subd.o fwd_trans.o lagrInterp.o lagrInterpD1.o lagrInterpD2.o reconstruction.o thresholding.o RK4.o -I.
 
-awcm.o: awcm.cpp conditions/conditions.hpp phys_driver/phys_driver.hpp transform/transform.hpp
+awcm.o: awcm.cpp conditions/conditions.hpp phys_driver/phys_driver.hpp transform/transform.hpp CollocationPoint.hpp
 	g++ -c awcm.cpp -I.
 
 scaling_subd.o: interpolation/scaling_subd.cpp 
