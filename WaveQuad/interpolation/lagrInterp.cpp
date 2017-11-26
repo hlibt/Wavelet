@@ -5,7 +5,7 @@
 #include "../CollocationPoint.hpp"
 using namespace std;
 
-double lagrInterp(double xeval, CollocationPoint* collPnt, int i, int numPnts) {
+double lagrInterp(double xeval, CollocationPoint** collPnt, int j, int i, int numPnts) {
 
     //--------------------------------------------------------------------------//
     // Information: This program "lagrInterp.cpp" computes the Lagrange interpolating
@@ -39,11 +39,11 @@ double lagrInterp(double xeval, CollocationPoint* collPnt, int i, int numPnts) {
         for (int k=leftPnt;k<=rightPnt;k++) {                                   //
             if (k==l) {                                                         // if l the same as k do nothing
             } else {                                                            // else compute the Lagrange coefficients
-                product *= ( xeval - collPnt[k].x ) / ( collPnt[l].x            //
-                                    - collPnt[k].x );                           //     
+                product *= ( xeval - collPnt[j][k].x ) / ( collPnt[j][l].x      //
+                                    - collPnt[j][k].x );                        //     
             }                                                                   //
         }                                                                       //
-        sum += product * collPnt[l].scaling_coeff;
+        sum += product * collPnt[j][l].scaling_coeff;                           // compute the polynomial
     }
     return sum;
 }

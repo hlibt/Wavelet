@@ -49,7 +49,7 @@ void wavelet_integrals(CollocationPoint** collPnt) {
 
     // generate wavelets at all levels and then compute integral
     for (int j=0;j<J;j++) {
-        detail_subd(psi,gridPnts,j,0,Jtrap,interpPnts);
+        detail_subd(psi,gridPnts,j,1,Jtrap,interpPnts);
         double summation = 0.;
         for (int i=0;i<jPnts( Jtrap );i++) {
             if ( i == 0 || ( i == jPnts( Jtrap ) - 1 ) ) {
@@ -60,7 +60,12 @@ void wavelet_integrals(CollocationPoint** collPnt) {
         }
         for (int i=0;i<jPnts(j+1);i++) {
             if ( i%2==1 ) {
-                collPnt[j+1][i].integral = summation * abs( collPnt[j][1].x - collPnt[j][0].x );
+                collPnt[j+1][i].integral = summation * abs( collPnt[Jtrap][1].x - collPnt[Jtrap][0].x );
+            }
+        }
+        for (int jstar=0;jstar<=J;jstar++) {
+            for (int k=0;k<jPnts(jstar);k++) {
+                psi[jstar][k] = 0.;
             }
         }
     }

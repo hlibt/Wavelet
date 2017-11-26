@@ -7,6 +7,6 @@ int inline jPnts(int j) { return pow(2,j+shift) + 1; }                  // the n
                                                                         //
 double inline integrand( double x ) {                                   // the function to be integrated
 //    double f = log( 1 - cos( x ) );                                     // singluar integrand
-    double f = x*x;
+    double f = sin(x*x);
     return f;                                                           //
 }                                                                       //    

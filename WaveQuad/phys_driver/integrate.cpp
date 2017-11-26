@@ -19,11 +19,9 @@ double integrate(CollocationPoint** collPnt) {
 
         // sum up integrals from the detail wavelets multiplied by their detail coefficients (at all levels)
     for (int j=1;j<=J;j++) {
-        int n = jPnts(j);
-        for (int i=0;i<n;i++) {
+        for (int i=0;i<jPnts(j);i++) {
             if ( collPnt[j][i].isMask == true ) {
                summation += collPnt[j][i].integral * collPnt[j][i].detail_coeff;
-               cout << "detail " << collPnt[j][i].detail_coeff << endl;
             }
         }
     }

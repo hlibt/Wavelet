@@ -40,8 +40,8 @@ void fwd_trans(CollocationPoint** collPnt) {
         for (int i=0;i<n;i++) {                                                 //
             if ( i%2==1 ) {                                                     // detail coefficients only exist at odd points
             double xeval = collPnt[j][i].x;                                     // define the point for polynomials to be evaluated 
-            collPnt[j][i].detail_coeff = .5*( collPnt[j][i].scaling_coeff       // compute detail coefficients
-                        - lagrInterp(xeval,collPnt[j-1],(i-1)/2,jPnts(j-1)) );  //
+            collPnt[j][i].detail_coeff = .5 * ( collPnt[j][i].scaling_coeff     // compute detail coefficients
+                        - lagrInterp(xeval,collPnt,j-1,(i-1)/2,jPnts(j-1)) );   //
             }                                                                   //
         }                                                                       //
     }                                                                           //
