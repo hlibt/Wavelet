@@ -26,7 +26,7 @@ int shift;
 int J;
 int interpPnts;
 
-int main(void) {
+int main() {
 
     //------- Grid and tolerance parameters ----------------------------//
     shift = 2;                                                          // increases number of points on level j=0 (global variable)
@@ -39,6 +39,7 @@ int main(void) {
 
     //------- Declare collocation points -------------------------------//
     CollocationPoint** collPnt = new CollocationPoint*[J+1];            // J+1 rows
+    double* u = new double[ jPnts(J) ];                                 // reconstructed function
     for (int j=0;j<=J;j++) {                                            // 
         int N = jPnts(j);                                               // number of points at level j
         collPnt[j] = new CollocationPoint[N];                           // create objects for each of the points
@@ -55,7 +56,10 @@ int main(void) {
     //------- Perform forward wavelet transform ------------------------//
     fwd_trans(collPnt);                                                 // decompose integrand into scaling and detail coefficients 
 
-    //------- Remove coefficients below the threshold ------------------//
+    //------- Compute the reconstructed function using wavelets -------//
+    reconstruction(
+
+/*    //------- Remove coefficients below the threshold ------------------//
     thresholding(collPnt,threshold);                                    // knock out small wavelet coefficients
 
     //------- Compute integrals of wavelets at all levels --------------//
@@ -64,6 +68,7 @@ int main(void) {
     //------- Reconstruct function using wavelets ----------------------//    
     double I = integrate(collPnt);                                      // compute integral of input function using wavelets
     printf( "The integral is %4.8f \n", I );                            // print out the solution to the screen
+*/
 
     //------- Cleanup --------------------------------------------------//
     delete[] collPnt;                                                   // delete collocation points from memory
