@@ -6,7 +6,11 @@ extern int interpPnts;
 int inline jPnts(int j) { return pow(2,j+shift) + 1; }                  // the number of grid points at level j
                                                                         //
 double inline integrand( double x ) {                                   // the function to be integrated
-//    double f = log( 1 - cos( x ) );                                     // singluar integrand
-    double f = sin(x*x);
+    double f;
+    if ( x == 0. ) {
+        f = 0.;
+    } else {
+        f = x * log( abs(x) );                                       // integrand
+    }
     return f;                                                           //
 }                                                                       //    
