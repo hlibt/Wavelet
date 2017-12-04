@@ -7,10 +7,11 @@ int inline jPnts(int j) { return pow(2,j+shift) + 1; }                  // the n
                                                                         //
 double inline integrand( double x ) {                                   // the function to be integrated
     double f;
-    if ( x == 0. ) {
+    f = exp( x );
+/*    if ( x == 0. ) {
         f = 0.;
     } else {
         f = x * log( abs(x) );                                       // integrand
-    }
+    } */
     return f;                                                           //
 }                                                                       //    

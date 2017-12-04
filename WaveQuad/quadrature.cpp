@@ -29,9 +29,15 @@ int interpPnts;
 int main() {
 
     //------- Grid and tolerance parameters ----------------------------//
+<<<<<<< HEAD
     shift = 5;                                                          // increases number of points on level j=0 (global variable)
     J = 18;                                                             // number of scales in the system
     interpPnts = 10;                                                    // half the number of points used for interpolation (2*interpPnts + 1)
+=======
+    shift = 4;                                                          // increases number of points on level j=0 (global variable)
+    J = 20;                                                             // number of scales in the system
+    interpPnts = 3;                                                     // half the number of points used for interpolation (2*interpPnts + 1)
+>>>>>>> cd26d15c9603d9717a2806371d85da5b98ce4504
     double threshold = pow(10.,-6.);                             	    // error tolerance for wavelet coefficients (determines accuracy of solution)
     int i;                                                              // the usual counter variable for spatial index
     int j;                                                          	// j usually indicates decomposition scale
@@ -66,7 +72,7 @@ int main() {
 
     //------- Reconstruct function using wavelets ----------------------//    
     double I = integrate(collPnt);                                      // compute integral of input function using wavelets
-    double error = abs( -1./4. - I );                                   // error for integrating sin(x^2) dx from -1 to 1
+    double error = abs( (exp(1)-1.) - I );                                   // error for integrating sin(x^2) dx from -1 to 1
     printf( "The integral is %4.17f \n", I );                           // print out the solution to the screen
     printf( "The error is %4.17f \n", error );                          // print the error
     int activPnts = jPnts(0);

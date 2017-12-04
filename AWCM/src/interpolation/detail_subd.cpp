@@ -1,6 +1,7 @@
 #include <iostream>
 #include <cmath>
 #include <math.h>
+#include "../CollocationPoint.hpp"
 #include "interpolation.hpp"
 #include "../global.hpp"
 
@@ -40,8 +41,8 @@ void detail_subd(double** f,double** x,int j,int m,int Jmax,int N) {
         for (int i=0;i<n-1;i++) {                                       // loop through all points but the last at level j
             double xEval=x[jstar+1][2*i+1];                             // set the point to be evaluated at lagrange polynomial
             f[jstar+1][2*i]=f[jstar][i];                                // even points stay the same
-            f[jstar+1][2*i+1]=2.*d[jstar][i]+lagrInterp(xEval,x[jstar], // odd points
-                                f[jstar],i,N,n);                        // 
+            f[jstar+1][2*i+1]=2.*d[jstar][i]+lagrInterp_old(xEval,      // compute odd points
+                                x[jstar],f[jstar],i,N,n);               // 
         }                                                               //
         f[jstar+1][2*(n-1)]=f[jstar][n-1];                              // last even point
     }                                                                   //

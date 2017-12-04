@@ -1,11 +1,11 @@
 #include <iostream>
 #include <cmath>
 #include <math.h>
-#include "../global.hpp"
 #include "../CollocationPoint.hpp"
+#include "../global.hpp"
 using namespace std;
 
-double lagrInterp(double xeval, CollocationPoint* collPnt, int i, int interpPnts, int numPnts) {
+double lagrInterp(double xeval, CollocationPoint** collPnt, int j, int i, int numPnts) {
 
     //--------------------------------------------------------------------------//
     // Information: This program "lagrInterp.cpp" computes the Lagrange interpolating
@@ -14,13 +14,13 @@ double lagrInterp(double xeval, CollocationPoint* collPnt, int i, int interpPnts
     //              wavelet transform itself.
     //
     // Input: 
-    //              x                       - the point that the polynomial is evaluated
+    //              xeval                    - the point that the polynomial is evaluated
     //              collPnt                 - the matrix of collocation point objects 
     //                                        at all levels. Composed of other variables
     //              collPnt.x               - the x-location of the collocation point
     //              collPnt.scaling_coeff   - the scaling coefficients
-    //              Jmax                    - maximum grid level
-    //              N                       - half the number of interp. points
+    //              J                       - maximum grid level (global)
+    //              numPnts                 - the number of points at current level
     //--------------------------------------------------------------------------//     
 
     double sum = 0.;                                                            // initialize a summation variable
@@ -30,7 +30,7 @@ double lagrInterp(double xeval, CollocationPoint* collPnt, int i, int interpPnts
         leftPnt++;                                                              // adjust stencil one point to the right if necessary
         rightPnt++;                                                             // 
     }                                                                           //
-    while ( rightPnt > (numPnts-1) ) {                                          // adjust stencil one point to the left if necessary                                            
+    while ( rightPnt > (numPnts-1) ) {                                          // adjust stencil one point to the left if necessary
         leftPnt--;                                                              //
         rightPnt--;                                                             //
     }                                                                           //
@@ -39,11 +39,11 @@ double lagrInterp(double xeval, CollocationPoint* collPnt, int i, int interpPnts
         for (int k=leftPnt;k<=rightPnt;k++) {                                   //
             if (k==l) {                                                         // if l the same as k do nothing
             } else {                                                            // else compute the Lagrange coefficients
-                product *= ( xeval - collPnt[k].x ) / ( collPnt[l].x            //
-                                    - collPnt[k].x );                           //     
+                product *= ( xeval - collPnt[j][k].x ) / ( collPnt[j][l].x      //
+                                    - collPnt[j][k].x );                        //     
             }                                                                   //
         }                                                                       //
-        sum += product * collPnt[l].scaling_coeff;
+        sum += product * collPnt[j][l].scaling_coeff;                           // compute the polynomial
     }
     return sum;
 }
