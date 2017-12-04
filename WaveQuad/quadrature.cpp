@@ -29,9 +29,9 @@ int interpPnts;
 int main() {
 
     //------- Grid and tolerance parameters ----------------------------//
-    shift = 4;                                                          // increases number of points on level j=0 (global variable)
-    J = 20;                                                             // number of scales in the system
-    interpPnts = 4;                                                     // half the number of points used for interpolation (2*interpPnts + 1)
+    shift = 5;                                                          // increases number of points on level j=0 (global variable)
+    J = 18;                                                             // number of scales in the system
+    interpPnts = 10;                                                    // half the number of points used for interpolation (2*interpPnts + 1)
     double threshold = pow(10.,-6.);                             	    // error tolerance for wavelet coefficients (determines accuracy of solution)
     int i;                                                              // the usual counter variable for spatial index
     int j;                                                          	// j usually indicates decomposition scale
