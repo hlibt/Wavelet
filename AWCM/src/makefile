@@ -1,9 +1,9 @@
 all: awcm
 
-awcm: awcm.o scaling_subd.o detail_subd.o fwd_trans.o lagrInterp.o lagrInterp_old.o lagrInterpD1.o lagrInterpD2.o reconstruction.o thresholding.o RK4.o
-	g++ -o awcm awcm.o scaling_subd.o detail_subd.o fwd_trans.o lagrInterp.o lagrInterp_old.o lagrInterpD1.o lagrInterpD2.o reconstruction.o thresholding.o RK4.o -I.
+awcm: awcm.o scaling_subd.o detail_subd.o fwd_trans.o lagrInterp.o lagrInterp_old.o lagrInterpD1.o lagrInterpD2.o reconstruction.o thresholding.o compute_derivatives.o compute_rhs.o RK4.o
+	g++ -o awcm awcm.o scaling_subd.o detail_subd.o fwd_trans.o lagrInterp.o lagrInterp_old.o lagrInterpD1.o lagrInterpD2.o reconstruction.o thresholding.o compute_derivatives.o compute_rhs.o RK4.o -I.
 
-awcm.o: awcm.cpp conditions/conditions.hpp phys_driver/phys_driver.hpp transform/transform.hpp CollocationPoint.hpp
+awcm.o: awcm.cpp conditions/conditions.hpp phys_driver/phys_driver.hpp transform/transform.hpp CollocationPoint.hpp global.hpp
 	g++ -c awcm.cpp -I.
 
 scaling_subd.o: interpolation/scaling_subd.cpp 
@@ -33,8 +33,14 @@ thresholding.o: phys_driver/thresholding.cpp
 reconstruction.o: phys_driver/reconstruction.cpp
 	g++ -c phys_driver/reconstruction.cpp -I. -I/phys_driver/
 
+compute_derivatives.o: phys_driver/compute_derivatives.cpp
+	g++ -c phys_driver/compute_derivatives.cpp -I. -I/phys_driver/
+
 RK4.o: phys_driver/RK4.cpp
 	g++ -c phys_driver/RK4.cpp -I. -I/phys_driver/
+
+compute_rhs.o: phys_driver/compute_rhs.cpp
+	g++ -c phys_driver/compute_rhs.cpp -I. -I/phys_driver/
 
 clean:
 	rm *o

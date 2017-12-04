@@ -5,7 +5,7 @@
 #include "../global.hpp"
 using namespace std;
 
-void reconstruction(double* fapprox , CollocationPoint** collPnt) {
+void reconstruction(CollocationPoint** collPnt) {
 
     //--------------------------------------------------------------------------//
     // Information: This program uses the active wavelets to reconstruct the 
@@ -42,16 +42,17 @@ void reconstruction(double* fapprox , CollocationPoint** collPnt) {
             }                                                                   //
             for (int i=0;i<jPnts(J);i++) {
                 if (j==0) {
-                    fapprox[i] += collPnt[j][l].scaling_coeff * phi[J][i];
+                    collPnt[J][i].u += collPnt[j][l].scaling_coeff * phi[J][i];
                 }
                 if ( collPnt[j+1][2*l+1].isMask == true && l < N-1 ) {
-                    fapprox[i] += collPnt[j+1][2*l+1].detail_coeff * psi[J][i]; 
+                    collPnt[J][i].u += collPnt[j+1][2*l+1].detail_coeff * psi[J][i]; 
                 }
             }
         }
     }
     delete[] phi;
     delete[] psi;
+    delete[] gridPnts;
 
     return;
 }
