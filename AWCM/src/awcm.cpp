@@ -5,6 +5,7 @@
 #include <iomanip>
 #include <math.h>
 #include <cmath>
+#include <vector>
 #include "CollocationPoint.hpp"
 #include "matrix_solvers/BiCGSTAB.h"
 #include "conditions/conditions.hpp"
@@ -12,7 +13,7 @@
 #include "interpolation/interpolation.hpp"
 #include "phys_driver/phys_driver.hpp"
 using namespace std;
-void output(char* input,double* X,double* U,bool* ACTIVE,int Jmax);
+void output(char* input, double* U, CollocationPoint** collPnt);
 void coeffs_out(double** x,bool** mask,int Jmax);
 
     //------------------------------------------------------------------------------//
@@ -37,6 +38,11 @@ int inline indexShift(int jstar, int j, int k) {                        // repre
         int gridMultplr = pow(2,jstar-j);                               // multiplier parameter to get k to level jstar
         return k * gridMultplr;                                         // output what k would be at finest level jstar
 }                                                                       //
+                                                                        //
+double inline init_condition(double x) {                                //
+    return sin(2.*x);                                                   //
+}                                                                       //
+
 
 int main(void) {
 
@@ -50,81 +56,41 @@ int main(void) {
     int k;                                                          	// k is another variable used to denote spatial index
 
     //------- Define timestep size -------------------------------------//
-    int numSteps = 40;                                            	    // number of timesteps     
+    int num_steps = 40;                                            	    // number of timesteps     
     double ti = 0.;                                               	    // initial simulation time  
     double tf = 1.;                                               	    // final simulation time     
-    double dt = ( tf - ti ) / numSteps;                           	    // timestep size (determined by choice of interval and number of steps)
-
-    //------- Class declarations ---------------------------------------//
-    initial_condition IC;                                               // class containing initial conditions
+    double dt = ( tf - ti ) / num_steps;                           	    // timestep size (determined by choice of interval and number of steps)
 
     //------- Declare collocation points -------------------------------//
-    int N = jPnts(0);                                                   // the number of points at the coarsest level j=0 (scaling points)
-    ScalingPoint* scalPnt = new ScalingPoint[N];                        // declare points corresponding to scaling wavelets as objects
-    DetailPoint** detPnt = new DetailPoint*[J+1];                       // J+1 rows
-    for (int j=0;j<J;j++) {                                             // 
-        N = jPnts(j) - 1;                                               // number of points associated with wavelets at level j
-        detPnt[j] = new DetailPoint[N];                                 // create "DetailPoint" objects for each of the points associated with wavelets
+    CollocationPoint** collPnt = new CollocationPoint*[J+1];            // Create J+1 pointers to arrays
+    for (int j=0;j<=J;j++) {                                            // 
+        int N = jPnts(j);                                               // number of points at level j
+        collPnt[j] = new CollocationPoint[N];                           // create array for all points at level j
     }                                                                   //
                         
     //------- Populate dyadic grid -------------------------------------//
-    N = jPnts(0) - 1;                                                   // number of points at the coarsest level (-1)
-    for (k=-N/2;k<=N/2;k++) {                                           //
-        scalPnt[k+N].x = 2.*pow(2.,-(j+shift)) * k;                     // the x-values of scaling points on [-1,1]
-    }                                                                   //
-    for (j=0;j<J;j++) {                                         	    // 
-        N = jPnts(j) - 1;                                               //
+    for (j=0;j<=J;j++) {                                         	    // 
+        int N = ( jPnts(j) - 1 ) / 2;                                   //
         for (k=-N;k<=N;k++) {                                          	//
-            if ( k % 2 == 1 ) {                                         // determine if at odd point (wavelet location)
-                detPnt[j][(k+N-1)/2].x = 2. * pow(2.,-(j+shift)) * k;   // x-locations of point corresponding to wavelet
-            }                                                           //
+            collPnt[j][k+N].x = 2. *  pow(2.,-(j+shift)) * k;           // x-locations of each collocation point
         }                                                       	    //
     }                                                           	    //
 
     //------- sample the the initial condition -------------------------//
     for (k=0;k<jPnts(J);k++) {                                          //
-        collPnt[J][k].scaling_coeff = IC.f( collPnt[J][k].x );          // sample the initial condition on the finest scale available
+        collPnt[J][k].scaling_coeff = init_condition(collPnt[J][k].x);  // sample the initial condition on the finest scale 
     }                                                                   //
-
+    
     //------- Perform forward wavelet transform ------------------------//
-//    fwd_trans(collPnt,J,interpPnts);                                    // decompose 'signal' into scaling and detail coefficients 
-                                                                        // ... lifting not implemented yet
+    fwd_trans(collPnt);                                                 // compute all scaling and detail coefficients
 
     //------- Remove coefficients below the threshold ------------------//
-//    thresholding(collPnt,threshold,J);                                  // knock out small wavelet coefficients
+    num_active = thresholding(collPnt,threshold);                       // knock out small wavelet coefficients
 
     //------- Extend mask ----------------------------------------------//
-/*    for (j=1;j<=J;j++) {                                                // 
-        int jstar=j-1;                                                  //
-        int gridMultplr=pow(2,j-jstar);                                 //
-        for (k=0;k<jPnts(jstar);k++) {                                  //
-            if (mask[jstar][k]==true) {                                 //
-                mask[j][k*gridMultplr]=true;                            //
-            }                                                           //
-        }                                                               //
-    }                                                                   //
-    for (j=J-1;j>0;j--) {                                               // 
-        for (k=0;k<jPnts(j);k++) {                                      //
-            if (k%2==1 && mask[j][k]==true) {                           //
-                int leftPnt=-interpPnts+1;  
-                int rightPnt=interpPnts;    
-                while ( leftPnt < 0 ) {
-                    leftPnt++;
-                    rightPnt++;
-                }
-                while ( rightPnt > (jPnts(j-1)-1) ) {
-                    leftPnt--;
-                    rightPnt--;
-                }
-                for (int l=leftPnt;l<=rightPnt;l++) {                   //
-                    mask[j-1][(k-1)/2+l]=true;                          //
-                }                                                       //
-            }                                                           //
-        }                                                               //
-    }                                                                   //
-*/
-/*    //------- Calculate spatial derivatives ----------------------------//
-    for (j=0;j<J;j++) {                                                 // 
+
+    //------- Compute spatial derivatives ------------------------------//
+/*    for (j=0;j<J;j++) {                                                 // 
         int N=jPnts(j);                                                 // number of points at current level
         int gridMultplr=pow(2,J-j);                                     // constant needed to get to same point at higher level
         if (mask[j+1][1]==false && activPnt[0]==false) {                // left boundary
@@ -157,24 +123,19 @@ int main(void) {
     }                                                                   // */
 
     //------- Reconstruct function using wavelets ----------------------//    
-//    reconstruction(x,u,c,d,mask,J,interpPnts);                          // build the solution using wavelets
-
+    double* u = new double[num_active];                                 // vector containing the approximated function
+    reconstruction(u,collPnt,num_active);                               // build the solution using wavelets
+    
     //------- Output solution to file ----------------------------------//
-/*    char u_Out[45];
-    char ux_Out[45];
-    char uxx_Out[45];
-    sprintf(u_Out, "output/_soln_files/u_t%d.dat",t);
-    sprintf(ux_Out, "output/_soln_files/ux_t%d.dat",t);
-    sprintf(uxx_Out, "output/_soln_files/uxx_t%d.dat",t);
-    output(u_Out,x[J],u,activPnt,J);
-    output(ux_Out,x[J],ux,activPnt,J);
-    output(uxx_Out,x[J],uxx,activPnt,J);
-    coeffs_out(x,mask,J); */
+    char u_Out[45];
+    sprintf(u_Out,"output/_soln_files/u.dat");
+    output(u_Out,u,collPnt);
+//    coeffs_out(x,mask,J);
 
     //------- Setup rhs of pde -----------------------------------------//
 /*    double* rhs=new double[jPnts(J)];                                   //
     double alp=0.00001;
-    for (i=0;i<jPnts(J);i++) {
+    for (i=0;i<jPnts(J);i++) 
             rhs[i]=-u[i]*ux[i]+alp*uxx[i];
     } */
 
@@ -186,13 +147,11 @@ int main(void) {
     return 0; 
 }
 
-void output(char* input,double* X,double* U,bool* ACTIVE,int Jmax) {
+void output(char* input, double* U, CollocationPoint** collPnt) {
     ofstream output;                            	
     output.open(input);                            	 
-    for (int i=0;i<jPnts(Jmax);i++) {  
-        if (ACTIVE[i]==true) {
- 			output << std::fixed << std::setprecision(16) << X[i] << " " << U[i] << endl;
-        }
+    for (int i=0;i<jPnts(J);i++) {  
+ 	    output << std::fixed << std::setprecision(16) << collPnt[J][i].x << " " << U[i] << endl;
     }
     output.close(); 
 }
