@@ -35,21 +35,21 @@ int main(void) {
 
     //------- Grid and tolerance parameters ----------------------------//
     shift = 2;                                                          // increases number of points on level j=0 (global variable)
-    J = 4;                                                              // number of scales in the system
+    J = 3;                                                              // number of scales in the system
     interpPnts = 2;                                                     // half the number of points used for interpolation (2*interpPnts + 1)
-    double threshold = 0.;                                         	    // error tolerance for wavelet coefficients (determines accuracy of solution)
+    double threshold = -0.;                                        	    // error tolerance for wavelet coefficients (determines accuracy of solution)
     int num_active = jPnts(J);                                          // declare variable to count number of active wavelets
     int i;                                                              // the usual counter variable for spatial index
     int j;                                                          	// j usually indicates decomposition scale
     int k;                                                          	// k is another variable used to denote spatial index
 
     //------- Physical parameters --------------------------------------//
-    double advec_vel = 0.2;                                             // advection velocity
+    double advec_vel = 5.0;                                             // advection velocity
 
     //------- Define timestep size -------------------------------------//
-    int num_steps = 1000;                                         	    // number of timesteps     
+    int num_steps = 100000;                                         	    // number of timesteps     
     double ti = 0.;                                               	    // initial simulation time  
-    double tf = 0.01;                                              	    // final simulation time     
+    double tf = 0.2;                                              	    // final simulation time     
     double dt = ( tf - ti ) / num_steps;                           	    // timestep size (determined by choice of interval and number of steps)
 
     //------- Declare collocation points -------------------------------//
@@ -78,7 +78,7 @@ int main(void) {
         //------- Set scaling coefficients to new solution -------------//
         if ( t > 0 ) {
             for (i=0;i<jPnts(J);i++) {
-                collPnt[J][i].scaling_coeff = collPnt[J][i].u;
+                collPnt[J][i].scaling_coeff = collPnt[J][i].u;          // assumes every point on u was advected (odd and even)
             }
         }
 
@@ -141,8 +141,11 @@ void output(char* input, CollocationPoint** collPnt) {
             k++;
         }
     }
-    for (int i=0;i<=cntr;i++) {  
- 	    output << std::fixed << std::setprecision(16) << x_compressed[i] << " " << u_compressed[i] << endl;
+//    for (int i=0;i<=cntr;i++) {  
+// 	    output << std::fixed << std::setprecision(16) << x_compressed[i] << " " << u_compressed[i] << endl;
+//    }
+    for (int i=0;i<jPnts(J);i++) {  
+ 	    output << std::fixed << std::setprecision(16) << collPnt[J][i].x << " " << collPnt[J][i].u << endl;
     }
     output.close(); 
     delete[] active;

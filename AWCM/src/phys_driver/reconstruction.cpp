@@ -32,6 +32,13 @@ void reconstruction(CollocationPoint** collPnt) {
             gridPnts[j][k+N] = 2. *  pow(2.,-(j+shift)) * k;                    // x-locations of each collocation point
         }                                                       	            //
     }                                                                           //
+
+    for (int j=0;j<=J;j++) {
+        int N = jPnts(j);
+        for (int l=0;l<N;l++) {
+            collPnt[j][l].u = 0.;
+        }
+    }
                                                                                 //
     for (int j=0;j<J;j++) {                                                     // 
         int N = jPnts(j);                                                         
