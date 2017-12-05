@@ -3,15 +3,13 @@ set(0,'defaulttextinterpreter','latex')
 fs=16;
 set(gca,'fontsize',fs-3)
 
-% input data
-U0=load('_soln_files/u.dat');
-U1=load('_soln_files/u1.dat');
+% number of steps
+n = 400;
 
-% organize data
-x=U0(:,1);
-u=U0(:,2);
-u1=U1(:,2);
-
-% plots
+% input data and make movie
 figure(1)
-plot(x,u,'bo-',x,u1,'r-');
+for i=1:n
+    filename = sprintf('_soln_files/u%d.dat',i-1);
+    U = load(filename);
+    plot( U(:,1) , U(:,2) );
+end
