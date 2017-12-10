@@ -25,7 +25,7 @@ void extend_mask(CollocationPoint** collPnt,int buffer_width) {
     //------- Extend mask to possibly significant detail coefficients ------//
     for (int j=1;j<=J;j++) {                                                // loop through all other levels
         int N = jPnts(j);                                                   // number of points at level j
-        for (int k=0;k<N;k++) {                                             // loop through points at level j
+        for (int k=N;k>=0;k--) {                                             // loop through points at level j
             if ( collPnt[j][k].isOdd ==true &&                              // check if point corresponds to a wavelet
                     collPnt[j][k].isMask == true ) {                        // check if wavelet point is in the mask already
 

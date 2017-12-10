@@ -33,9 +33,9 @@ int main(void) {
 
     //------- Grid and tolerance parameters ----------------------------//
     shift = 2;                                                          // increases number of points on level j=0 (global variable)
-    J = 6;                                                              // number of scales in the system
+    J = 7;                                                              // number of scales in the system
     interpPnts = 2;                                                     // half the number of points used for interpolation (2*interpPnts + 1)
-    double threshold = pow(10.,-4.);                         	        // error tolerance for wavelet coefficients (determines accuracy of solution)
+    double threshold = pow(10.,-6.);                         	        // error tolerance for wavelet coefficients (determines accuracy of solution)
     int i, j, k;                                                        // j is the wavelet level, i or k denote spatial index
 
     //------- Physical parameters --------------------------------------//

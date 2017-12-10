@@ -9,7 +9,7 @@ n = 9000;
 % input data and make movie
 figure(1)
 for i=0:n
-    if mod(i,20)==0
+    if mod(i,2)==0
         filename = sprintf('_soln_files/u%d.dat',i);
         U = load(filename);
         plot( U(:,1) , U(:,2) ); grid on; hold on;
