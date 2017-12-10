@@ -32,14 +32,14 @@ int interpPnts;
 int main(void) {
 
     //------- Grid and tolerance parameters ----------------------------//
-    shift = 3;                                                          // increases number of points on level j=0 (global variable)
-    J = 8;                                                              // number of scales in the system
-    interpPnts = 3;                                                     // half the number of points used for interpolation (2*interpPnts + 1)
-    double threshold = pow(10.,-2.5);                         	        // error tolerance for wavelet coefficients (determines accuracy of solution)
+    shift = 2;                                                          // increases number of points on level j=0 (global variable)
+    J = 6;                                                              // number of scales in the system
+    interpPnts = 2;                                                     // half the number of points used for interpolation (2*interpPnts + 1)
+    double threshold = pow(10.,-4.);                         	        // error tolerance for wavelet coefficients (determines accuracy of solution)
     int i, j, k;                                                        // j is the wavelet level, i or k denote spatial index
 
     //------- Physical parameters --------------------------------------//
-    double advec_vel = 2. ;                                             // advection velocity
+    double advec_vel = 1. ;                                             // advection velocity
 
     //------- Define timestep size -------------------------------------//
     int num_steps = 10000;                                         	    // number of timesteps     
@@ -99,9 +99,11 @@ void output(CollocationPoint** collPnt,int current_timestep) {
     for (int j=0;j<=J;j++) {
         int N = jPnts(j);
         for (int i=0;i<N;i++) {  
-            int k = indexShift(J,j,i);
-            tmp[k] = collPnt[j][i];
-            num_active++;
+            if ( collPnt[j][i].isMask == true ) {
+                int k = indexShift(J,j,i);
+                tmp[k] = collPnt[j][i];
+                num_active++;
+            }
         }
     }
     for (int i=0;i<jPnts(J);i++) {
@@ -110,5 +112,11 @@ void output(CollocationPoint** collPnt,int current_timestep) {
         }
     }
     output.close(); 
+    printf(" \n");
+    printf("------------------------------------------ \n");
+    printf("Timestep: %d \n",current_timestep);
+    printf("Active points: %d out of %d \n",num_active,jPnts(J));
+    printf("------------------------------------------ \n");   
+    printf(" \n");
     delete[] tmp;
 }

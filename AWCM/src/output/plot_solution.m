@@ -4,7 +4,7 @@ fs=16;
 set(gca,'fontsize',fs-3)
 
 % number of steps
-n = 9999;
+n = 9000;
 
 % input data and make movie
 figure(1)
