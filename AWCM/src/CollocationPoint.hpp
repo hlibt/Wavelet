@@ -12,4 +12,5 @@ class CollocationPoint {
         double scaling_coeff;                       // the scaling coefficient at the point
         double detail_coeff;                        // the wavelet coefficient at the point (if it is an odd point)
         bool isMask;                                // stores whether or not the point is in the mask at current iterate
+        bool isOdd;                                 // stores whether or not the point corresponds to a wavelet
 };
