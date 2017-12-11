@@ -13,9 +13,9 @@ for i=0:n
         filename = sprintf('_soln_files/u%d.dat',i);
         U = load(filename);
         plot( U(:,1) , U(:,2) ); grid on; hold on;
-        plot( U(:,1) , 0 , '.r' );
+        plot( U(:,1) , U(:,2) , '.r' );
         hold off;
-        axis( [ -1 1 0 1 ] );
+        axis( [ -1 1 -1 1 ] );
         pause(0.00000001);
     end
 end

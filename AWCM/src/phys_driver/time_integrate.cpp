@@ -12,6 +12,5 @@ void time_integrate(CollocationPoint** collPnt,double h,double c) {
             }
         }   
     }
-//    collPnt[0][0] = collPnt[0][jPnts(0)-1];
     return;
 }
