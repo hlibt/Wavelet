@@ -1,6 +1,9 @@
 #include <vector>
 using namespace std;
 
+#ifndef __COLLOCPNT__H_
+#define __COLLOCPNT_H_
+
 class CollocationPoint {
 
     //------- Public members -----------------------//------------------------------------------------------------------//
@@ -14,3 +17,5 @@ class CollocationPoint {
         bool isMask;                                // stores whether or not the point is in the mask at current iterate
         bool isOdd;                                 // stores whether or not the point corresponds to a wavelet
 };
+
+#endif
