@@ -16,6 +16,7 @@ class CollocationPoint {
         double detail_coeff;                        // the wavelet coefficient at the point (if it is an odd point)
         bool isMask;                                // stores whether or not the point is in the mask at current iterate
         bool isOdd;                                 // stores whether or not the point corresponds to a wavelet
+        bool isBuffer;                              // stores whether the point is in the adjacent zone
 };
 
 #endif
