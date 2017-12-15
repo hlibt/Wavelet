@@ -12,7 +12,7 @@ int inline indexShift(int jstar, int j, int k) {                        // repre
                                                                         //
 double inline init_condition(double x) {                                //
     double f = 0.;
-//    f = ( 1 / sqrt(2.) ) * exp( -x*x / 0.05);                        //
-    f = tanh(-16*x) * exp( -x*x );
+    f = ( 1 / sqrt(2.) ) * exp( -x*x / 0.05);                        //
+//    f = tanh(-16*x) * exp( -x*x );
     return f;
 }                                                                       //

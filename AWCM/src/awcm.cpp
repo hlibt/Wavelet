@@ -32,14 +32,15 @@ int interpPnts;
 int main(void) {
 
     //------- Grid and tolerance parameters ----------------------------//
-    shift = 2;                                                          // increases number of points on level j=0 (global variable)
-    J = 7;                                                              // number of scales in the system
-    interpPnts = 2;                                                     // half the number of points used for interpolation (2*interpPnts + 1)
-    double threshold = pow(10.,-4.);                         	        // error tolerance for wavelet coefficients (determines accuracy of solution)
+    shift = 3;                                                          // increases number of points on level j=0 (global variable)
+    J = 4;                                                              // number of scales in the system
+    interpPnts = 3;                                                     // half the number of points used for interpolation (2*interpPnts + 1)
+    double threshold = pow(10.,-16.);                         	        // error tolerance for wavelet coefficients (determines accuracy of solution)
     int i, j, k;                                                        // j is the wavelet level, i or k denote spatial index
 
     //------- Physical parameters --------------------------------------//
     double advec_vel = 1. ;                                             // advection velocity
+    double diffusion_coeff = 0.1;                                       // coefficient of diffusivity
 
     //------- Define timestep size -------------------------------------//
     int num_steps = 10000;                                         	    // number of timesteps     
@@ -79,7 +80,7 @@ int main(void) {
         output(collPnt,t);                                              // output solution to file at current timestep
 
         //------- Advance in time --------------------------------------//
-        time_integrate(collPnt,dt,advec_vel);                           // advance the solution forward in time
+        time_integrate(collPnt,dt,advec_vel,diffusion_coeff);           // advance the solution forward in time
 
     }                                                                   // end of time integration
 

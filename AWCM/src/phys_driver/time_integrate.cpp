@@ -2,13 +2,13 @@
 #include "../CollocationPoint.hpp"
 #include "../global.hpp"
 
-void time_integrate(CollocationPoint** collPnt,double h,double c) {
+void time_integrate(CollocationPoint** collPnt,double h,double c,double alpha) {
 
     for (int j=0;j<=J;j++) {
         int N = jPnts(j);
         for (int i=0;i<N;i++) {
             if ( collPnt[j][i].isMask == true ) {
-               collPnt[j][i].u = ( -c * collPnt[j][i].ux ) * h + collPnt[j][i].u;
+               collPnt[j][i].u = ( -c * collPnt[j][i].ux + alpha * collPnt[j][i].uxx ) * h + collPnt[j][i].u;
             }
         }   
     }
