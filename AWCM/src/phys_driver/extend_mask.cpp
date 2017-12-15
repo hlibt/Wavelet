@@ -3,7 +3,7 @@
 #include "../global.hpp"
 using namespace std;
 
-void extend_mask(CollocationPoint** collPnt,int buffer_width) {
+void extend_mask(CollocationPoint** collPnt,int buffer_width,int buffer_height) {
     
     //--------------------------------------------------------------------------//
     // Information: extend_mask.cpp extends the existing mask to include
@@ -18,6 +18,7 @@ void extend_mask(CollocationPoint** collPnt,int buffer_width) {
     //                                        at all levels. Composed of other variables
     //              collPnt.scaling_coeff   - the scaling coefficients
     //              collPnt.detail_coeff    - the detail coefficients
+    //              collPnt.isMask          - boolean (in the current mask or not)
     //              J                       - maximum grid level (global variable)
     //              interpPnts              - half the number of interp. points (global)
     //--------------------------------------------------------------------------//     
@@ -25,7 +26,7 @@ void extend_mask(CollocationPoint** collPnt,int buffer_width) {
     //------- Extend mask to possibly significant detail coefficients ------//
     for (int j=1;j<=J;j++) {                                                // loop through all other levels
         int N = jPnts(j);                                                   // number of points at level j
-        for (int k=N;k>=0;k--) {                                             // loop through points at level j
+        for (int k=N;k>=0;k--) {                                            // loop through points at level j
             if ( collPnt[j][k].isOdd ==true &&                              // check if point corresponds to a wavelet
                     collPnt[j][k].isMask == true ) {                        // check if wavelet point is in the mask already
 
@@ -49,7 +50,7 @@ void extend_mask(CollocationPoint** collPnt,int buffer_width) {
                     }                                                       //
                     for (int l=leftPnt;l<=rightPnt;l++) {                   // loop through points in the stencil
                         collPnt[j-1][l].isMask = true;                      // place each point in the interpolation stencil in the mask
-                    }                                                       // 
+                    }                                                       // this step is known as perfect reconstruction
                 }                                                           //
             }                                                               // 
         }                                                                   //
