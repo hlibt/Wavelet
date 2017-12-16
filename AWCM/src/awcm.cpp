@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <string>
 #include <stdio.h>
 #include <iomanip>
 #include <math.h>
@@ -13,7 +14,9 @@
 #include "global.hpp"
 using namespace std;
 void output(CollocationPoint** collPnt,int current_timestep);
-
+void control(int &max_scale, int &shift, double &threshold, int &interp_points, int &num_timesteps, double &tf, 
+                double &advec_vel, double &diffusivity, string &buffer_type, bool &ifwrite);
+    
     //------------------------------------------------------------------------------//
     //                                                                              //
     //     ADAPTIVE WAVELET COLLOCATION METHOD USING 2ND GENERATION WAVELETS TO     //
@@ -25,28 +28,38 @@ void output(CollocationPoint** collPnt,int current_timestep);
     //                                                                              //
     //------------------------------------------------------------------------------//
 
-int shift;
-int J;
-int interpPnts;
+int shift;                                                              // starting grid level
+int J;                                                                  // maximum wavelet level    
+int interpPnts;                                                         // half the number of interpolation points in each stencil
 
 int main(void) {
 
     //------- Grid and tolerance parameters ----------------------------//
-    shift = 3;                                                          // increases number of points on level j=0 (global variable)
-    J = 4;                                                              // number of scales in the system
-    interpPnts = 3;                                                     // half the number of points used for interpolation (2*interpPnts + 1)
-    double threshold = pow(10.,-16.);                         	        // error tolerance for wavelet coefficients (determines accuracy of solution)
+    double threshold;                                    	            // error tolerance for wavelet coefficients
+    int buffer_width;                                                   // width of the buffer layer ( in terms of adjacent wavelets )
+    int buffer_height;                                                  // height of the buffer layer ( in terms of wavelet levels )
     int i, j, k;                                                        // j is the wavelet level, i or k denote spatial index
 
     //------- Physical parameters --------------------------------------//
-    double advec_vel = 1. ;                                             // advection velocity
-    double diffusion_coeff = 0.1;                                       // coefficient of diffusivity
+    double advec_vel;                                                   // advection velocity
+    double diffusivity;                                                 // coefficient of diffusivity
 
     //------- Define timestep size -------------------------------------//
-    int num_steps = 10000;                                         	    // number of timesteps     
-    double ti = 0.;                                               	    // initial simulation time  
-    double tf = 0.5;                                              	    // final simulation time     
-    double dt = ( tf - ti ) / num_steps;                           	    // timestep size (determined by choice of interval and number of steps)
+    int num_steps;                                               	    // number of timesteps     
+    double tf;                                                    	    // final simulation time     
+
+    //------- Numerical scheme choices ---------------------------------//
+    string time_integrator;                                             // choice of time-stepping scheme
+    string buffer_type;                                                 // defines how to define the adjacent zone layer of wavelets
+
+    //------- Input/output preferences ---------------------------------//
+    bool ifwrite;                                                       // write data to file or not
+
+    //------- Input simulation parameters from control file ------------//
+    control(J, shift, threshold, interpPnts, num_steps, tf,             // 
+               advec_vel, diffusivity, bufftype, buffer_width,          //
+               buffer_height, ifwrite);                                 //
+    double dt = tf / num_steps;                                    	    // compute the timestep size
 
     //------- Declare collocation points -------------------------------//
     CollocationPoint** collPnt = new CollocationPoint*[J+1];            // Create J+1 pointers to arrays
@@ -65,22 +78,19 @@ int main(void) {
         fwd_trans(collPnt);                                             // compute forward wavelet transform on the adaptive grid    
 
         //------- Remove coefficients below the threshold --------------//
-        thresholding(collPnt,threshold);                                // construct a semi-complete mask for the next timestep
+        thresholding(collPnt,threshold);                                // construct an initial mask of wavelets whose coefficients are above the threshold
 
         //------- Extend mask to include adjacent zone -----------------//
-        extend_mask(collPnt,1);                                         // extend the mask to include all points necessary for computing detail coeffs
-
-        //------- Compute spatial derivatives --------------------------//
-//        compute_derivatives(collPnt);                                   // compute the spatial derivatives
+        adjacent_zone(collPnt,buffer_width,buffer_height);              // create an adjacent zone of wavelets which may become significant after dt time
 
         //------- Reconstruct function using wavelets ------------------//    
         reconstruction(collPnt);                                        // build the solution using wavelets
 
         //------- Output solution at each timestep ---------------------//
-        output(collPnt,t);                                              // output solution to file at current timestep
+        if ( ifwrite == 1 ) output(collPnt,t);                          // output solution to file at current timestep
 
         //------- Advance in time --------------------------------------//
-        time_integrate(collPnt,dt,advec_vel,diffusion_coeff);           // advance the solution forward in time
+        time_integrate(collPnt,dt,advec_vel,diffusivity);               // advance the solution forward in time
 
     }                                                                   // end of time integration
 

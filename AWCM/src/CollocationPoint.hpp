@@ -17,6 +17,7 @@ class CollocationPoint {
         bool isMask;                                // stores whether or not the point is in the mask at current iterate
         bool isOdd;                                 // stores whether or not the point corresponds to a wavelet
         bool isBuffer;                              // stores whether the point is in the adjacent zone
+        bool isNew;                                 // determines whether corresponding wavelet needs to be computed
 };
 
 #endif

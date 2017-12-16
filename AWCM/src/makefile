@@ -2,7 +2,7 @@ all: awcm
 
 objects = awcm.o scaling_subd.o detail_subd.o fwd_trans.o lagrInterp.o lagrInterp_old.o lagrInterpD1.o \
 			lagrInterpD2.o reconstruction.o thresholding.o compute_derivatives.o time_integrate.o	\
-			seed_grid.o extend_mask.o
+			seed_grid.o adjacent_zone.o control.o
 
 awcm: $(objects) 
 	g++ -o awcm $(objects)
@@ -43,11 +43,14 @@ reconstruction.o: phys_driver/reconstruction.cpp
 compute_derivatives.o: phys_driver/compute_derivatives.cpp
 	g++ -c phys_driver/compute_derivatives.cpp -I. -I/phys_driver/
 
-extend_mask.o: phys_driver/extend_mask.cpp
-	g++ -c phys_driver/extend_mask.cpp
+adjacent_zone.o: phys_driver/adjacent_zone.cpp
+	g++ -c phys_driver/adjacent_zone.cpp
 
 time_integrate.o: phys_driver/time_integrate.cpp
 	g++ -c phys_driver/time_integrate.cpp -I. -I/phys_driver/
+
+control.o: control.cpp
+	g++ -c control.cpp -I.
 
 clean:
 	rm awcm $(objects)
