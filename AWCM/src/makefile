@@ -1,7 +1,7 @@
 all: awcm
 
 objects = awcm.o scaling_subd.o detail_subd.o fwd_trans.o lagrInterp.o lagrInterp_old.o lagrInterpD1.o \
-			lagrInterpD2.o reconstruction.o thresholding.o compute_derivatives.o time_integrate.o	\
+			lagrInterpD2.o compute_field.o thresholding.o compute_derivatives.o time_integrate.o	\
 			seed_grid.o adjacent_zone.o control.o
 
 awcm: $(objects) 
@@ -34,17 +34,17 @@ lagrInterpD1.o: interpolation/lagrInterpD1.cpp
 lagrInterpD2.o: interpolation/lagrInterpD2.cpp
 	g++ -c interpolation/lagrInterpD2.cpp -I. -I/interpolation/
 
-thresholding.o: phys_driver/thresholding.cpp
-	g++ -c phys_driver/thresholding.cpp -I. -I/phys_driver/
+thresholding.o: grid_adaptation/thresholding.cpp
+	g++ -c grid_adaptation/thresholding.cpp -I. -I/phys_driver/
 
-reconstruction.o: phys_driver/reconstruction.cpp
-	g++ -c phys_driver/reconstruction.cpp -I. -I/phys_driver/
+adjacent_zone.o: grid_adaptation/adjacent_zone.cpp
+	g++ -c grid_adaptation/adjacent_zone.cpp
+
+compute_field.o: phys_driver/compute_field.cpp
+	g++ -c phys_driver/compute_field.cpp -I. -I/phys_driver/
 
 compute_derivatives.o: phys_driver/compute_derivatives.cpp
 	g++ -c phys_driver/compute_derivatives.cpp -I. -I/phys_driver/
-
-adjacent_zone.o: phys_driver/adjacent_zone.cpp
-	g++ -c phys_driver/adjacent_zone.cpp
 
 time_integrate.o: phys_driver/time_integrate.cpp
 	g++ -c phys_driver/time_integrate.cpp -I. -I/phys_driver/

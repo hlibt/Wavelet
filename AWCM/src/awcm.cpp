@@ -9,13 +9,11 @@
 #include "matrix_solvers/BiCGSTAB.h"
 #include "conditions/conditions.hpp"
 #include "transform/transform.hpp"
+#include "grid_adaptation/grid_adaptation.hpp"
 #include "interpolation/interpolation.hpp"
 #include "phys_driver/phys_driver.hpp"
 #include "global.hpp"
 using namespace std;
-void output(CollocationPoint** collPnt,int current_timestep);
-void control(int &max_scale, int &shift, double &threshold, int &interp_points, int &num_timesteps, double &tf, 
-                double &advec_vel, double &diffusivity, string &buffer_type, bool &ifwrite);
     
     //------------------------------------------------------------------------------//
     //                                                                              //
@@ -59,7 +57,9 @@ int main(void) {
     control(J, shift, threshold, interpPnts, num_steps, tf,             // 
                advec_vel, diffusivity, bufftype, buffer_width,          //
                buffer_height, ifwrite);                                 //
-    double dt = tf / num_steps;                                    	    // compute the timestep size
+
+    //------- Compute simulation timestep ------------------------------//
+    double dt = tf / num_steps;                                    	    //
 
     //------- Declare collocation points -------------------------------//
     CollocationPoint** collPnt = new CollocationPoint*[J+1];            // Create J+1 pointers to arrays
@@ -84,10 +84,10 @@ int main(void) {
         adjacent_zone(collPnt,buffer_width,buffer_height);              // create an adjacent zone of wavelets which may become significant after dt time
 
         //------- Reconstruct function using wavelets ------------------//    
-        reconstruction(collPnt);                                        // build the solution using wavelets
+        compute_field(collPnt);                                         // compute the field where necessary using wavelet basis
 
         //------- Output solution at each timestep ---------------------//
-        if ( ifwrite == 1 ) output(collPnt,t);                          // output solution to file at current timestep
+        if ( ifwrite == 1 ) write_field_to_file(collPnt,t);             // output solution to file at current timestep
 
         //------- Advance in time --------------------------------------//
         time_integrate(collPnt,dt,advec_vel,diffusivity);               // advance the solution forward in time
@@ -99,35 +99,3 @@ int main(void) {
     return 0; 
 }
 
-void output(CollocationPoint** collPnt,int current_timestep) {
-
-    char u_out[45];                                                     // declare space for character array
-    sprintf(u_out,"output/_soln_files/u%d.dat",current_timestep);       // append filename to include timestep number
-    ofstream output;                            	
-    output.open(u_out);     
-    int num_active = 0;    
-    CollocationPoint* tmp = new CollocationPoint[jPnts(J)];
-    for (int j=0;j<=J;j++) {
-        int N = jPnts(j);
-        for (int i=0;i<N;i++) {  
-            if ( collPnt[j][i].isMask == true ) {
-                int k = indexShift(J,j,i);
-                tmp[k] = collPnt[j][i];
-                num_active++;
-            }
-        }
-    }
-    for (int i=0;i<jPnts(J);i++) {
-        if ( tmp[i].isMask == true ) {
-            output << std::fixed << std::setprecision(16) << tmp[i].x << " " << tmp[i].u << endl;    
-        }
-    }
-    output.close(); 
-    printf(" \n");
-    printf("------------------------------------------ \n");
-    printf("Timestep: %d \n",current_timestep);
-    printf("Active points: %d out of %d \n",num_active,jPnts(J));
-    printf("------------------------------------------ \n");   
-    printf(" \n");
-    delete[] tmp;
-}

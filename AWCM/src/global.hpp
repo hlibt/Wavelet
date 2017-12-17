@@ -11,8 +11,10 @@ int inline indexShift(int jstar, int j, int k) {                        // repre
 }                                                                       //
                                                                         //
 double inline init_condition(double x) {                                //
-    double f = 0.;
-    f = ( 1 / sqrt(2.) ) * exp( -x*x / 0.05);                        //
-//    f = tanh(-16*x) * exp( -x*x );
-    return f;
+    double f = 0.;                                                      //
+    f = ( 1 / sqrt(2.) ) * exp( -x*x / 0.05);                           //
+    return f;                                                           //
 }                                                                       //
+
+void control(int &max_scale, int &shift, double &threshold, int &interp_points, int &num_timesteps, double &tf, 
+                double &advec_vel, double &diffusivity, string &buffer_type, bool &ifwrite);

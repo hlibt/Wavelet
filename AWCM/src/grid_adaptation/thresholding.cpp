@@ -14,10 +14,11 @@ void thresholding(CollocationPoint** collPnt, double epsilon) {
     //              the mask. A buffer zone of points must still be added to
     //              the mask so that physical features which become relavant
     //              after timestepping are not missed or underresolved. This 
-    //              program also ensures that the scaling coefficients used
-    //              to compute each detail coefficient which is kept, are also
-    //              kept. This collection of points corresponding to 
-    //              scaling coefficients is called the interpolation stencil:
+    //              program does not ensure that the scaling coefficients used
+    //              to compute each detail coefficient are kept, as this step
+    //              is done in the reconstruction_check.cpp program.
+    //              This collection of points needed to compute a detail  
+    //              coefficient is called the interpolation stencil:
     //
     //              detail coefficient at level j                   --->      o
     //              interpolation stencil on j-1 for interpPnts=2   ---> o  o   o  o
@@ -46,24 +47,7 @@ void thresholding(CollocationPoint** collPnt, double epsilon) {
                 //------- Remove neighbors from mask -----------------------//
                 collPnt[j][k-1].isMask = false;                             // left neighbor   
                 collPnt[j][k+1].isMask = false;                             // right neighbor   
-
-
-                //------- Also turn of its interpolation stencil -----------//
-                int leftPnt = -interpPnts + 1 + (k-1)/2;                    // determine the leftmost point in its stencil
-                int rightPnt = interpPnts + (k-1)/2;                        // determine the rightmost point in the stencil
-                while ( leftPnt < 0 ) {                                     // this loop checks to ensure the stencil consists of points in the domain
-                    leftPnt++;                                              // adjust stencil one point to the right if necessary
-                    rightPnt++;                                             // 
-                }                                                           //
-                while ( rightPnt > (jPnts(j-1)-1) ) {                       // adjust stencil one point to the left if necessary
-                    leftPnt--;                                              //
-                    rightPnt--;                                             //
-                }                                                           //
-                for (int l=leftPnt;l<=rightPnt;l++) {                       // loop through points in the stencil
-                    if (collPnt[j-1][l].isOdd == false ) {                  // do NOT turn off detail coefficients in the stencil
-                        collPnt[j-1][l].isMask = false;                     // turn off each point in stencil
-                    }                                                       //
-                }                                                           // 
+                                                                    
             }                                                               // 
         }                                                                   //
     }                                                                       // 

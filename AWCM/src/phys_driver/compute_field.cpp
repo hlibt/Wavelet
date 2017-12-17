@@ -6,7 +6,7 @@
 using namespace std;
 void diffWave(double** f,double** df,double h,int J,int N,int derivative_order);
 
-void reconstruction(CollocationPoint** collPnt) {
+void compute_field(CollocationPoint** collPnt) {
 
     //--------------------------------------------------------------------------//
     // Information: This program uses the active wavelets to reconstruct the 
