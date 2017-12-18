@@ -13,8 +13,13 @@
 #include "interpolation/interpolation.hpp"
 #include "phys_driver/phys_driver.hpp"
 #include "global.hpp"
+#include "output/output.hpp"
 using namespace std;
     
+void control(int &max_scale, int &shift, double &threshold, int &interp_points, int &num_timesteps, double &tf, 
+                double &advec_vel, double &diffusivity, string &buffer_type, int &buffer_width,
+               int &buffer_height,  bool &ifwrite);
+
     //------------------------------------------------------------------------------//
     //                                                                              //
     //     ADAPTIVE WAVELET COLLOCATION METHOD USING 2ND GENERATION WAVELETS TO     //
@@ -54,20 +59,20 @@ int main(void) {
     bool ifwrite;                                                       // write data to file or not
 
     //------- Input simulation parameters from control file ------------//
-    control(J, shift, threshold, interpPnts, num_steps, tf,             // 
-               advec_vel, diffusivity, bufftype, buffer_width,          //
+    control(J, shift, threshold, interpPnts, num_steps, tf,             // read all simulation input variables from file
+               advec_vel, diffusivity, buffer_type, buffer_width,       //
                buffer_height, ifwrite);                                 //
 
     //------- Compute simulation timestep ------------------------------//
     double dt = tf / num_steps;                                    	    //
 
-    //------- Declare collocation points -------------------------------//
+    //------- Allocate space for entire grid ---------------------------//
     CollocationPoint** collPnt = new CollocationPoint*[J+1];            // Create J+1 pointers to arrays
     for (int j=0;j<=J;j++) {                                            // 
         int N = jPnts(j);                                               // number of points at level j
         collPnt[j] = new CollocationPoint[N];                           // create array for all points at level j
     }                                                                   //
-                        
+
     //------- Populate dyadic grid -------------------------------------//
     seed_grid(collPnt);                                                 // sample initial condition on the grid
 
@@ -82,6 +87,9 @@ int main(void) {
 
         //------- Extend mask to include adjacent zone -----------------//
         adjacent_zone(collPnt,buffer_width,buffer_height);              // create an adjacent zone of wavelets which may become significant after dt time
+
+        //------- Perform the perfect reconstruction check -------------//
+        reconstruction_check(collPnt);                                  // ensure that all detail points can be reconstructed at the next timestep
 
         //------- Reconstruct function using wavelets ------------------//    
         compute_field(collPnt);                                         // compute the field where necessary using wavelet basis

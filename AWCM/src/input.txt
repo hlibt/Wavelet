@@ -1,11 +1,11 @@
 Maximum number of wavelet levels in the simulation:
-max_scale 12
+max_scale 8
 
 Starting wavelet level (should be at least 2):
 shift 3
 
 Wavelet coefficient thresholding parameter
-threshold 0.00001
+threshold 0.00005
 
 Half the number of interpolation points per stencil:
 interp_points 3
@@ -14,13 +14,22 @@ Final time in the simulation:
 tf 1.0
 
 Number of timesteps in the simulation:
-num_timesteps 500
+num_timesteps 6000
 
 Advection velocity:
 advec_vel 0.5
 
 Coefficient of diffusivity:
-diffusivity 0.2
+diffusivity 0.01
+
+Type of adjacent zone to add at each timestep
+buffer_type Type1
+
+Width of the buffer zone for Type1 wavelets
+buffer_width 1
+
+Height of the buffer zone for Type2 wavelets
+buffer_height 1
 
 Write data to file or not:
 ifwrite 1

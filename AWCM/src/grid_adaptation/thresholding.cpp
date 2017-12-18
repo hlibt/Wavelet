@@ -34,56 +34,43 @@ void thresholding(CollocationPoint** collPnt, double epsilon) {
     //              interpPnts              - half the number of interp. points (global)
     //--------------------------------------------------------------------------//     
     
-    //------- Turn off insignificant detail coefficients -------------------//
+    //------- Place all scaling points at level j=0 into the mask ----------//
+    for (int i=0;i<jPnts(0);i++) {                                          // loop through points at leve j=0
+        collPnt[0][i].isMask = true;                                        // put these points into the mask
+    }                                                                       //
+    
+    //------- Decide fate of detail coefficients ---------------------------//
     for (int j=1;j<=J;j++) {                                                // loop through all other levels
         int N = jPnts(j);                                                   // number of points at level j
         for (int k=0;k<N;k++) {                                             // loop through points at level j
+
+            //------- If coefficient less than threshold -------------------//
             if ( collPnt[j][k].isOdd == true &&                             // if point associated with wavelet but ...
                         abs(collPnt[j][k].detail_coeff) < epsilon ) {       // threshold not met, turn off the wavelet
 
                 //------- Turn off wavelet ---------------------------------//
                 collPnt[j][k].isMask = false;                               // turn off corresponding wavelet by removing point from mask
+                collPnt[j][k].isBuffer = false;                             // remove possible previous affiliation with buffer zone
 
                 //------- Remove neighbors from mask -----------------------//
-                collPnt[j][k-1].isMask = false;                             // left neighbor   
-                collPnt[j][k+1].isMask = false;                             // right neighbor   
-                                                                    
+                collPnt[j][k-1].isMask = false;                             // need to turn off left neighbor (scaling point)
+                collPnt[j][k-1].isBuffer = false;                           // ensure removal from buffer  
+                collPnt[j][k+1].isMask = false;                             // right neighbor as well (scaling point also)   
+                collPnt[j][k+1].isBuffer = false;                           // ensure removal from buffer 
             }                                                               // 
-        }                                                                   //
-    }                                                                       // 
 
-    //------- Place all scaling points at level j=0 into the mask ----------//
-    for (int i=0;i<jPnts(0);i++) {                                          // loop through points at leve j=0
-        collPnt[0][i].isMask = true;                                        // put these points into the mask
-    }                                                                       //
-
-    //------- Turn on significant detail coefficients ----------------------//
-    for (int j=1;j<=J;j++) {                                                // loop through all other levels
-        int N = jPnts(j);                                                   // number of points at level j
-        for (int k=0;k<N;k++) {                                             // loop through points at level j
+            //------- If coefficient greater or equal to threshold ---------//
             if ( collPnt[j][k].isOdd == true &&                             // check if point corresponds to a wavelet
                  abs(collPnt[j][k].detail_coeff) >= epsilon ) {             // determine if detail coefficient is large enough
 
                 //------- Place the point in the mask ----------------------//
                 collPnt[j][k].isMask = true;                                // put active wavelet into the mask
+                collPnt[j][k].isBuffer = false;                             // remove possible previous affiliation with adjacent zone
 
-                //------- Extend mask to its interpolation stencil ---------//
-                int leftPnt = -interpPnts + 1 + (k-1)/2;                    // determine the leftmost point in its stencil
-                int rightPnt = interpPnts + (k-1)/2;                        // determine the rightmost point in the stencil
-                while ( leftPnt < 0 ) {                                     // this loop checks to ensure the stencil consists of points in the domain
-                    leftPnt++;                                              // adjust stencil one point to the right if necessary
-                    rightPnt++;                                             // 
-                }                                                           //
-                while ( rightPnt > (jPnts(j-1)-1) ) {                       // adjust stencil one point to the left if necessary
-                    leftPnt--;                                              //
-                    rightPnt--;                                             //
-                }                                                           //
-                for (int l=leftPnt;l<=rightPnt;l++) {                       // loop through points in the stencil
-                    collPnt[j-1][l].isMask = true;                          // place each point in the interpolation stencil in the mask ...
-                }                                                           // so that the detail coefficient can be reconstructed ...
-            }                                                               // at the next timestep
+            }                                                               //
+
         }                                                                   //
-    }                                                                       // a near-complete mask is constructed ( buffer layer still needed )
+    }                                                                       // 
 
-    return;                                                                 
+    return;
 }

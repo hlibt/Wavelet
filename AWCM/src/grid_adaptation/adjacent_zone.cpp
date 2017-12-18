@@ -29,7 +29,8 @@ void adjacent_zone(CollocationPoint** collPnt,int buffer_width,int buffer_height
     for (int j=1;j<=J;j++) {                                                // loop through all other levels
         int N = jPnts(j);                                                   // number of points at level j
         for (int k=0;k<N;k++) {                                             // loop through points at level j
-            if ( collPnt[j][k].isOdd == true && collPnt.isBuffer == false   // check if point corresponds to a wavelet which is not in safety zone
+            if ( collPnt[j][k].isOdd == true &&                             // check if point corresponds to a wavelet
+                    collPnt[j][k].isBuffer == false                         // determine if wavelet is not in safety zone
                     && collPnt[j][k].isMask == true ) {                     // check if wavelet point is in the mask already
 
                 //---- Include points left and right of active wavelet -----//

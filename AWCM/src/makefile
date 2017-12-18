@@ -2,7 +2,7 @@ all: awcm
 
 objects = awcm.o scaling_subd.o detail_subd.o fwd_trans.o lagrInterp.o lagrInterp_old.o lagrInterpD1.o \
 			lagrInterpD2.o compute_field.o thresholding.o compute_derivatives.o time_integrate.o	\
-			seed_grid.o adjacent_zone.o control.o
+			seed_grid.o adjacent_zone.o control.o reconstruction_check.o write_field_to_file.o
 
 awcm: $(objects) 
 	g++ -o awcm $(objects)
@@ -16,12 +16,6 @@ scaling_subd.o: interpolation/scaling_subd.cpp
 detail_subd.o: interpolation/detail_subd.cpp 
 	g++ -c interpolation/detail_subd.cpp -I. -I/interpolation/
 
-seed_grid.o: phys_driver/seed_grid.cpp
-	g++ -c phys_driver/seed_grid.cpp -I. -I/phys_driver
-
-fwd_trans.o: transform/fwd_trans.cpp
-	g++ -c transform/fwd_trans.cpp -I. -I/transform/
-
 lagrInterp.o: interpolation/lagrInterp.cpp
 	g++ -c interpolation/lagrInterp.cpp -I. -I/interpolation/
 
@@ -34,11 +28,20 @@ lagrInterpD1.o: interpolation/lagrInterpD1.cpp
 lagrInterpD2.o: interpolation/lagrInterpD2.cpp
 	g++ -c interpolation/lagrInterpD2.cpp -I. -I/interpolation/
 
+fwd_trans.o: transform/fwd_trans.cpp
+	g++ -c transform/fwd_trans.cpp -I. -I/transform/
+
 thresholding.o: grid_adaptation/thresholding.cpp
 	g++ -c grid_adaptation/thresholding.cpp -I. -I/phys_driver/
 
 adjacent_zone.o: grid_adaptation/adjacent_zone.cpp
 	g++ -c grid_adaptation/adjacent_zone.cpp
+
+reconstruction_check.o: grid_adaptation/reconstruction_check.cpp
+	g++ -c grid_adaptation/reconstruction_check.cpp
+
+seed_grid.o: phys_driver/seed_grid.cpp
+	g++ -c phys_driver/seed_grid.cpp -I. -I/phys_driver
 
 compute_field.o: phys_driver/compute_field.cpp
 	g++ -c phys_driver/compute_field.cpp -I. -I/phys_driver/
@@ -51,6 +54,9 @@ time_integrate.o: phys_driver/time_integrate.cpp
 
 control.o: control.cpp
 	g++ -c control.cpp -I.
+
+write_field_to_file.o: output/write_field_to_file.cpp
+	g++ -c output/write_field_to_file.cpp -I. -I/output/
 
 clean:
 	rm awcm $(objects)

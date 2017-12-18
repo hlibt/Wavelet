@@ -9,15 +9,26 @@ void diffWave(double** f,double** df,double h,int J,int N,int derivative_order);
 void compute_field(CollocationPoint** collPnt) {
 
     //--------------------------------------------------------------------------//
-    // Information: This program uses the active wavelets to reconstruct the 
-    //              original function.  
+    // Information: compute_field.cpp reconstructs the field by
+    //              summing the active wavelets and wavelet coefficients.
+    //              Derivatives of the function are computed by differentiating
+    //              the active wavelets. 
     //
     // Input: 
     //              collPnt                 - the matrix of collocation point objects 
     //                                        at all levels. Composed of other variables
-    //              J                       - maximum grid level (global)
+    //              collPnt.scaling_coeff   - the scaling coefficients
+    //              collPnt.detail_coeff    - the detail coefficients
+    //              epsilon                 - threshold parameter for detail coeffs.
+    //              J                       - maximum grid level (global variable)
+    //              interpPnts              - half the number of interp. points (global)
+    // Output:
+    //              collPnt.u               - the field u(x)
+    //              collPnt.ux              - the first derivative of u(x)
+    //              collPnt.uxx             - the second derivative of u(x)
     //--------------------------------------------------------------------------//     
 
+    //------- Allocate space for necessary arrays ------------------------------//
     double** gridPnts = new double*[J+1];                                       // create arrays for grid points to pass through scaling_subd
     double** phi = new double*[J+1];                                            // arrays for the scaling function
     double** psi = new double*[J+1];                                            // arrays for the detail wavelet
@@ -27,7 +38,7 @@ void compute_field(CollocationPoint** collPnt) {
     double** DDpsi=new double*[J+1];
     double* u_reconstructed = new double[jPnts(J)];                             // reconstructed solution variable
     double* ux_reconstructed = new double[jPnts(J)];                            //
-    double* uxx_reconstructed = new double[jPnts(J)];                            //
+    double* uxx_reconstructed = new double[jPnts(J)];                           //
     for (int j=0;j<=J;j++) {                                                    // create columns
         int N = jPnts(j);                                                       //
         gridPnts[j] = new double[N];                                            //

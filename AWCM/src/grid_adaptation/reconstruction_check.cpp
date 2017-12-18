@@ -34,12 +34,14 @@ void reconstruction_check(CollocationPoint** collPnt) {
     //              interpPnts              - half the number of interp. points (global)
     //--------------------------------------------------------------------------//     
 
-    for (int j=2;j<=J;j++) {
-        int N = jPnts(j);
-        for (int k=0;k<N;k++) {
-            if ( collPnt[j][k].isMask == true )
+    //------- Loop through all points at levels j=2 through j=J ------------//
+    for (int j=2;j<=J;j++) {                                                //
+        int N = jPnts(j);                                                   //
+        for (int k=0;k<N;k++) {                                             //
+            if ( collPnt[j][k].isMask == true &&                            //
+                    collPnt[j][k].isOdd == true) {                          //
 
-                //------- Also turn of its interpolation stencil -----------//
+                //------- Place interpolation stencil into mask --- --------//
                 int leftPnt = -interpPnts + 1 + (k-1)/2;                    // determine the leftmost point in its stencil
                 int rightPnt = interpPnts + (k-1)/2;                        // determine the rightmost point in the stencil
                 while ( leftPnt < 0 ) {                                     // this loop checks to ensure the stencil consists of points in the domain
@@ -51,8 +53,10 @@ void reconstruction_check(CollocationPoint** collPnt) {
                     rightPnt--;                                             //
                 }                                                           //
                 for (int l=leftPnt;l<=rightPnt;l++) {                       // loop through points in the stencil
-                    if (collPnt[j-1][l].isOdd == false ) {                  // do NOT turn off detail coefficients in the stencil
-                        collPnt[j-1][l].isMask = false;                     // turn off each point in stencil
-                    }                                                       //
-                }                                                           // 
+                        collPnt[j-1][l].isMask = true;                      // place each stencil point in the mask
+                }                                                           //
+
+            }                                                               // 
+        }                                                                   //
+    }                                                                       //
 }

@@ -4,7 +4,8 @@
 using namespace std;
 
 void control(int &max_scale, int &shift, double &threshold, int &interp_points, int &num_timesteps, double &tf, 
-                double &advec_vel, double &diffusivity, string &buffer_type, bool &ifwrite) {
+                double &advec_vel, double &diffusivity, string &buffer_type, int &buffer_width,
+               int &buffer_height,  bool &ifwrite) {
 
     // read all simulation parameters from input text file
     string line;
@@ -41,7 +42,18 @@ void control(int &max_scale, int &shift, double &threshold, int &interp_points, 
             }
             if ( line.compare(0,11,"diffusivity") == 0 ) {
                 string substring = line.substr(12,string::npos);
-                advec_vel = stod(substring,0);
+                diffusivity = stod(substring,0);
+            }
+            if ( line.compare(0,11,"buffer_type") == 0 ) {
+                buffer_type = line.substr(12,string::npos);
+            }
+            if ( line.compare(0,12,"buffer_width") == 0 ) {
+                string substring = line.substr(13,string::npos);
+                buffer_width = stoi(substring,0);
+            }
+            if ( line.compare(0,13,"buffer_height") == 0 ) {
+                string substring = line.substr(14,string::npos);
+                buffer_height = stoi(substring,0);
             }
             if ( line.compare(0,7,"ifwrite") == 0 ) {
                 string substring = line.substr(8,string::npos);
@@ -66,9 +78,14 @@ void control(int &max_scale, int &shift, double &threshold, int &interp_points, 
     printf("    Final simulation time: %3.3f \n", tf);
     printf("    Advection velocity: %3.3f \n", advec_vel);
     printf("    Diffusivity coefficient: %3.3f \n", diffusivity);
+    printf("    Buffer width: %d \n", buffer_width);
+    printf("    Buffer height: %d \n", buffer_height);
     printf("    Write data to files (true/false): %d \n", ifwrite);
     printf("                                                                            \n");
     printf("==========================================================================\n");
 
+    int x;
+    printf(" Enter any number to continue. \n ");
+    cin >> x;
     return;
 }

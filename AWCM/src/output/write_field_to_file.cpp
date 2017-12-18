@@ -1,3 +1,12 @@
+#include <iomanip>
+#include <stdio.h>
+#include <iostream>
+#include <fstream>
+#include <cmath>
+#include "../CollocationPoint.hpp"
+#include "../global.hpp"
+using namespace std;
+
 void write_field_to_file(CollocationPoint** collPnt,int current_timestep) {
 
     char u_out[45];                                                     // declare space for character array
