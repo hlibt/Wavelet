@@ -103,7 +103,11 @@ int main(void) {
     }                                                                   // end of time integration
 
     //------- Cleanup --------------------------------------------------//
+    for (j=0;j<=J;j++) {
+        delete[] collPnt[j];
+    }
     delete[] collPnt;
+
     return 0; 
 }
 

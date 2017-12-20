@@ -85,7 +85,7 @@ void control(int &max_scale, int &shift, double &threshold, int &interp_points, 
     printf("==========================================================================\n");
 
     int x;
-    printf(" Enter any number to continue. \n ");
+    printf(" Enter any key and enter to continue. \n ");
     cin >> x;
     return;
 }

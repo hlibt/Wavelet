@@ -6,7 +6,7 @@ set(gca,'fontsize',fs-3)
 % number of steps
 n = 6000;
 
-vxn = 2400;
+vxn = 1000;
 vx = linspace(-1,1,vxn);
 vtn = n;
 vt = linspace(0,1,vtn);
@@ -15,14 +15,16 @@ vu = burgers_solution(0.01,vxn,vx,vtn,vt);
 % input data and make movie
 figure(1)
 for i=0:n-1
-    if ( mod(i,5)==0 )
+    if ( mod(i,2)==0 )
         filename = sprintf('_soln_files/u%d.dat',i);
         U = load(filename);
-        plot( U(:,1) , U(:,2), 'b' ); grid on; hold on;
+        [x,I] = sort( U(:,1) );
+        u = U(:,2);
+        plot( x , u(I), 'b' ); grid on; hold on;
         plot( vx, vu(:,i+1) ,'r'); hold on;
-        plot( U(:,1) , 0 , '.b' );
+        plot( x , u(I), '.b' );
         hold off;
         axis( [ -1 1 -1 1 ] );
-        pause(0.001);
+        pause(0.0000001);
     end
 end

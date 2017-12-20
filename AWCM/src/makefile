@@ -1,62 +1,66 @@
+CXX = g++
+DEBUG_FLAG =
+
 all: awcm
 
-objects = awcm.o scaling_subd.o detail_subd.o fwd_trans.o lagrInterp.o lagrInterp_old.o lagrInterpD1.o \
-			lagrInterpD2.o compute_field.o thresholding.o compute_derivatives.o time_integrate.o	\
-			seed_grid.o adjacent_zone.o control.o reconstruction_check.o write_field_to_file.o
+objects = awcm.o scaling_subd.o detail_subd.o fwd_trans.o lagrInterp.o \
+			compute_field.o thresholding.o time_integrate.o	\
+			seed_grid.o adjacent_zone.o control.o reconstruction_check.o \
+			write_field_to_file.o wavelet_derivative.o
 
 awcm: $(objects) 
-	g++ -o awcm $(objects)
+	${CXX} -o awcm $(objects)
 
 awcm.o: awcm.cpp conditions/conditions.hpp phys_driver/phys_driver.hpp transform/transform.hpp CollocationPoint.hpp global.hpp
-	g++ -c awcm.cpp -I.
+	${CXX} ${DEBUG_FLAG} -c awcm.cpp -I.
 
 scaling_subd.o: interpolation/scaling_subd.cpp 
-	g++ -c interpolation/scaling_subd.cpp -I. -I/interpolation/
+	${CXX} ${DEBUG_FLAG} -c interpolation/scaling_subd.cpp -I. -I/interpolation/
 
 detail_subd.o: interpolation/detail_subd.cpp 
-	g++ -c interpolation/detail_subd.cpp -I. -I/interpolation/
+	${CXX} ${DEBUG_FLAG} -c interpolation/detail_subd.cpp -I. -I/interpolation/
 
 lagrInterp.o: interpolation/lagrInterp.cpp
-	g++ -c interpolation/lagrInterp.cpp -I. -I/interpolation/
+	${CXX} ${DEBUG_FLAG} -c interpolation/lagrInterp.cpp -I. -I/interpolation/
 
 lagrInterp_old.o: interpolation/lagrInterp_old.cpp
-	g++ -c interpolation/lagrInterp_old.cpp -I. -I/interpolation/
+	${CXX} ${DEBUG_FLAG} -c interpolation/lagrInterp_old.cpp -I. -I/interpolation/
 
 lagrInterpD1.o: interpolation/lagrInterpD1.cpp
-	g++ -c interpolation/lagrInterpD1.cpp -I. -I/interpolation/
+	${CXX} ${DEBUG_FLAG} -c interpolation/lagrInterpD1.cpp -I. -I/interpolation/
 
 lagrInterpD2.o: interpolation/lagrInterpD2.cpp
-	g++ -c interpolation/lagrInterpD2.cpp -I. -I/interpolation/
+	${CXX} ${DEBUG_FLAG} -c interpolation/lagrInterpD2.cpp -I. -I/interpolation/
 
 fwd_trans.o: transform/fwd_trans.cpp
-	g++ -c transform/fwd_trans.cpp -I. -I/transform/
+	${CXX} ${DEBUG_FLAG} -c transform/fwd_trans.cpp -I. -I/transform/
 
 thresholding.o: grid_adaptation/thresholding.cpp
-	g++ -c grid_adaptation/thresholding.cpp -I. -I/phys_driver/
+	${CXX} ${DEBUG_FLAG} -c grid_adaptation/thresholding.cpp -I. -I/phys_driver/
 
 adjacent_zone.o: grid_adaptation/adjacent_zone.cpp
-	g++ -c grid_adaptation/adjacent_zone.cpp
+	${CXX} ${DEBUG_FLAG} -c grid_adaptation/adjacent_zone.cpp
 
 reconstruction_check.o: grid_adaptation/reconstruction_check.cpp
-	g++ -c grid_adaptation/reconstruction_check.cpp
+	${CXX} ${DEBUG_FLAG} -c grid_adaptation/reconstruction_check.cpp
 
 seed_grid.o: phys_driver/seed_grid.cpp
-	g++ -c phys_driver/seed_grid.cpp -I. -I/phys_driver
+	${CXX} ${DEBUG_FLAG} -c phys_driver/seed_grid.cpp -I. -I/phys_driver
 
 compute_field.o: phys_driver/compute_field.cpp
-	g++ -c phys_driver/compute_field.cpp -I. -I/phys_driver/
+	${CXX} ${DEBUG_FLAG} -c phys_driver/compute_field.cpp -I. -I/phys_driver/
 
-compute_derivatives.o: phys_driver/compute_derivatives.cpp
-	g++ -c phys_driver/compute_derivatives.cpp -I. -I/phys_driver/
+wavelet_derivative.o: phys_driver/wavelet_derivative.cpp
+	${CXX} ${DEBUG_FLAG} -c phys_driver/wavelet_derivative.cpp -I. -I/phys_driver/
 
 time_integrate.o: phys_driver/time_integrate.cpp
-	g++ -c phys_driver/time_integrate.cpp -I. -I/phys_driver/
+	${CXX} ${DEBUG_FLAG} -c phys_driver/time_integrate.cpp -I. -I/phys_driver/
 
 control.o: control.cpp
-	g++ -c control.cpp -I.
+	${CXX} ${DEBUG_FLAG} -c control.cpp -I.
 
 write_field_to_file.o: output/write_field_to_file.cpp
-	g++ -c output/write_field_to_file.cpp -I. -I/output/
+	${CXX} ${DEBUG_FLAG} -c output/write_field_to_file.cpp -I. -I/output/
 
 clean:
 	rm awcm $(objects)

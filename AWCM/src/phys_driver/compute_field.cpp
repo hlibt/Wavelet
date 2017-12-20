@@ -3,8 +3,8 @@
 #include "../CollocationPoint.hpp"
 #include "../interpolation/interpolation.hpp"
 #include "../global.hpp"
+#include "phys_driver.hpp"
 using namespace std;
-void diffWave(double** f,double** df,double h,int J,int N,int derivative_order);
 
 void compute_field(CollocationPoint** collPnt) {
 
@@ -29,67 +29,57 @@ void compute_field(CollocationPoint** collPnt) {
     //--------------------------------------------------------------------------//     
 
     //------- Allocate space for necessary arrays ------------------------------//
-    double** gridPnts = new double*[J+1];                                       // create arrays for grid points to pass through scaling_subd
-    double** phi = new double*[J+1];                                            // arrays for the scaling function
-    double** psi = new double*[J+1];                                            // arrays for the detail wavelet
-    double** Dphi=new double*[J+1];
-    double** Dpsi=new double*[J+1];
-    double** DDphi=new double*[J+1];
-    double** DDpsi=new double*[J+1];
-    double* u_reconstructed = new double[jPnts(J)];                             // reconstructed solution variable
-    double* ux_reconstructed = new double[jPnts(J)];                            //
-    double* uxx_reconstructed = new double[jPnts(J)];                           //
-    for (int j=0;j<=J;j++) {                                                    // create columns
-        int N = jPnts(j);                                                       //
-        gridPnts[j] = new double[N];                                            //
-        phi[j] = new double[N];                                                 //
-        psi[j] = new double[N];                                                 //
-        Dphi[j] = new double[N];                                                //
-        Dpsi[j] = new double[N];                                                //
-        DDphi[j] = new double[N];                                               //
-        DDpsi[j] = new double[N];                                               //
-    }                                                                           //
-    for (int j=0;j<=J;j++) {                                                    //
-        int N = ( jPnts(j) - 1 ) / 2;                                           //
-        for (int k=-N;k<=N;k++) {                                      	        //
-            gridPnts[j][k+N] = 2. *  pow(2.,-(j+shift)) * k;                    // x-locations of each collocation point
-        }                                                       	            //
+    int N = jPnts(J);                                                           // number of points at maximum level of resolution 
+    double* phi = new double[N];                                                // arrays for the scaling function
+    double* psi = new double[N];                                                // arrays for the detail wavelet
+    double* phix = new double[N];                                               // vector for the derivative of the scaling function
+    double* psix = new double[N];                                               // vector for the derivative of the wavelet
+    double* phixx = new double[N];                                              // vector for the second derivative of the scaling function
+    double* psixx = new double[N];                                              // vector for the second derivative of the wavelet
+    double* u_reconstructed = new double[N];                                    // reconstructed solution variable
+    double* ux_reconstructed = new double[N];                                   // reconstructed first derivative of the solution variable
+    double* uxx_reconstructed = new double[N];                                  // second derivative of the solution variable
+
+    //------- Compute interval length for spatial derivatives ------------------//
+    double h = abs( collPnt[J][1].x - collPnt[J][0].x );                        //
+
+    //------- Set to zero all reconstructed variables --------------------------//
+    for (int i=0;i<jPnts(J);i++) {                                              //
+        u_reconstructed[i] = 0.;                                                //
+        ux_reconstructed[i] = 0.;                                               //
+        uxx_reconstructed[i] = 0.;                                              //
     }                                                                           //
 
-    for (int i=0;i<jPnts(J);i++) {
-        u_reconstructed[i] = 0.;
-        ux_reconstructed[i] = 0.;
-        uxx_reconstructed[i] = 0.;
-    }
-
+    //------- Loop through all levels collecting significant wavelets ----------//
     for (int j=0;j<J;j++) {                                                     // 
-        int N = jPnts(j);                                                         
-        for (int l=0;l<N;l++) {
-            if (j==0) {
-                scaling_subd(phi,gridPnts,j,l,J,interpPnts);              // generate the scaling function if at level j=0
-                diffWave(phi,Dphi,abs(gridPnts[J][1]-gridPnts[J][0]),J,jPnts(J),1);   //
-                diffWave(phi,DDphi,abs(gridPnts[J][1]-gridPnts[J][0]),J,jPnts(J),2);   //
+        int N = jPnts(j);                                                       //
+        for (int l=0;l<N;l++) {                                                 // 
+            if (j==0) {                                                         // j=0 for the points corresponding to scaling functions
+                scaling_subd(collPnt,phi,j,l);                                  // generate the scaling function if at level j=0
+                wavelet_derivative(phi,phix,h,jPnts(J),1);                      //
+                wavelet_derivative(phi,phixx,h,jPnts(J),2);                     //
             }
             if ( collPnt[j+1][2*l+1].isMask == true && l < N-1 ) {              // if at odd point and the point is point is in the mask,
-                detail_subd(psi,gridPnts,j,l,J,interpPnts);                     // then generate the detail wavelet at that point
-                diffWave(psi,Dpsi,abs(gridPnts[J][1]-gridPnts[J][0]),J,jPnts(J),1);   //
-                diffWave(psi,DDpsi,abs(gridPnts[J][1]-gridPnts[J][0]),J,jPnts(J),2);   //
+                detail_subd(collPnt,psi,j,l);                                   // then generate the detail wavelet at that point
+                wavelet_derivative(psi,psix,h,jPnts(J),1);                      // compute first derivative of wavelet function
+                wavelet_derivative(psi,psixx,h,jPnts(J),2);                     // compute second derivative of wavelet function
             }                                                                   //
             for (int i=0;i<jPnts(J);i++) {
                 if (j==0) {
-                    u_reconstructed[i] += collPnt[j][l].scaling_coeff * phi[J][i];
-                    ux_reconstructed[i] += collPnt[j][l].scaling_coeff * Dphi[J][i];
-                    uxx_reconstructed[i] += collPnt[j][l].scaling_coeff * DDphi[J][i];
+                    u_reconstructed[i] += collPnt[j][l].scaling_coeff * phi[i];
+                    ux_reconstructed[i] += collPnt[j][l].scaling_coeff * phix[i];
+                    uxx_reconstructed[i] += collPnt[j][l].scaling_coeff * phixx[i];
                 }
                 if ( collPnt[j+1][2*l+1].isMask == true && l < N-1 ) {
-                    u_reconstructed[i] += collPnt[j+1][2*l+1].detail_coeff * psi[J][i]; 
-                    ux_reconstructed[i] += collPnt[j+1][2*l+1].detail_coeff * Dpsi[J][i];
-                    uxx_reconstructed[i] += collPnt[j+1][2*l+1].detail_coeff * DDpsi[J][i];
+                    u_reconstructed[i] += collPnt[j+1][2*l+1].detail_coeff * psi[i]; 
+                    ux_reconstructed[i] += collPnt[j+1][2*l+1].detail_coeff * psix[i];
+                    uxx_reconstructed[i] += collPnt[j+1][2*l+1].detail_coeff * psixx[i];
                 }
             }
         }
     }
 
+    //------- Transfer results to the adaptive dyadic grid ---------------------//
     for (int j=0;j<=J;j++) {
         int N = jPnts(j);
         for (int l=0;l<N;l++) {
@@ -104,32 +94,14 @@ void compute_field(CollocationPoint** collPnt) {
     
     delete[] phi;
     delete[] psi;
-    delete[] Dphi;
-    delete[] Dpsi;
-    delete[] DDphi;
-    delete[] DDpsi;
+    delete[] phix;
+    delete[] psix;
+    delete[] phixx;
+    delete[] psixx;
     delete[] u_reconstructed;
     delete[] ux_reconstructed;
     delete[] uxx_reconstructed;
-    delete[] gridPnts;
 
     return;
 }
 
-void diffWave(double** f,double** df,double h,int J,int N,int derivative_order) {
-    if ( derivative_order == 1 ) {
-        df[J][0]=(-3.*f[J][0]+4.*f[J][1]-f[J][2])/(2.*h);
-        for (int i=1;i<N-1;i++) {
-            df[J][i]=(f[J][i+1]-f[J][i-1])/(2.*h);
-        }
-        df[J][N-1]=(3.*f[J][N-1]-4.*f[J][N-2]+f[J][N-2])/(2.*h);
-    }
-    if ( derivative_order == 2 ) {
-        df[J][0] = ( -f[J][3] + 4.*f[J][2] - 5.*f[J][1] + 2.*f[J][0] ) / ( h*h );
-        for (int i=1;i<N-1;i++) {
-            df[J][i] = ( f[J][i+1] - 2.*f[J][i] + f[J][i-1] ) / ( h*h );
-        }
-        df[J][N-1] = ( -f[J][N-4] + 4.*f[J][N-3] - 5.*f[J][N-2] + 2.*f[J][N-1] ) / ( h*h );
-    }
-    return;
-}
