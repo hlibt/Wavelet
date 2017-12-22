@@ -1,23 +1,30 @@
+*** This is the input file. All parameters that can be modified in the simulation
+    are enclosed in this file. Variable names must be exact. To change the initial
+    condition, edit the global.hpp file and run 'make'. ***
+
+Select PDE ( "burgers" or "modified_burgers" or "advection" or "advection_diffusion" )
+equation modified_burgers
+
 Maximum number of wavelet levels in the simulation:
-max_scale 7
+max_scale 8
 
 Starting wavelet level (should be at least 2):
 shift 2
 
 Wavelet coefficient thresholding parameter
-threshold 0.0005
+threshold 0.0000005
 
 Half the number of interpolation points per stencil:
 interp_points 2
 
 Final time in the simulation:
-tf 1.0
+tf 0.5
 
 Number of timesteps in the simulation:
-num_timesteps 6000
+num_timesteps 8000
 
 Advection velocity:
-advec_vel 0.0
+advec_vel 1.0
 
 Coefficient of diffusivity:
 diffusivity 0.01
@@ -31,5 +38,5 @@ buffer_width 2
 Height of the buffer zone for Type2 wavelets
 buffer_height 1
 
-Write data to file or not:
+Write data to file or not ( 1 = write, 0 = don't write ):
 ifwrite 1

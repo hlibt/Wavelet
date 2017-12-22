@@ -16,14 +16,15 @@
 #include "output/output.hpp"
 using namespace std;
     
-void control(int &max_scale, int &shift, double &threshold, int &interp_points, int &num_timesteps, double &tf, 
+void control(string &equation, int &max_scale, int &shift, double &threshold, int &interp_points, int &num_timesteps, double &tf, 
                 double &advec_vel, double &diffusivity, string &buffer_type, int &buffer_width,
                int &buffer_height,  bool &ifwrite);
 
     //------------------------------------------------------------------------------//
     //                                                                              //
     //     ADAPTIVE WAVELET COLLOCATION METHOD USING 2ND GENERATION WAVELETS TO     //
-    //     SOLVE THE 1D VISCOUS BURGERS EQUATION ON AN ADAPTIVE-DYADIC GRID         //
+    //     SOLVE 1D ADVECTION/DIFFUSION/BURGERS EQUATIONS ON AN ADAPTIVE-DYADIC     //
+    //     GRID                                                                     //
     //                                                                              //
     //     AUTHOR: BRANDON GUSTO                                                    //
     //     REFERENCES: O. Vasilyev & C. Bowman, JCP 165, 2000                       //
@@ -44,6 +45,7 @@ int main(void) {
     int i, j, k;                                                        // j is the wavelet level, i or k denote spatial index
 
     //------- Physical parameters --------------------------------------//
+    string equation;                                                    // partial differential equation to solve
     double advec_vel;                                                   // advection velocity
     double diffusivity;                                                 // coefficient of diffusivity
 
@@ -59,7 +61,7 @@ int main(void) {
     bool ifwrite;                                                       // write data to file or not
 
     //------- Input simulation parameters from control file ------------//
-    control(J, shift, threshold, interpPnts, num_steps, tf,             // read all simulation input variables from file
+    control(equation, J, shift, threshold, interpPnts, num_steps, tf,   // read all simulation input variables from file
                advec_vel, diffusivity, buffer_type, buffer_width,       //
                buffer_height, ifwrite);                                 //
 
@@ -86,7 +88,7 @@ int main(void) {
         thresholding(collPnt,threshold);                                // construct an initial mask of wavelets whose coefficients are above the threshold
 
         //------- Extend mask to include adjacent zone -----------------//
-        adjacent_zone(collPnt,buffer_width,buffer_height);              // create an adjacent zone of wavelets which may become significant after dt time
+        adjacent_zone(collPnt,buffer_width,buffer_height);              // create an adjacent zone of wavelets which may become significant during dt time
 
         //------- Perform the perfect reconstruction check -------------//
         reconstruction_check(collPnt);                                  // ensure that all detail points can be reconstructed at the next timestep
@@ -98,7 +100,7 @@ int main(void) {
         if ( ifwrite == 1 ) write_field_to_file(collPnt,t);             // output solution to file at current timestep
 
         //------- Advance in time --------------------------------------//
-        time_integrate(collPnt,dt,advec_vel,diffusivity);               // advance the solution forward in time
+        time_integrate(collPnt,dt,equation,advec_vel,diffusivity);      // advance the solution forward in time
 
     }                                                                   // end of time integration
 

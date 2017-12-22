@@ -3,7 +3,7 @@
 #include <string>
 using namespace std;
 
-void control(int &max_scale, int &shift, double &threshold, int &interp_points, int &num_timesteps, double &tf, 
+void control(string &equation, int &max_scale, int &shift, double &threshold, int &interp_points, int &num_timesteps, double &tf, 
                 double &advec_vel, double &diffusivity, string &buffer_type, int &buffer_width,
                int &buffer_height,  bool &ifwrite) {
 
@@ -12,6 +12,9 @@ void control(int &max_scale, int &shift, double &threshold, int &interp_points, 
     ifstream myfile ("input.txt");
     if ( myfile.is_open() ) {    
         while ( getline (myfile,line) ) {
+            if ( line.compare(0,8,"equation") == 0 ) {
+                equation = line.substr(9,string::npos);
+            }
             if ( line.compare(0,9,"max_scale") == 0 ) {
                 string substring = line.substr(10,string::npos);
                 max_scale = stoi(substring,0);

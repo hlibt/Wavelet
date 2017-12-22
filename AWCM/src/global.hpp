@@ -12,7 +12,8 @@ int inline indexShift(int jstar, int j, int k) {                        // repre
                                                                         //
 double inline init_condition(double x) {                                //
     double f = 0.;                                                      //
-    f = - sin( M_PI * x ); 
+//    f = - sin( M_PI * x ); 
+    f = -tanh( (x+.5) / (2*.01) );
     return f;                                                           //
 }                                                                       //
 
