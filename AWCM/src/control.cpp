@@ -3,9 +3,9 @@
 #include <string>
 using namespace std;
 
-void control(string &equation, int &max_scale, int &shift, double &threshold, int &interp_points, int &num_timesteps, double &tf, 
-                double &advec_vel, double &diffusivity, string &buffer_type, int &buffer_width,
-               int &buffer_height,  bool &ifwrite) {
+void control(string &equation, int &max_scale, int &lvl_shift, double &threshold, int &interp_points, int &num_timesteps, double &tf, 
+                double &advec_vel, double &diffusivity, string &boundary_conditions, double &left_boundary, double &right_boundary,
+                string &buffer_type, int &buffer_width, int &buffer_height,  bool &ifwrite) {
 
     // read all simulation parameters from input text file
     string line;
@@ -21,7 +21,7 @@ void control(string &equation, int &max_scale, int &shift, double &threshold, in
             }
             if ( line.compare(0,5,"shift") == 0 ) {
                 string substring = line.substr(6,string::npos);
-                shift = stoi(substring,0);
+                lvl_shift = stoi(substring,0);
             }
             if ( line.compare(0,9,"threshold") == 0 ) {
                 string substring = line.substr(10,string::npos);
@@ -46,6 +46,17 @@ void control(string &equation, int &max_scale, int &shift, double &threshold, in
             if ( line.compare(0,11,"diffusivity") == 0 ) {
                 string substring = line.substr(12,string::npos);
                 diffusivity = stod(substring,0);
+            }
+            if ( line.compare(0,19,"boundary_conditions") == 0 ) {
+                boundary_conditions = line.substr(20,string::npos);
+            }
+            if ( line.compare(0,13,"left_boundary") == 0 ) {
+                string substring = line.substr(14,string::npos);
+                left_boundary = stod(substring,0);
+            }
+            if ( line.compare(0,14,"right_boundary") == 0 ) {
+                string substring = line.substr(15,string::npos);
+                right_boundary = stod(substring,0);
             }
             if ( line.compare(0,11,"buffer_type") == 0 ) {
                 buffer_type = line.substr(12,string::npos);
@@ -74,8 +85,9 @@ void control(string &equation, int &max_scale, int &shift, double &threshold, in
     printf("                        ADAPTIVE WAVELET COLLOCATION SOLVER                 \n");
     printf("                   ONE DIMENSIONAL ADVECTION-DIFFUSION EQUATION             \n");
     printf("                                                                            \n");
+    cout << "    PDE: " << equation << endl;
     printf("    Maximum wavelet level: %d \n", max_scale);
-    printf("    Starting level: %d \n", shift);
+    printf("    Starting level: %d \n", lvl_shift);
     printf("    Wavelet coefficient threshold parameter: %.2e \n", threshold);
     printf("    Number of timesteps: %d \n", num_timesteps);
     printf("    Final simulation time: %3.3f \n", tf);
@@ -88,7 +100,7 @@ void control(string &equation, int &max_scale, int &shift, double &threshold, in
     printf("==========================================================================\n");
 
     int x;
-    printf(" Enter any key and enter to continue. \n ");
+    printf(" Enter any character and press enter to continue. \n ");
     cin >> x;
     return;
 }

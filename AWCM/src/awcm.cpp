@@ -16,19 +16,38 @@
 #include "output/output.hpp"
 using namespace std;
     
-void control(string &equation, int &max_scale, int &shift, double &threshold, int &interp_points, int &num_timesteps, double &tf, 
-                double &advec_vel, double &diffusivity, string &buffer_type, int &buffer_width,
-               int &buffer_height,  bool &ifwrite);
+void control(string &equation, int &max_scale, int &lvl_shift, double &threshold, int &interp_points, int &num_timesteps, double &tf, 
+                double &advec_vel, double &diffusivity, string &boundary_conditions, double &left_boundary, double &right_boundary,
+                string &buffer_type, int &buffer_width, int &buffer_height,  bool &ifwrite);
 
     //------------------------------------------------------------------------------//
     //                                                                              //
-    //     ADAPTIVE WAVELET COLLOCATION METHOD USING 2ND GENERATION WAVELETS TO     //
-    //     SOLVE 1D ADVECTION/DIFFUSION/BURGERS EQUATIONS ON AN ADAPTIVE-DYADIC     //
-    //     GRID                                                                     //
+    //     Adaptive wavelet collocation method using 2nd generation wavelets        //
+    //     to solve the following time-dependent partial differential equations:    //
+    //     advection, advection-diffusion, diffusion, viscid or inviscid burgers,   //
+    //     modified burgers equations in one dimension.                             //
     //                                                                              //
-    //     AUTHOR: BRANDON GUSTO                                                    //
-    //     REFERENCES: O. Vasilyev & C. Bowman, JCP 165, 2000                       //
-    //     DATE CREATED: Aug 01, 2017                                               //
+    //     The input file specifies the following simulation parameters:            //
+    //          - which PDE to solve                                                //
+    //          - maximum wavelet scale                                             //
+    //          - shifting parameter to determine how many scaling wavelets         //
+    //          - wavelet coefficient threshold parameter                           //
+    //          - haf the number of interpolating points to build wavelet           //
+    //          - the number of timesteps in the simulation                         //
+    //          - final time in the simulation                                      //
+    //          - constant advection velocity                                       //
+    //          - constant diffusivity                                              //
+    //          - type of boundary condition (derichlet or periodic)                //
+    //          - derichlet boundary conditions (if derichlet)                      //
+    //          - which type of adjacent zone to impose                             //
+    //          - number of adjacent scales to include (if type 1 adjacent zone)    //
+    //          - number of adjacent wavelets to include                            //
+    //          - whether to write solution to file or not                          //
+    //                                                                              //
+    //                                                                              //
+    //     Author: Brandon Gusto                                                    //
+    //     References: O. Vasilyev & C. Bowman, JCP 165, 2000                       //
+    //     Date created: Aug 01, 2017                                               //
     //                                                                              //
     //------------------------------------------------------------------------------//
 
@@ -46,8 +65,11 @@ int main(void) {
 
     //------- Physical parameters --------------------------------------//
     string equation;                                                    // partial differential equation to solve
+    string boundary_type;                                               // type of boundary conditions (periodic or derichlet)
     double advec_vel;                                                   // advection velocity
     double diffusivity;                                                 // coefficient of diffusivity
+    double left_bc;                                                     // left derichlet boundary condition
+    double right_bc;                                                    // right derichlet boundary condition
 
     //------- Define timestep size -------------------------------------//
     int num_steps;                                               	    // number of timesteps     
@@ -62,8 +84,8 @@ int main(void) {
 
     //------- Input simulation parameters from control file ------------//
     control(equation, J, shift, threshold, interpPnts, num_steps, tf,   // read all simulation input variables from file
-               advec_vel, diffusivity, buffer_type, buffer_width,       //
-               buffer_height, ifwrite);                                 //
+               advec_vel, diffusivity, boundary_type, left_bc, right_bc,//
+               buffer_type, buffer_width, buffer_height, ifwrite);      //
 
     //------- Compute simulation timestep ------------------------------//
     double dt = tf / num_steps;                                    	    //
@@ -97,10 +119,11 @@ int main(void) {
         compute_field(collPnt);                                         // compute the field where necessary using wavelet basis
 
         //------- Output solution at each timestep ---------------------//
-        if ( ifwrite == 1 ) write_field_to_file(collPnt,t);             // output solution to file at current timestep
+        if ( ifwrite == 1 ) write2file(collPnt,t);                      // output solution to file at current timestep
 
         //------- Advance in time --------------------------------------//
-        time_integrate(collPnt,dt,equation,advec_vel,diffusivity);      // advance the solution forward in time
+        time_integrate(collPnt,dt,equation,advec_vel,diffusivity,       // advance the solution forward in time
+                        boundary_type,left_bc,right_bc);                //
 
     }                                                                   // end of time integration
 

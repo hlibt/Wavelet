@@ -1,1 +1,1 @@
-void write_field_to_file(CollocationPoint** collPnt,int current_timestep);
+void write2file(CollocationPoint** collPnt,int current_timestep);

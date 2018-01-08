@@ -16,35 +16,33 @@
 %\usepackage{doublespace}
 
 \begin{document}
-\title{Implementing the Adaptive Wavelet Collocation Method for Analyzing Calcium Dynamics 
-in Astrocyte Branch Structures}
+\title{Implementing the Adaptive Wavelet Collocation Method}
 \author{Brandon Gusto \\}
 
 \maketitle
 %
 \section{Motivation for the Adaptive Wavelet Collocation Method}
 The adaptive wavelet collocation method (AWCM) is a method for numerically solving differential equations.
-It has a number of merits which make it an attractive alternative to traditional finite element, finite volume, and 
-finite difference methods for particular problems. The AWCM has been successfully applied to parabolic, elliptic, and 
+It has a number of merits which make it an attractive alternative to traditional finite element or finite volume 
+methods for particular problems. The AWCM has been successfully applied to parabolic, elliptic, and 
 hyperbolic PDEs, in applications such as aeroacoustics, turbulence, flame interactions, and others. 
 Some important qualities of the method which make it so capable are that
 \begin{itemize}
     \item wavelets are localized in space and scale
     \item the wavelet basis forms a multiresolution analysis
+    \item the existence of a fast wavelet transform makes the method $\mathcal{O}(\mathcal{N})$
 \end{itemize} 
-Probably the most attractive quality of wavelets for solving partial differential equations (PDEs) or systems of PDEs is for their
-tremendous ability to compress the solution, providing high resolution where it is needed, and fewer grid points where the 
+One of the most attractive qualities of using wavelets for solving partial differential equations (PDEs) or systems of PDEs is for their
+ability to naturally compress the solution, providing high resolution where it is needed, and fewer grid points where the 
 solution is smooth. The wavelet basis is ideal for problems which have 
- length scales ranging from the large structures, down to the Kolmogorov scale which governs 
- the size of the smallest eddies in fluid turbulence; and time scales ranging from microseconds for turbulence down 
- to nanoseconds for combustion or the propagation of a flame front.
+disparate length and time scales.
 
 \section{Fundamentals of Wavelets}
 A wavelet is a mathematical function which can be used as a basis for representing either continuous functions or 
 discrete signals. There exist many other bases which have been utilized, most notably the Fourier
 basis composed of sine and cosine functions.
 Unlike the Fourier basis functions however, wavelets are functions with finite length. The most simple example of a wavelet
-is the haar wavelet, which has a scaling function, $\phi(x)$, and a mother wavelet $\psi(x)$ as shown in 
+is the Haar wavelet, which has a scaling function, $\phi(x)$, and a mother wavelet $\psi(x)$ as shown in 
 figure (\ref{fig:haar_scaling}) and (\ref{fig:haar_wavelet}).
 \begin{figure}[H]
 	\centering
@@ -61,7 +59,7 @@ figure (\ref{fig:haar_scaling}) and (\ref{fig:haar_wavelet}).
 \end{figure}
 Since the wavelet functions are localized in space, it is necessary to shift them in order to approximate
 a function. This action is referred to as \textit{translation}. Furthermore, functions may exhibit very sharp changes over an
-interval which is smaller than the piecewise constant wavelet, and so a wavelet of higher frequency would be necessary
+interval which is smaller than the piecewise constant wavelet, and so a wavelet of higher frequency is necessary
 to fit the function. By using a \textit{dilation} of the original wavelet, the function can be well approximated. 
 Define a relationship between the scaling function $\phi(x)$ and the translates of its dilation 
 $\phi(2x)$ by the dilation equation given by
@@ -70,7 +68,8 @@ $\phi(2x)$ by the dilation equation given by
 \label{dilation equation}
 \end{equation}
 
-The three pillars(?) of wavelets which make them such a useful tool for approximation are \textbf{Orthogonality}, \textbf{Compact Support}, and \textbf{Multiresolution Analysis}.
+The three pillars(?) of wavelets which make them such a useful tool for approximation are \textbf{Orthogonality}, 
+\textbf{Compact Support}, and \textbf{Multiresolution Analysis}.
 \subsection{Orthogonality}
 The basis of wavelet functions constitute an orthonormal set. All translations and dilations of the mother wavelet $\psi(x)$
 are orthogonal to the scaling function $\phi(x)$, 
@@ -82,12 +81,10 @@ and other wavelets
 \int_{-\infty}^{\infty} \psi_{k}^{j}(x) \psi_{k'}^{j'}(x) dx = 0.
 \end{equation}
 \subsection{Compact Support}
-Wavelet functions have compact support, meaning that they are uniformly zero outside of a specified interval.
+Wavelet functions have compact support, implying that they are uniformly zero outside of a specified interval.
 This property is advantageous for approximating sharp signals, where one would like to represent the spike using only a small 
 handful of basis functions. The Fourier basis is not adequate for this purpose, since the support for the basis is global; 
-the sine and cosine functions have infinite length. While successively higher-frequency sine and cosine terms 
-can be superimposed, the result is the necessary storage of more basis functions which cancel them out away
-from the sharp signal. 
+the sine and cosine functions have infinite length. 
 \subsection{Multiresolution Analysis}
 Let us define the space which is spanned by the basis of scaling functions $\phi_{k}^{0}(x)$ at the coarsest
 level of resolution by $V_0$. We understand from the previous section that the set of wavelet functions are orthogonal 
@@ -111,9 +108,8 @@ V_j = V_0 \oplus W_0 \oplus W_1 \oplus \dots \oplus W_j.
 The spaces $V_j$ are nested, since for example the function $\phi(x)$ is a combination of $\phi(2x)$ and $\phi(2x-1)$. 
 In other terms, $V_0 \subset V_1 \subset \dots \subset V_j$.
 \subsection{Dyadic Grid}
-In developing an adaptive wavelet collocation algorithm, an appropriate numerical grid should be described. The 
-multi-resolution properties of wavelets previously described warrant a multilevel grid. This 
-is called a dyadic grid, and it should have as many levels as there are scales in the given problem. It can consist of 
+The multi-resolution properties of wavelets previously described warrant a multilevel, or dyadic grid.
+This grid should have as many levels as there are scales in the given problem. It can consist of 
 either uniformly or non-uniformly spaced points. In the case of equally spaced grid points, 
 let each grid level $j = 0, \dots, J$ be computed by 
 \begin{align}
@@ -133,7 +129,7 @@ $x_{k}^{j}=x_{2k}^{j+1}$ for $k \in \mathcal{K}^{j}$.
 
 \section{Second-Generation Wavelets}
 Second-generation wavelets refer to the family of functions which are no longer defined as translates and dilations of 
-a single mother function. The necessity of such functions 
+a single mother function. 
 
 \subsection{Interpolating Subdivision}
 The interpolating subdivision scheme is central to the second-generation wavelet collocation approach. The scheme is used to

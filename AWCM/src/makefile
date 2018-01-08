@@ -6,7 +6,7 @@ all: awcm
 objects = awcm.o scaling_subd.o detail_subd.o fwd_trans.o lagrInterp.o \
 			compute_field.o thresholding.o time_integrate.o	\
 			seed_grid.o adjacent_zone.o control.o reconstruction_check.o \
-			write_field_to_file.o wavelet_derivative.o
+			write2file.o wavelet_derivative.o
 
 awcm: $(objects) 
 	${CXX} -o awcm $(objects)
@@ -59,8 +59,8 @@ time_integrate.o: phys_driver/time_integrate.cpp
 control.o: control.cpp
 	${CXX} ${DEBUG_FLAG} -c control.cpp -I.
 
-write_field_to_file.o: output/write_field_to_file.cpp
-	${CXX} ${DEBUG_FLAG} -c output/write_field_to_file.cpp -I. -I/output/
+write2file.o: output/write2file.cpp
+	${CXX} ${DEBUG_FLAG} -c output/write2file.cpp -I. -I/output/
 
 clean:
 	rm awcm $(objects)
