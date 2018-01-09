@@ -191,7 +191,8 @@ The wavelet $\psi_{l}^{j}$ is computed by setting $d_{m}^{j'} = \delta_{j',j} \d
 	\caption{An example of a wavelet, $\psi(x)$, for $N=3$.}
 \end{figure}
 \section{Approximation of Functions}
-The approximation of a function $f(x)$ is done by setting the scaling coefficients at the arbitrary maximum level of resolution $J$ to the function itself. Once the function is sampled this way on $\mathcal{G}^J$, the forward wavelet transform is 
+The approximation of a function $f(x)$ is done by setting the scaling coefficients at the arbitrary maximum level of 
+resolution $J$ to the function itself. Once the function is sampled this way for all $c_{k}^{J}$, the forward wavelet transform is 
 performed down to the coarsest level of resolution. The function is then represented by 
 \begin{equation}
         f^J(x)=\sum_{k \in \mathcal{K}^0} c_{k}^{0} \phi_{k}^{0}(x) + \sum_{j=0}^{J-1} \sum_{l \in \mathcal{L}^j}
@@ -233,9 +234,10 @@ of accuracy worse than a comparable four-point centered finite difference scheme
 accuracy. The only advantage of this method can be seen when the stencil is non-uniform, in which case the finite difference 
 coefficients would have to be computed either in an implicit sense, or by interpolation, as done here.
 \subsection{Non-Uniform Finite Difference Stencils}
+\textit{Here shall be summarized the approach taken by Rastigejev \& Paolucci, 2006 }
 
 \section{Single-Precision Finite Differencing with Richardson Extrapolation}
-When evaluating finite differences with finite-precision machines. one must consider not just the truncation error of the scheme,
+When evaluating derivatives with finite-precision machines, one must consider not just the truncation error of the scheme,
 but also the induced roundoff error. To illustrate, consider the 2-point centered finite difference scheme,
 \begin{equation}
 \overline{f}'(x) \approx \frac{f(x+h) - f(x-h)}{2h}.
@@ -280,7 +282,8 @@ As the step-size decreases from unity, the error of the approximation will decre
 $h^{\ast}$ is reached, and then the error will increase due to roundoff error.
 \section{Open Areas of Research / Project Ideas}
 \begin{itemize}
-	\item AWCM combined with level-set method 
+	\item AWCM combined with finite volume approach at the finest grid level with 
+            moment-of-fluid method for interface reconstruction
 	\item Wavelet Finite Element in an Arbitrary Lagrangian-Eulerian formulation.
 	\item Single-precision implementation of AWCM for parallelization on GPU's.
 \end{itemize}

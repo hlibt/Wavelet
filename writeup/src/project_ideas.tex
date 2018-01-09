@@ -1,0 +1,37 @@
+\documentclass[11pt]{article}
+\usepackage{fullpage}
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{subcaption}
+\usepackage{mwe}
+\usepackage{epstopdf}
+\usepackage{color,verbatim}
+\usepackage{pgfplots}
+\usepackage{bm}
+\usepackage{listings}
+\usepackage{mathtools}          %loads amsmath as well
+\usepackage{titling}
+\DeclareGraphicsRule{.tif}{png}{.png}{`convert #1 `dirname #1`/`basename #1 .tif`.png}
+%\usepackage{doublespace}
+
+\begin{document}
+\title{New ideas in Wavelet Methods}
+\author{Brandon Gusto \& Gordon Erlebacher}
+
+\maketitle
+
+\section{A Single-Precision Implementation of the Adaptive Wavelet Collocation Method on GPUs}
+    The goal of this effort is to take advantage of the multi-resolution properties of wavelets in order
+    to solve partial differential equations on a two-dimensional adaptive grid using single-precision
+    graphical processing units. Single-Precision GPU computing offers greater computing speeds compared
+    with double precision computing. If an efficient numerical scheme which overcame the issues of
+    round-off error using single-precision computing was implemented on GPUs, it could potentially be of
+    use in practical engineering applications.
+\section{A Moment-of-Fluid Wavelet Collocation Approach for Multi-Phase Flows}
+    The AWCM could be combined with a finite volume formulation at the finest grid level, while using 
+    the moment-of-fluid method for interface reconstruction.
+	
+\section{An Arbitrary Lagrangian-Eulerian Wavelet Collocation Method}
+
+\end{document}

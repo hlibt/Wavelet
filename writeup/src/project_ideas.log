@@ -1,9 +1,9 @@
-This is pdfTeX, Version 3.1415926-2.5-1.40.14 (TeX Live 2013) (format=pdflatex 2016.8.8)  8 JAN 2018 09:46
+This is pdfTeX, Version 3.1415926-2.5-1.40.14 (TeX Live 2013) (format=pdflatex 2016.8.8)  9 JAN 2018 09:45
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
-**wavelet_writeup.tex
-(./wavelet_writeup.tex
+**project_ideas.tex
+(./project_ideas.tex
 LaTeX2e <2011/06/27>
 Babel <v3.8m> and hyphenation patterns for english, dumylang, nohyphenation, lo
 aded.
@@ -314,8 +314,8 @@ Type X to quit or <RETURN> to proceed,
 or enter new name. (Default extension: sty)
 
 Enter file name: 
-(./wavelet_writeup.aux)
-\openout1 = `wavelet_writeup.aux'.
+(./project_ideas.aux)
+\openout1 = `project_ideas.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 18.
 LaTeX Font Info:    ... okay on input line 18.
@@ -357,99 +357,30 @@ LaTeX Font Info:    Try loading font information for U+msb on input line 22.
 (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
-LaTeX Font Info:    Try loading font information for OMS+cmr on input line 31.
-
-(/usr/share/texlive/texmf-dist/tex/latex/base/omscmr.fd
-File: omscmr.fd 1999/05/25 v2.5h Standard LaTeX font definitions
-)
-LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <10.95> not available
-(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 31.
-
-(./plotting_scripts/haar_scaling.tex
-\plotpoint=\box33
-)
-Overfull \hbox (1.35864pt too wide) in paragraph at lines 64--50
- [][] 
+Overfull \hbox (16.56439pt too wide) in paragraph at lines 31--31
+[]\OT1/cmr/bx/n/14.4 A Moment-of-Fluid Wavelet Col-lo-ca-tion Ap-proach
  []
 
 [1
 
 {/usr/share/texlive/texmf-var/fonts/map/pdftex/updmap/pdftex.map}]
-(./plotting_scripts/haar_wavelet.tex)
-Overfull \hbox (1.35864pt too wide) in paragraph at lines 67--57
- [][] 
- []
-
-[2] [3]
-Overfull \hbox (57.69296pt too wide) in paragraph at lines 103--105
-\OT1/cmr/m/n/10.95 Considering suc-ces-sively finer ap-prox-i-ma-tion spaces sp
-anned by $\OML/cmm/m/it/10.95 ^^^\OT1/cmr/m/n/10.95 (4\OML/cmm/m/it/10.95 x\OT1
-/cmr/m/n/10.95 )\OML/cmm/m/it/10.95 ; ^^^\OT1/cmr/m/n/10.95 (8\OML/cmm/m/it/10.
-95 x\OT1/cmr/m/n/10.95 )\OML/cmm/m/it/10.95 ; [] ; ^^^\OT1/cmr/m/n/10.95 (2[]\O
-ML/cmm/m/it/10.95 x\OT1/cmr/m/n/10.95 )$,
- []
-
-[4] [5] [6] (./image/scaling_j3.tex)
-Overfull \hbox (1.35864pt too wide) in paragraph at lines 246--186
- [] 
- []
-
-(./image/detail_j3.tex)
-Overfull \hbox (1.35864pt too wide) in paragraph at lines 169--191
- [] 
- []
-
-[7] (./image/solution.tex)
-Overfull \hbox (1.35864pt too wide) in paragraph at lines 684--210
- [] 
- []
-
-
-Overfull \hbox (42.27724pt too wide) in paragraph at lines 204--211
-\OT1/cmr/m/n/10.95 In the fig-ures be-low are ap-prox-i-ma-tions to the func-ti
-on $\OML/cmm/m/it/10.95 f\OT1/cmr/m/n/10.95 (\OML/cmm/m/it/10.95 x\OT1/cmr/m/n/
-10.95 ) = [] [] [] []$
- []
-
-[8] [9]
-Overfull \hbox (11.5229pt too wide) in paragraph at lines 239--239
-[]\OT1/cmr/bx/n/14.4 Single-Precision Fi-nite Dif-fer-enc-ing with Richard-
- []
-
-[10]
-Overfull \hbox (4.83197pt too wide) in paragraph at lines 288--289
-[]\OT1/cmr/m/n/10.95 Single-precision im-ple-men-ta-tion of AWCM for par-al-lel
-iza-tion on GPU's. 
- []
-
-[11] [12] (./wavelet_writeup.aux) ) 
+(./project_ideas.aux) ) 
 Here is how much of TeX's memory you used:
- 5437 strings out of 495063
- 81045 string characters out of 3182202
- 199056 words of memory out of 3000000
- 8511 multiletter control sequences out of 15000+200000
- 16334 words of font info for 60 fonts, out of 3000000 for 9000
+ 5366 strings out of 495063
+ 79956 string characters out of 3182202
+ 137986 words of memory out of 3000000
+ 8467 multiletter control sequences out of 15000+200000
+ 12258 words of font info for 45 fonts, out of 3000000 for 9000
  14 hyphenation exceptions out of 8191
- 42i,16n,40p,336b,325s stack positions out of 5000i,500n,10000p,200000b,50000s
-</usr/share/texlive/texmf-dist/fonts/type1/p
-ublic/amsfonts/cm/cmbx10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/
-amsfonts/cm/cmbx12.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfon
-ts/cm/cmex10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/
-cmmi10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi6.
-pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb></u
-sr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/shar
-e/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/share/texli
-ve/texmf-dist/fonts/type1/public/amsfonts/cm/cmr17.pfb></usr/share/texlive/texm
-f-dist/fonts/type1/public/amsfonts/cm/cmr6.pfb></usr/share/texlive/texmf-dist/f
-onts/type1/public/amsfonts/cm/cmr8.pfb></usr/share/texlive/texmf-dist/fonts/typ
-e1/public/amsfonts/cm/cmsy10.pfb></usr/share/texlive/texmf-dist/fonts/type1/pub
-lic/amsfonts/cm/cmsy6.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/ams
-fonts/cm/cmsy8.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/c
-m/cmti10.pfb>
-Output written on wavelet_writeup.pdf (12 pages, 212503 bytes).
+ 42i,6n,40p,334b,219s stack positions out of 5000i,500n,10000p,200000b,50000s
+</usr/share/texlive/texmf-dist/fonts/type1/public/amsfon
+ts/cm/cmbx12.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/
+cmr10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.p
+fb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr17.pfb>
+Output written on project_ideas.pdf (1 page, 55722 bytes).
 PDF statistics:
- 103 PDF objects out of 1000 (max. 8388607)
- 73 compressed objects within 1 object stream
+ 24 PDF objects out of 1000 (max. 8388607)
+ 16 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
  1 words of extra memory for PDF output out of 10000 (max. 10000000)
 
