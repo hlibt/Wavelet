@@ -9,7 +9,7 @@ for j=0:Jmax
 end
 
 % define some test point
-x = single( 1.59 );
+x = single( 1.9 );
 
 % define some test function f(x) and its derivative df(x)
 f = @(x) single( cos( pi * x ) );
@@ -19,23 +19,25 @@ df = @(x) single( -pi * sin( pi * x ) );
 % ... scheme for all levels j
 for j=0:Jmax
     h = single( stepsize(j+1) );
-    cntrd2pnt(j+1) = ( f(x+h) - f(x-h) ) / (2*h);
-    cntrd2pnt(j+1) = single( cntrd2pnt(j+1) );
+    cntrd2pnt(j+1) = single( ( f(x+h) - f(x-h) ) / (2*h) );
 end
 
 % perform the 4-point centered finite difference ...
 % ... scheme for all levels j
 for j=0:Jmax
     h = single( stepsize(j+1) );
-    cntrd4pnt(j+1) = ( f(x-2*h) - 8*f(x-h) ...
-    + 8*f(x+h) - f(x+2*h) ) / ( 12 * h );
-    cntrd4pnt(j+1) = single( cntrd4pnt(j+1) );
+    cntrd4pnt(j+1) = single( ( f(x-2*h) - 8*f(x-h) ...
+    + 8*f(x+h) - f(x+2*h) ) / ( 12 * h ) );
 end
 
-% compute richardson extrapolation
+% compute richardson extrapolation not using different ...
+% ... levels but only a 4-point stencil on j-1 ...
+% ... and compute the finite difference using a 2-pnt FD
+t = 2; % refer to wiki page for richardson extrapolation
 for j=0:Jmax
-    h = single( stepsize(j+1) );
-    extrap2pnt(j+1) = RE(2,h,f,x);
+    h = single( stepsize((j+1<=3)*(j+1)+(j+1>3)*3) );
+    extrap2pnt(j+1) = ( t^2*single( ( f(x+h/t) - f(x-h/t) ) / (2*h/t) ) ...
+                      - single( ( f(x+h) - f(x-h) ) / (2*h) ) ) / (t^2 - 1);
 end
 
 % compute the error

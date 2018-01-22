@@ -6,14 +6,27 @@
 #include "../global.hpp"
 using namespace std;
 
-void time_integrate(CollocationPoint** collPnt,double h,string equation, double c,double alpha,
+void time_advance(CollocationPoint** collPnt,double h,string equation, double c,double alpha,
                         string boundary_type, double left_bc, double right_bc) {
 
-    //------- Advance solution in time ---------------------------------------------//
-    for (int j=0;j<=J;j++) {
+    //------- Advance interior points in time --------------------------------------//
+    for (int j=1;j<=J;j++) {
         int N = jPnts(j);
         for (int i=1;i<N-1;i++) {
+
+            //------- Advance point if it is in mask -------------------------------//
             if ( collPnt[j][i].isMask == true ) {
+                RK2(collPnt,j,i,h,equation);
+            }
+
+        }
+
+
+
+
+
+
+{
                 if ( equation.compare(0,7,"burgers") == 0 ) {
                     collPnt[j][i].u = ( - collPnt[j][i].u * collPnt[j][i].ux + 
                                alpha * collPnt[j][i].uxx ) * h + collPnt[j][i].u;
