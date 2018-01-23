@@ -122,7 +122,7 @@ int main(void) {
         if ( ifwrite == 1 ) write2file(collPnt,t);                      // output solution to file at current timestep
 
         //------- Advance in time --------------------------------------//
-        time_integrate(collPnt,dt,equation,advec_vel,diffusivity,       // advance the solution forward in time
+        time_advance(collPnt,dt,equation,advec_vel,diffusivity,         // advance the solution forward in time
                         boundary_type,left_bc,right_bc);                //
 
     }                                                                   // end of time integration
