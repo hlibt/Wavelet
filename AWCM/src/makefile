@@ -4,9 +4,9 @@ DEBUG_FLAG =
 all: awcm
 
 objects = awcm.o scaling_subd.o detail_subd.o fwd_trans.o lagrInterp.o \
-			compute_field.o thresholding.o time_integrate.o	\
+			compute_field.o thresholding.o time_advance.o	\
 			seed_grid.o adjacent_zone.o control.o reconstruction_check.o \
-			write2file.o wavelet_derivative.o
+			write2file.o RK2.o rhs.o
 
 awcm: $(objects) 
 	${CXX} -o awcm $(objects)
@@ -53,8 +53,14 @@ compute_field.o: phys_driver/compute_field.cpp
 wavelet_derivative.o: phys_driver/wavelet_derivative.cpp
 	${CXX} ${DEBUG_FLAG} -c phys_driver/wavelet_derivative.cpp -I. -I/phys_driver/
 
-time_integrate.o: phys_driver/time_integrate.cpp
+time_advance.o: phys_driver/time_advance.cpp
 	${CXX} ${DEBUG_FLAG} -c phys_driver/time_integrate.cpp -I. -I/phys_driver/
+
+rhs.o: phys_driver/rhs.cpp
+	${CXX} ${DEBUG_FLAG} -c phys_driver/rhs.cpp -I. -I/phys_driver/
+
+RK2.o: phys_driver/RK2.cpp
+	${CXX} ${DEBUG_FLAG} -c phys_driver/RK2.cpp -I. -I/phys_Driver/
 
 control.o: control.cpp
 	${CXX} ${DEBUG_FLAG} -c control.cpp -I.

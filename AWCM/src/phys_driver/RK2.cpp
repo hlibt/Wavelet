@@ -17,6 +17,7 @@ void RK2(CollocationPoint** collPnt, int j, int i, double h, string equation) {
     //              j                       - grid level
     //              i                       - spatial index
     //              h                       - the size of the timestep
+    //              equation                - a string to inform solver of pde
     // Output:
     //              collPnt.u               - the solution u_ji at the updated time
     //--------------------------------------------------------------------------//     
@@ -25,8 +26,8 @@ void RK2(CollocationPoint** collPnt, int j, int i, double h, string equation) {
     double k1, k2;
 
     //------- Compute RHS at each time interval --------//
-    k1 = rhs(collPnt,j,i,0.);
-    k2 = rhs(collPnt,j,i,h*k1/2.);
+    k1 = rhs(collPnt,j,i,0.,equation);
+    k2 = rhs(collPnt,j,i,h*k1/2.,equation);
 
     //-------- Update the solution variable ------------//
     collPnt[j][i].u = collPnt[j][i].u + h*k2;

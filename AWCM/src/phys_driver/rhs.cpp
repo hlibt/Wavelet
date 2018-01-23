@@ -3,7 +3,7 @@
 #include "../global.hpp"
 #include "../interpolation/interpolation.hpp"
 
-double rhs(CollocationPoint** collPnt, int j, int i, double mod,string equation) { 
+double rhs(CollocationPoint** collPnt, int j, int i, double mod, string equation) { 
 
     //--------------------------------------------------------------------------------------//
     // Information: rhs.cpp computes the right-hand-side of the initial value problem
@@ -21,10 +21,11 @@ double rhs(CollocationPoint** collPnt, int j, int i, double mod,string equation)
     //------- Modify the gridpoint's stencil values --------------------//
     double* gridPnts = new double[2*interpPnts];                        // the interpolating stencil
     double* funcPnts = new double[2*interpPnts];                        // the function evaluated at stencil points
+    double f0 = collPnt[j][i].u + mod;                                  // solution at time subinterval
     int p = (i-1)/2 - interpPnts + 1;                                   // starting grid index
     for (int k=0;k<2*interpPnts;k++) {                                  // loop through stencil
         gridPnts[k] = collPnt[j-1][p].x;                                //
-        funcPnts[k] = collPnt[j-1][p].scaling_coeff + mod;              //
+        funcPnts[k] = collPnt[j-1][p].u + mod;                          //
         p++;                                                            //
     }
 
@@ -79,5 +80,16 @@ double rhs(CollocationPoint** collPnt, int j, int i, double mod,string equation)
     }                                                                   //
 
     //------- Combine derivatives to form rhs --------------------------//
-
+    if ( equation.compare(0,7,"burgers") == 0 ) {
+        return -f0*f1 + alpha*f2;
+    } else if ( equation.compare(0,16,"modified_burgers") == 0 ) {
+        return ( -(f0 + c)*f1 + alpha*f2 );
+    } else if ( equation.compare(0,19,"advection_diffusion") == 0 ) {
+        return -c*f1 + alpha*f2;
+    } else if ( equation.compare(0,9,"advection") == 0 ) {
+        return -c*f1;
+    } else if ( equation.compare(0,9,"diffusion") == 0 ) {
+        return alpha*f2;
+    }
+    
 }
