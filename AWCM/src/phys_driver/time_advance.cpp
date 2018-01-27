@@ -10,14 +10,14 @@ void time_advance(CollocationPoint** collPnt,double h,string equation, double c,
                         string boundary_type, double left_bc, double right_bc) {
 
     //------- Advance interior points in time --------------------------------------//
-    for (int j=1;j<=J;j++) {
-        int N = jPnts(j);
-        for (int i=0;i<N;i++) {
-
+    for (int j=0;j<=J;j++) {                                                        // search all levels for points in the mask
+        int N = jPnts(j);                                                           // number of points at level j
+        for (int i=0;i<N;i++) {                                                     // loop through points at level j
+ 
             //------- Advance point if it is in mask -------------------------------//
-            if ( collPnt[j][i].isMask == true && collPnt[j][i].isOdd == true ) {
-                RK2(collPnt,j,i,h,equation);
-            }
+            if ( collPnt[j][i].isMask == true ) {                                   // determine if point is in mask
+                RK2(collPnt,j,i,h,equation);                                        // call time integration scheme
+            }                                                                       //
 
             //------- Compute boundary values --------------------------------------//
             if ( boundary_type.compare(0,9,"derichlet") == 0 ) {

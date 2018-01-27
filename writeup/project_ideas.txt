@@ -1,0 +1,5 @@
+Discontinous Galerking with Wavelets
+Adaptive Wavelet Quadrature for Boundary Integral Equations
+Adaptive Wavelet Collocation Method on Single Precision GPUs
+Arbitrary Lagrangian Eulerian Wavelet Collocation
+Combustion Sprays using AWCM with front-tracking / front-capturing / moment-of-fluid 

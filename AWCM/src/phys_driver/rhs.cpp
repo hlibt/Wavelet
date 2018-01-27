@@ -18,18 +18,27 @@ double rhs(CollocationPoint** collPnt, int j, int i, double mod, string equation
     //              interpPnts              - half the number of interp. points (global)
     //--------------------------------------------------------------------------------------//     
 
-    //------- Modify the gridpoint's stencil values --------------------//
+    //------- initialize vectors ---------------------------------------//
     double* gridPnts = new double[2*interpPnts];                        // the interpolating stencil
     double* funcPnts = new double[2*interpPnts];                        // the function evaluated at stencil points
+
+    //------- determine if given stencil is adequate -------------------//
+    if ( j!=J && collPnt[j+1][2*i+1].isMask == true 
+            && ) {                 //
+        j++;                                                            // increment wavelet-grid level
+        i*=2;                                                           // represent grid index at next level
+    }
+
+    //------- modify the gridpoint's stencil values --------------------//
     double f0 = collPnt[j][i].u + mod;                                  // solution at time subinterval
     int p = (i-1)/2 - interpPnts + 1;                                   // starting grid index
     for (int k=0;k<2*interpPnts;k++) {                                  // loop through stencil
         gridPnts[k] = collPnt[j-1][p].x;                                //
-        funcPnts[k] = collPnt[j-1][p].u + mod;                          //
+        funcPnts[k] = collPnt[j-1][p].u + mod;                          // add modification to solution variable
         p++;                                                            //
     }
 
-    //------- Compute first-order spatial derivative -------------------//
+    //------- compute first-order spatial derivative -------------------//
     double f1 = 0.;                                                     // the first derivative of u
     double x = collPnt[j][i].x;                                         // evaluation point
     for (p=0;p<2*interpPnts;p++) {
@@ -54,7 +63,7 @@ double rhs(CollocationPoint** collPnt, int j, int i, double mod, string equation
         f1 += funcPnts[p] * sum / productLower;
     }
 
-    //------- Compute second-order spatial derivative ------------------//
+    //------- compute second-order spatial derivative ------------------//
     double f2 = 0.;                                                     // the second derivative of u
     for (p=0;p<2*interpPnts;p++) {                                      //
         double sumOuter = 0.;                                           //

@@ -107,10 +107,10 @@ int main(void) {
         fwd_trans(collPnt);                                             // compute forward wavelet transform on the adaptive grid    
 
         //------- Remove coefficients below the threshold --------------//
-        thresholding(collPnt,threshold);                                // construct an initial mask of wavelets whose coefficients are above the threshold
+        thresholding(collPnt,threshold);                                // construct a mask of wavelets whose coefficients are above the threshold
 
         //------- Extend mask to include adjacent zone -----------------//
-        adjacent_zone(collPnt,buffer_width,buffer_height);              // create an adjacent zone of wavelets which may become significant during dt time
+        adjacent_zone(collPnt,buffer_width,buffer_height);              // create adjacent zone of wavelets which may become significant after dt
 
         //------- Perform the perfect reconstruction check -------------//
         reconstruction_check(collPnt);                                  // ensure that all detail points can be reconstructed at the next timestep

@@ -23,14 +23,14 @@ void RK2(CollocationPoint** collPnt, int j, int i, double h, string equation) {
     //--------------------------------------------------------------------------//     
     
     //------- Declare variables ------------------------//
-    double k1, k2;
+    double k1, k2;                                      // slopes at time intervals
 
     //------- Compute RHS at each time interval --------//
-    k1 = rhs(collPnt,j,i,0.,equation);
-    k2 = rhs(collPnt,j,i,h*k1/2.,equation);
+    k1 = rhs(collPnt,j,i,0.,equation);                  // slope at initial time
+    k2 = rhs(collPnt,j,i,h*k1/2.,equation);             // slope at half-time
 
     //-------- Update the solution variable ------------//
-    collPnt[j][i].u = collPnt[j][i].u + h*k2;
+    collPnt[j][i].u = collPnt[j][i].u + h*k2;           // updated solution
 
     return
 }
