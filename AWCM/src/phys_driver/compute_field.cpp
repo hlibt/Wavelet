@@ -1,4 +1,5 @@
 #include <cmath>
+#include <string>
 #include "../CollocationPoint.hpp"
 #include "../interpolation/interpolation.hpp"
 #include "../global.hpp"

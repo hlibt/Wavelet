@@ -1,4 +1,4 @@
-CXX = g++
+CXX = g++ -std=c++11
 DEBUG_FLAG =
 
 all: awcm
@@ -6,7 +6,7 @@ all: awcm
 objects = awcm.o scaling_subd.o detail_subd.o fwd_trans.o lagrInterp.o \
 			compute_field.o thresholding.o time_advance.o	\
 			seed_grid.o adjacent_zone.o control.o reconstruction_check.o \
-			write2file.o RK2.o rhs.o
+			write2file.o RK2.o rhs.o compress.o decompress.o
 
 awcm: $(objects) 
 	${CXX} -o awcm $(objects)
@@ -41,6 +41,12 @@ thresholding.o: grid_adaptation/thresholding.cpp
 adjacent_zone.o: grid_adaptation/adjacent_zone.cpp
 	${CXX} ${DEBUG_FLAG} -c grid_adaptation/adjacent_zone.cpp
 
+compress.o: grid_adaptation/compress.cpp
+	${CXX} ${DEBUG_FLAG} -c grid_adaptation/compress.cpp
+
+decompress.o: grid_adaptation/decompress.cpp
+	${CXX} ${DEBUG_FLAG} -c grid_adaptation/decompress.cpp
+
 reconstruction_check.o: grid_adaptation/reconstruction_check.cpp
 	${CXX} ${DEBUG_FLAG} -c grid_adaptation/reconstruction_check.cpp
 
@@ -54,7 +60,7 @@ wavelet_derivative.o: phys_driver/wavelet_derivative.cpp
 	${CXX} ${DEBUG_FLAG} -c phys_driver/wavelet_derivative.cpp -I. -I/phys_driver/
 
 time_advance.o: phys_driver/time_advance.cpp
-	${CXX} ${DEBUG_FLAG} -c phys_driver/time_integrate.cpp -I. -I/phys_driver/
+	${CXX} ${DEBUG_FLAG} -c phys_driver/time_advance.cpp -I. -I/phys_driver/
 
 rhs.o: phys_driver/rhs.cpp
 	${CXX} ${DEBUG_FLAG} -c phys_driver/rhs.cpp -I. -I/phys_driver/
