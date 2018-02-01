@@ -12,9 +12,9 @@ int inline indexShift(int jstar, int j, int k) {                        // repre
                                                                         //
 double inline init_condition(double x) {                                //
     double f = 0.;                                                      //
-//    f = - sin( M_PI * x ); 
+    f = - sin( M_PI * x ); 
 //    f = -tanh( (x+.5) / (2*.01) );
-    f = exp( -.5*pow(x/0.1,2) );
+//    f = exp( -.5*pow(x/0.1,2) );
     return f;                                                           //
 }                                                                       //
 
