@@ -119,11 +119,11 @@ int main(void) {
         compute_field(collPnt);                                         // compute the field where necessary using wavelet basis
 
         //------- Output solution at each timestep ---------------------//
-        if ( ifwrite == 1 ) write2file(collPnt,t);                      // output solution to file at current timestep
+        int nactive = write2file(collPnt,t);                            // output solution to file at current timestep
 
         //------- Advance in time --------------------------------------//
         time_advance(collPnt,dt,equation,advec_vel,diffusivity,         // advance the solution forward in time
-                        boundary_type,left_bc,right_bc);                //
+                        boundary_type,left_bc,right_bc,nactive);        //
 
     }                                                                   // end of time integration
 

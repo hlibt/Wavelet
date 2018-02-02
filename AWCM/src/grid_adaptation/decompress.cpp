@@ -5,6 +5,7 @@
 #include "../CollocationPoint.hpp"
 #include "../global.hpp"
 using namespace std;
+
 void decompress(CollocationPoint** collPnt, double* funcpts, int* spatial_identifier, int* level_identifier, int nactive) {
 
     //--------------------------------------------------------------------------//
@@ -25,8 +26,26 @@ void decompress(CollocationPoint** collPnt, double* funcpts, int* spatial_identi
     for (int i=0;i<nactive;i++) {                                           //
         int j = level_identifier[i];                                        // dyadic grid level
         int k = spatial_identifier[i];                                      //
-        cout << j <<  " " << k << "\n" << endl;
         collPnt[j][k].u = funcpts[i];                                       // updated solution on dyadic grid
+    }                                                                       //
+
+    //------- complete update ----------------------------------------------//
+    for (int j=0;j<J;j++) {                                                 //
+        int N = jPnts(j);                                                   //
+        for (int k=0;k<N;k++) {                                             //
+            if ( collPnt[j][k].isMask == true &&                            //
+                    ( collPnt[j][k].isOdd == true || j==0 ) ) {             //
+                
+                //------- update all points in mask ------------------------//
+                for (int jstar=j+1;jstar<=J;jstar++) {                      // 
+                    int m = indexShift(jstar,j,k);                          //
+                    if ( collPnt[jstar][m].isMask == true ) {               //
+                        collPnt[jstar][m].u = collPnt[j][k].u;              //
+                    }                                                       //
+                }                                                           //
+
+            }                                                               // 
+        }                                                                   //
     }                                                                       //
     return;
 }

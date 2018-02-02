@@ -8,35 +8,22 @@
 #include "phys_driver.hpp"
 
 void time_advance(CollocationPoint** collPnt,double h,string equation, double c,double alpha,
-                        string boundary_type, double left_bc, double right_bc) {
+                        string boundary_type, double left_bc, double right_bc, int nactive) {
 
-<<<<<<< HEAD
-    //------- Advance interior points in time --------------------------------------//
-    for (int j=0;j<=J;j++) {                                                        // search all levels for points in the mask
-        int N = jPnts(j);                                                           // number of points at level j
-        for (int i=0;i<N;i++) {                                                     // loop through points at level j
- 
-            //------- Advance point if it is in mask -------------------------------//
-            if ( collPnt[j][i].isMask == true ) {                                   // determine if point is in mask
-                RK2(collPnt,j,i,h,equation);                                        // call time integration scheme
-            }                                                                       //
-=======
     //------- initialize compression vectors -------------------------------//
-    double* gridPts;                                                        // vector of active grid points
-    double* funcPts;                                                        // vector of functional values at those points
-    int* spatialMapPts;                                                     // integer array of spatial mapping values
-    int* levelMapPts;                                                       // integer array of level mapping values
-    int na;                                                                 //
+    double* gridPts = new double[nactive];                                  // vector of active grid points
+    double* funcPts = new double[nactive];                                  // vector of functional values at those points
+    int* spatialMapPts = new int[nactive];                                  // integer array of spatial mapping values
+    int* levelMapPts = new int[nactive];                                    // integer array of level mapping values
 
     //------- compress the grid --------------------------------------------//
-    compress(collPnt,gridPts,funcPts,spatialMapPts,levelMapPts,na);         // compress grid and output number of active points
->>>>>>> 2f6e487d56af862323ff001ca16a8666c02e1e39
+    compress(collPnt,gridPts,funcPts,spatialMapPts,levelMapPts,nactive);    // compress grid and output number of active points
 
     //------- Advance interior points in time ------------------------------//
-    RK2(gridPts,funcPts,na,h,alpha,c,equation);                             // move solution variables forward
+    RK2(gridPts,funcPts,nactive,h,alpha,c,equation);                        // move solution variables forward
 
     //------- decompress the grid ------------------------------------------//
-    decompress(collPnt,funcPts,spatialMapPts,levelMapPts,na);               // go from compressed grid back to dyadic
+    decompress(collPnt,funcPts,spatialMapPts,levelMapPts,nactive);          // go from compressed grid back to dyadic
 
     //------- Compute boundary values --------------------------------------//
     for (int j=0;j<=J;j++) {                                                //

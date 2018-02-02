@@ -1,1 +1,1 @@
-void write2file(CollocationPoint** collPnt,int current_timestep);
+int write2file(CollocationPoint** collPnt,int timestep);

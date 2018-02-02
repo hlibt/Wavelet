@@ -51,11 +51,11 @@ function post_process(numsteps,plot_soln,plot_coeffs,freq)
     end
 
     % solution to burger's equation
-    %vxn = 1000;
-    %vx = linspace(-1,1,vxn);
-    %vtn = n;
-    %vt = linspace(0,1,vtn);
-    %vu = burgers_solution(0.01,vxn,vx,vtn,vt);
+    vxn = 5000;
+    vx = linspace(-1,1,vxn);
+    vtn = numsteps;
+    vt = linspace(0,1,vtn);
+    vu = burgers_solution(0.1,vxn,vx,vtn,vt);
 
     % input data and make movie
     figure(2)
@@ -66,10 +66,10 @@ function post_process(numsteps,plot_soln,plot_coeffs,freq)
             [x,I] = sort( U(:,1) );
             u = U(:,2);
             plot( x , u(I), 'b' ); grid on; hold on;
-    %        plot( vx, vu(:,i+1) ,'r'); hold on;
+            plot( vx, vu(:,i+1) ,'r'); hold on;
             plot( x , u(I), '.b' );
             hold off;
-            axis( [ -1 1 0 1.5 ] );
+            axis( [ -1 1 -1.5 1.5 ] );
             pause(0.0000001);
         end
     end

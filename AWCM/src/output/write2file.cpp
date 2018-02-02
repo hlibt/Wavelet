@@ -7,7 +7,7 @@
 #include "../global.hpp"
 using namespace std;
 
-void write2file(CollocationPoint** collPnt,int timestep) {
+int write2file(CollocationPoint** collPnt,int timestep) {
 
     //------- Output the field -----------------------------------------//
     char u_out[45];                                                     // declare space for character array
@@ -21,7 +21,7 @@ void write2file(CollocationPoint** collPnt,int timestep) {
             if ( collPnt[j][i].isMask == true ) {
                 output << std::fixed << std::setprecision(16) <<        //
                     collPnt[j][i].x << " " << collPnt[j][i].u << endl;  //    
-                if ( collPnt[j][i].isOdd == true ) num_active++;        // only count active wavelets
+                if (j==0 || collPnt[j][i].isOdd==true) {num_active++;}  // count active wavelets
             }
         }
     }
@@ -37,7 +37,6 @@ void write2file(CollocationPoint** collPnt,int timestep) {
             if ( collPnt[j][i].isOdd == true && collPnt[j][i].isMask == true ) {
                 output << std::fixed << std::setprecision(16) << collPnt[j][i].x 
                         << " " << j << " " << abs( collPnt[j][i].detail_coeff ) << endl;    
-                num_active++;
             }
         }
     }
@@ -50,4 +49,7 @@ void write2file(CollocationPoint** collPnt,int timestep) {
     printf("Active points: %d out of %d \n",num_active,jPnts(J));
     printf("------------------------------------------ \n");   
     printf(" \n");
+    
+    return num_active;
+
 }

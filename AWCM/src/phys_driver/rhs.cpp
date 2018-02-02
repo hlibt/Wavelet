@@ -1,5 +1,6 @@
 #include <cmath>
 #include <string>
+#include <iostream>
 #include "../CollocationPoint.hpp"
 #include "../global.hpp"
 #include "../interpolation/interpolation.hpp"
@@ -19,25 +20,6 @@ double rhs(double* gridpts, double* funcpts, int nactive, int i, double mod, dou
     //              interpPnts              - half the number of interp. points (global)
     //--------------------------------------------------------------------------------------//     
 
-<<<<<<< HEAD
-    //------- initialize vectors ---------------------------------------//
-    double* gridPnts = new double[2*interpPnts];                        // the interpolating stencil
-    double* funcPnts = new double[2*interpPnts];                        // the function evaluated at stencil points
-
-    //------- determine if given stencil is adequate -------------------//
-    if ( j!=J && collPnt[j+1][2*i+1].isMask == true 
-            && ) {                 //
-        j++;                                                            // increment wavelet-grid level
-        i*=2;                                                           // represent grid index at next level
-    }
-
-    //------- modify the gridpoint's stencil values --------------------//
-    double f0 = collPnt[j][i].u + mod;                                  // solution at time subinterval
-    int p = (i-1)/2 - interpPnts + 1;                                   // starting grid index
-    for (int k=0;k<2*interpPnts;k++) {                                  // loop through stencil
-        gridPnts[k] = collPnt[j-1][p].x;                                //
-        funcPnts[k] = collPnt[j-1][p].u + mod;                          // add modification to solution variable
-=======
     //------- compute interpolation stencil ----------------------------//
     int N = 2*interpPnts + 1;                                           // number of points in the stencil
     double* xstencil = new double[N];                                   // the interpolating stencil
@@ -50,7 +32,6 @@ double rhs(double* gridpts, double* funcpts, int nactive, int i, double mod, dou
     for (int k=0;k<=2*interpPnts;k++) {                                 // populate stencil
         xstencil[k] = gridpts[p];                                       //
         fstencil[k] = funcpts[p] + mod;                                 //
->>>>>>> 2f6e487d56af862323ff001ca16a8666c02e1e39
         p++;                                                            //
     }                                                                   //
 
@@ -80,29 +61,30 @@ double rhs(double* gridpts, double* funcpts, int nactive, int i, double mod, dou
 
     //------- compute second-order spatial derivative ------------------//
     double f2 = 0.;                                                     // the second derivative of u
-    for (p=0;p<N;p++) {                                                 //
-        double sumOuter = 0.;                                           //
-        for (int l=0;l<N;l++) {                                         //
-            if (l!=i) {                                                 //
-                double sumInner = 0.;                                   //
-                for (int m=0;m<N;m++) {                                 //
-                    if (m!=i && m!=l) {                                 //
-                        double product=1.;                              //
-                        for (int k=0;k<N;k++) {                         //
-                            if (k!=i && k!=l && k!=m) {                 //
-                                product *= ( xeval - xstencil[k] ) /    //
-                                          ( xstencil[i] - xstencil[k]); //
-                            }                                           //
-                        }                                               //
-                        sumInner += product / (xstencil[i]-xstencil[m]);//
-                    }                                                   //
-                }                                                       //
-                sumOuter += sumInner / ( xstencil[i]-xstencil[l] );     //
-            }                                                           //
-        }                                                               //
-        f2 += fstencil[i] * sumOuter;                                   //
-    }                                                                   //
+    for (int i=0;i<N;i++) {
+        double sumOuter=0.;
+        for (int l=0;l<N;l++) {
+            if (l!=i) {
+                double sumInner=0.;
+                for (int m=0;m<N;m++) {
+                    if (m!=i && m!=l) {
+                        double product=1.;
+                        for (int k=0;k<N;k++) {
+                            if (k!=i && k!=l && k!=m) {
+                                product *= (xeval-xstencil[k]) 
+                                        /(xstencil[i]-xstencil[k]);
+                            }
+                        }
+                        sumInner+=product/(xstencil[i]-xstencil[m]);
+                    }
+                }
+                sumOuter += sumInner/(xstencil[i]-xstencil[l]);
+            }
+        }
+        f2 += fstencil[i] * sumOuter;
+    }
 
+//    cout << "i is: " << i << "x is: " << xeval << "f1 is: " << f1 << " f2 is: " << f2 <<  endl;
     //------- Combine derivatives to form rhs --------------------------//
     if ( equation.compare(0,7,"burgers") == 0 ) {
         return -f0*f1 + alpha*f2;
