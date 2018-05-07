@@ -22,16 +22,14 @@ void time_advance(CollocationPoint** collPnt,double h,string equation, double c,
     //------- Advance interior points in time ------------------------------//
     RK2(gridPts,funcPts,nactive,h,alpha,c,equation);                        // move solution variables forward
 
-    //------- decompress the grid ------------------------------------------//
-    decompress(collPnt,funcPts,spatialMapPts,levelMapPts,nactive);          // go from compressed grid back to dyadic
-
     //------- Compute boundary values --------------------------------------//
-    for (int j=0;j<=J;j++) {                                                //
-        if ( boundary_type.compare(0,9,"derichlet") == 0 ) {                //
-            collPnt[j][0].u = left_bc;                                      //
-            collPnt[j][jPnts(j)-1].u = right_bc;                            //
-        }                                                                   //
+    if ( boundary_type.compare(0,9,"derichlet") == 0 ) {                    //
+        collPnt[0][0].u = left_bc;                                          //
+        collPnt[0][jPnts(0)-1].u = right_bc;                                //
     }                                                                       //
+
+    //------- decompress the grid ------------------------------------------//
+    decompress(collPnt,funcPts,spatialMapPts,levelMapPts,nactive);          // go from compressed grid back to dyadic-adaptive
 
     //------- cleanup data -------------------------------------------------//
     delete[] gridPts;                                                       //

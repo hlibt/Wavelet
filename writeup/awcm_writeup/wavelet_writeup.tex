@@ -17,38 +17,41 @@
 
 \begin{document}
 
-\title{Implementing the Adaptive Wavelet Collocation Method}
+\title{Investigation of Multiresolution Methods for Solving One-Dimensional PDEs}
 \author{Brandon Gusto \\}
 
 \maketitle
 
 %===========================================%
 
-\section{Motivation for the Adaptive Wavelet Collocation Method}
-The adaptive wavelet collocation method (AWCM) is a method for numerically solving differential equations.
-It has a number of merits which make it an attractive alternative to traditional finite element or finite volume 
-methods for particular problems. The AWCM has been successfully applied to parabolic, elliptic, and 
-hyperbolic PDEs, in applications such as aeroacoustics, turbulence, flame interactions, and others. 
-Some important qualities of the method which make it so capable are that
+\section{Background and Motivation for Multiresolution Methods}
+In the last two and a half decades, multiresolution methods have gained considerable attention and have been the focus
+of ongoing research in a variety of fields.
+Wavelet methods for numerically solving differential equations have a number of merits which make them 
+attractive compared to traditional methods for particular problems. Some methods simply use their compress properties
+is to provide spatial adaptivity to a numerical method, while other methods such as wavelet galerkin or wavelet collocation
+use the wavelet basis explicitly to represent the solution.
+Some important qualities of the method which make it so capable for spatial adaptivity are that
 \begin{itemize}
     \item wavelets are localized in space and scale
     \item the wavelet basis forms a multiresolution analysis
-    \item the existence of a fast wavelet transform makes the method $\mathcal{O}(\mathcal{N})$
+    \item the existence of a fast discrete wavelet transform makes the method $\mathcal{O}(\mathcal{N})$
 \end{itemize} 
-One of the most attractive qualities of using wavelets for solving partial differential equations (PDEs) or systems of PDEs is for their
-ability to naturally compress the solution, providing high resolution where it is needed, and fewer grid points where the 
-solution is smooth. The wavelet basis is ideal for problems which have 
-disparate length and time scales.
+One of the most attractive qualities of using wavelets for solving partial differential equations (PDEs) 
+or systems of PDEs is for their ability to naturally compress the solution, providing high resolution where 
+it is needed, and fewer grid points where the solution is smooth. The wavelet basis is ideal for problems 
+which have disparate length and time scales.
 
 %===========================================%
 
-\section{Fundamentals of Wavelets}
+\section{Brief Review of Wavelets}
 A wavelet is a mathematical function which can be used to generate a basis for representing either continuous functions or 
 discrete signals. There exist many other bases which have been utilized, most notably the Fourier
 basis composed of sine and cosine functions.
 Unlike the Fourier basis functions however, wavelets are functions with finite length. The most simple example of a wavelet
 is the Haar wavelet, which has a scaling function, $\phi(x)$, and a mother wavelet $\psi(x)$ as shown in 
 figure (\ref{fig:haar_scaling}) and (\ref{fig:haar_wavelet}).
+
 \begin{figure}[H]
 	\centering
 	\input{plotting_scripts/haar_scaling.tex}
@@ -62,12 +65,14 @@ figure (\ref{fig:haar_scaling}) and (\ref{fig:haar_wavelet}).
 	\caption{Haar wavelet function}
 	\label{fig:haar_wavelet}
 \end{figure}
+
 The scaling and wavelet functions have compact support, thus to approximate functions it is necessary to shift them. 
 This action is referred to as \textit{translation}. Furthermore, since functions may exhibit sharp changes over an
 interval which is smaller than the piecewise constant wavelet, a wavelet of higher frequency is necessary
 to fit the function. A \textit{dilation} of the original wavelet decreases its support, allowing it to 
 approximate more complex functions. These basic operations allow for the formation of a basis.
 The basis is constructed from the scaling and wavelet functions as
+
 \begin{align}
 \phi_{j,k}(x) & = 2^{j/2} \phi(2^j x - k) \\
 \psi_{j,k}(x) & = 2^{j/2} \psi(2^j x - k) 
@@ -76,22 +81,28 @@ The basis is constructed from the scaling and wavelet functions as
 
 The three main qualities of wavelets which make them such a useful tool for 
 approximation are \textbf{Compact Support}, \textbf{Orthogonality}, and \textbf{Multiresolution Analysis}.
+
 \subsection{Compact Support}
 Wavelets are uniformly zero outside of a specified interval, and this useful property is known as compact support.
 This property is advantageous for approximating sharp signals, where one would like to represent the spike using only a small 
 handful of basis functions. The Fourier basis is not adequate for this purpose, since the support for the basis is global; 
 the sine and cosine functions have infinite length. 
+
 \subsection{Orthogonality}
 The basis of wavelet functions constitute an orthonormal set. All translations and dilations of the 
 wavelet $\psi(x)$ are orthogonal to each other,
+
 \begin{equation}
 \int_{-\infty}^{\infty} \psi_{j,k}(x) \psi_{j',k'}(x) dx = 0,
 \end{equation}
+
 if $j \neq j'$ or $k \neq k'$. Furthermore, all combinations of translates and dilates of the wavelet are orthogonal
 to all tranlates and dilates of the scaling function,
+
 \begin{equation}
 \int_{-\infty}^{\infty} \phi_{j,k}(x) \psi_{j',k'}(x) dx = 0,
 \end{equation}
+
 for all integers $j,j',k$, and $k'$.
 
 \subsection{Multiresolution Analysis}
@@ -100,10 +111,12 @@ to be approximated using as few basis functions as possible. Let $V_0$ be the sp
 scaling functions $\phi_{0,k}(x)$ at the coarsest level of resolution. The space spanned by the wavelets at the same
 level $j=0$ is $W_0$. Due to the aforementioned orthogonality between scaling functions and wavelets, the space
 $W_0$ is orthogonal to $V_0$. The refined space $V_1$ can be described by
+
 \begin{equation}
 V_1 = V_0 \oplus W_0,
 \label{V1}
 \end{equation}
+
 which represents all piecewise functions defined on half-intervals. Equation (\ref{V1}) indicates that the space spanned by 
 $\phi(2x)$ can be described by the `summation' of the spaces spanned by
 $V_0$ and $W_0$. One finer level, $V_2$, is spanned by translates of $\phi(4x)$. It can be written as
@@ -119,8 +132,11 @@ Thus the spaces $V_j$ are nested, since the function $\phi(x)$ is a combination 
 In mathematical notation, $V_0 \subset V_1 \subset \dots \subset V_j$.
 
 %===========================================%
+\section{Adaptive Wavelet Collocation Method}
+Adaptive wavelet collocation has been successfully applied to parabolic, elliptic, and 
+hyperbolic PDEs, in applications such as aeroacoustics, turbulence, flame interactions, and others. 
 
-\section{Dyadic Grid}
+\subsection{Dyadic Grid}
 The multi-resolution properties of wavelets previously described warrant a multilevel, or dyadic grid.
 This grid should have as many levels as there are scales in the given problem. It can consist of 
 either uniformly or non-uniformly spaced points. In the case of equally spaced grid points, 
@@ -139,12 +155,6 @@ where $\mathcal{K}^{j}$ is the integer set representing the spatial locations in
 nested, implying that $\mathcal{G}^{j} \subset \mathcal{G}^{j+1}$. In other words, the points $x^{j}$ are a perfect 
 subset of the points $x^{j+1}$. This can be demonstrated by the relation that 
 $x_{k}^{j}=x_{2k}^{j+1}$ for $k \in \mathcal{K}^{j}$.
-
-%===========================================%
-
-\section{Second-Generation Wavelets}
-Second-generation wavelets refer to the family of functions which are no longer defined as translates and dilations of 
-a single mother function. 
 
 \subsection{Interpolating Subdivision Algorithm}
 The interpolating subdivision scheme is central to the second-generation wavelet collocation approach. The scheme is used to
@@ -176,8 +186,10 @@ and the inverse transform is given by
 		c_{2k}^{j+1} &= c_{k}^{j}.
 	\end{split}
 \end{equation}
+
 \subsection{Construction of Interpolating Scaling and Wavelet Functions}
 The wavelet and scaling function do not have a closed-form expression.
+
 \subsubsection{Scaling Functions}
 The construction of second-generation interpolating wavelets makes use of the interpolating subdivision algorithm. 
 The scheme is used to interpolate functional values defined at points on level $j$, to odd points (i.e. $x_{2k+1}^{j+1}$) 
@@ -189,15 +201,21 @@ To obtain the scaling function $\phi_{m}^{j}(x)$, from (5) set $c_{k}^{j}=\delta
       0 & k \neq m.
    \end{cases}
 \]
-Then let all $d_{l}^{j'}=0, \forall l \in \mathcal{L}^{j'}, \forall j' \geq j$ and perform the inverse transform up to an arbitrarily high level of resolution $J$. 
+Then let all $d_{l}^{j'}=0, \forall l \in \mathcal{L}^{j'}, \forall j' \geq j$ and perform the inverse transform 
+up to an arbitrarily high level of resolution $J$. 
+
 \subsubsection{Wavelet Functions}
-The wavelet $\psi_{l}^{j}$ is computed by setting $d_{m}^{j'} = \delta_{j',j} \delta_{l,m}, \forall l \in \mathcal{L}^{j}, \forall j \geq j$, 
-and also $c_{k}^{j}, \forall k \in \mathcal{K}^j$. Then perform the inverse wavelet transform up to an arbitrarily high level of resolution $J$.
+The wavelet $\psi_{l}^{j}$ is computed by setting $d_{m}^{j'} = \delta_{j',j} \delta_{l,m}, 
+\forall l \in \mathcal{L}^{j}, \forall j \geq j$, 
+and also $c_{k}^{j}, \forall k \in \mathcal{K}^j$. Then perform the inverse wavelet transform up to an 
+arbitrarily high level of resolution $J$.
+
 \begin{figure}
 	\center
 	\input{image/scaling_j3.tex}
 	\caption{An example of a scaling function, $\phi(x)$, for $N=3$.}
 \end{figure}
+
 \begin{figure}
 	\center
 	\input{image/detail_j3.tex}
@@ -208,16 +226,23 @@ and also $c_{k}^{j}, \forall k \in \mathcal{K}^j$. Then perform the inverse wave
 
 \section{Approximation of Functions}
 The approximation of a function $f(x)$ is done by setting the scaling coefficients at the arbitrary maximum level of 
-resolution $J$ to the function itself. Once the function is sampled this way for all $c_{k}^{J}$, the forward wavelet transform is 
-performed down to the coarsest level of resolution. The function is then represented by 
+resolution $J$ to the function itself. Once the function is sampled this way for all $c_{k}^{J}$, the forward wavelet 
+transform is performed down to the coarsest level of resolution. The function is then represented by 
+
 \begin{equation}
         f^J(x)=\sum_{k \in \mathcal{K}^0} c_{k}^{0} \phi_{k}^{0}(x) + \sum_{j=0}^{J-1} \sum_{l \in \mathcal{L}^j}
                 d_{l}^{j} \psi_{l}^{j}(x).
 \end{equation}
-Often, a large number of wavelet coefficients can be discarded, and the approximation (6) still is adequate. Define some threshold $\epsilon$ for the coefficients, then keep only those coefficients which satisfy $|d_{l}^{j}| \geq \epsilon$. The approximation (6) becomes 
+
+Often, a large number of wavelet coefficients can be discarded, and the approximation (6) still is adequate. Define 
+some threshold $\epsilon$ for the coefficients, then keep only those coefficients which satisfy 
+$|d_{l}^{j}| \geq \epsilon$. The approximation (6) becomes 
+
 \begin{equation}
-        f_{\geq}^{J}(x)=\sum_{k \in \mathcal{K}^0} c_{k}^{0} \phi_{k}^{0}(x) + \sum_{j=0}^{J-1} \sum_{ \substack{ l \in \mathcal{L}^j \\ |d_{l}^{j}| \geq \epsilon} } d_{l}^{j} \psi_{l}^{j}(x).
+        f_{\geq}^{J}(x)=\sum_{k \in \mathcal{K}^0} c_{k}^{0} \phi_{k}^{0}(x) + \sum_{j=0}^{J-1} 
+        \sum_{ \substack{ l \in \mathcal{L}^j \\ |d_{l}^{j}| \geq \epsilon} } d_{l}^{j} \psi_{l}^{j}(x).
 \end{equation}
+
 In the figures below are approximations to the function $f(x)=\cos{(80 \pi x)} \exp{(-64 x^2)}$ with an increasing threshold 
 $\epsilon$.
 \begin{figure}[H]
@@ -226,13 +251,11 @@ $\epsilon$.
 	\caption{Approximation of $f(x)=\cos{(80 \pi x)} \exp{(-64 x^2)},$ with $N=3$ and 256 points on $\mathcal{G}^J$. All coefficients are kept.}
 \end{figure}
 
-%===========================================%
-
-\section{Calculation of Spatial Derivatives}
+\subsection{Calculation of Spatial Derivatives}
 The calculation of spatial derivatives involves analyzing the detail coefficients, as they are a measure of how well the 
-given function is approximated by the local interpolant. If a point $x_{k}^{j}$ on level $j$ of the dyadic grid, does not have 
-detail coefficients above the threshold at points $x_{2k+1}^{j+1}$ or $x_{2k-1}^{j+1}$, then the given function's error is
-bounded by the thresholding parameter $\epsilon$.  Thus a stencil consisting of the same points
+given function is approximated by the local interpolant. If a point $x_{k}^{j}$ on level $j$ of the dyadic grid, does 
+not have detail coefficients above the threshold at points $x_{2k+1}^{j+1}$ or $x_{2k-1}^{j+1}$, then the given 
+function's error is bounded by the thresholding parameter $\epsilon$.  Thus a stencil consisting of the same points
 which constructed the underlying polynomial should result in an accurate result at that point, 
 within some constant multiple of the tolerance $\epsilon$.
 

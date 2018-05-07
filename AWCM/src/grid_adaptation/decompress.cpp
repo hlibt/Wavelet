@@ -35,15 +35,7 @@ void decompress(CollocationPoint** collPnt, double* funcpts, int* spatial_identi
         for (int k=0;k<N;k++) {                                             //
             if ( collPnt[j][k].isMask == true &&                            //
                     ( collPnt[j][k].isOdd == true || j==0 ) ) {             //
-                
-                //------- update all points in mask ------------------------//
-                for (int jstar=j+1;jstar<=J;jstar++) {                      // 
-                    int m = indexShift(jstar,j,k);                          //
-                    if ( collPnt[jstar][m].isMask == true ) {               //
-                        collPnt[jstar][m].u = collPnt[j][k].u;              //
-                    }                                                       //
-                }                                                           //
-
+                collPnt[j+1][2*k].u = collPnt[j][k].u;                      //
             }                                                               // 
         }                                                                   //
     }                                                                       //

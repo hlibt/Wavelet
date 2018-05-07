@@ -9,7 +9,7 @@ void reconstruction_check(CollocationPoint** collPnt) {
 
     //--------------------------------------------------------------------------//
     // Information: reconstruction_check.cpp is called after both the 
-    //              thresholding.cpp and adjacent_zone.cpp routines are ran.
+    //              thresholding.cpp and adjacent_zone.cpp routines are run.
     //              Once both routines have produced a mask of points which are
     //              currently significant (thresholding.cpp) and also points which
     //              may become significant at the next timestep (adjacent_zone.cpp),
@@ -35,7 +35,7 @@ void reconstruction_check(CollocationPoint** collPnt) {
     //--------------------------------------------------------------------------//     
 
     //------- Loop through all points at levels j=2 through j=J ------------//
-    for (int j=2;j<=J;j++) {                                                //
+    for (int j=2;j<=J;j++) {                                                // start on 2 because all points at level 0 automatically included
         int N = jPnts(j);                                                   //
         for (int k=0;k<N;k++) {                                             //
             if ( collPnt[j][k].isMask == true &&                            //
