@@ -3,16 +3,16 @@
     condition, edit the global.hpp file and run 'make'. ***
 
 Select PDE ( "burgers" or "modified_burgers" or "advection" or "advection_diffusion" or "diffusion" )
-equation diffusion
+equation burgers
 
 Maximum number of wavelet levels in the simulation:
-max_scale 6
+max_scale 8
 
 Starting wavelet level (should be at least 2):
 shift 2
 
 Wavelet coefficient thresholding parameter:
-threshold 0.000001
+threshold 0.00001
 
 Half the number of interpolation points per stencil:
 interp_points 2
@@ -21,7 +21,7 @@ Final time in the simulation:
 tf 1
 
 Number of timesteps in the simulation:
-num_timesteps 12000
+num_timesteps 8000
 
 Advection velocity:
 advec_vel 0.1

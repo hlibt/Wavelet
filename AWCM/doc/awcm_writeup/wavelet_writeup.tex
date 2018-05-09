@@ -1,37 +1,52 @@
-\documentclass[11pt]{article}
-\usepackage{fullpage}
+\documentclass[10.5pt]{article}
+
+% Packages:
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
 \usepackage{float}
 \usepackage{graphicx}
 \usepackage{amssymb}
-\usepackage{subcaption}
-\usepackage{mwe}
-\usepackage{epstopdf}
-\usepackage{color,verbatim}
 \usepackage{pgfplots}
 \usepackage{bm}
-\usepackage{listings}
 \usepackage{mathtools}          %loads amsmath as well
 \usepackage{titling}
+\usepackage{biblatex}
+\usepackage{indentfirst}
+\addbibresource{bibliography.bib}
 \DeclareGraphicsRule{.tif}{png}{.png}{`convert #1 `dirname #1`/`basename #1 .tif`.png}
-%\usepackage{doublespace}
+
+% Move title up:
+\setlength{\droptitle}{-10em}
 
 \begin{document}
 
-\title{Investigation of Multiresolution Methods for Solving One-Dimensional PDEs}
+% Title information:
+\title{Study of Multiresolution Concepts for Numerically Solving PDEs}
 \author{Brandon Gusto \\}
-
 \maketitle
 
-%===========================================%
+% Introductory section:
+\section*{Motivation for Multiresolution Methods}
+Computer simulation of physical phenomenon has become a centerpiece of modern engineering design. As more accuracy is demanded,
+and more complex physics need to be resolved, the demand on computing power increases dramatically. In recent years, processing power for a single
+chip has stopped making significant year-over-year gains. In light of this, computational scientists around the world are coming up with
+new ways to handle the tremendous amount of computations necessitated by numerical simulations. 
+Computer simulations are designed to numerically solve the (usually simplified) system of partial differential equations which govern
+the behavior of the physics of interest. Real-world simulations typically run with a computational grid that contains tens or hundreds 
+of millions of unknowns. Since the 1980s, computational scientists have devised methods which try to reduce the number of degrees of 
+freedom (unknowns) in a system. Adaptive mesh refinement (AMR) \cite{berger} was the first method of adaptively refining the solution where 
+more accuracy is needed. AMR is still the standard in most production and research codes today. AMR typically refines the solution
+by running the simulation on a coarse and fine grid simultaneously, and estimating via Richardson extrapolation the truncation error.
 
-\section{Background and Motivation for Multiresolution Methods}
-In the last two and a half decades, multiresolution methods have gained considerable attention and have been the focus
-of ongoing research in a variety of fields.
-Wavelet methods for numerically solving differential equations have a number of merits which make them 
-attractive compared to traditional methods for particular problems. Some methods simply use their compress properties
-is to provide spatial adaptivity to a numerical method, while other methods such as wavelet galerkin or wavelet collocation
-use the wavelet basis explicitly to represent the solution.
-Some important qualities of the method which make it so capable for spatial adaptivity are that
+An alternative to AMR methods for providing a reliable measure of error is multiresolution analysis (MRA). MRA provides a hierarchy 
+of nested approximation spaces, with a coarsest and finest approximation. Errors between levels of resolution are stored in the detail
+wavelet spaces. In the last few decades, multiresolution methods have gained considerable attention and have been the focus
+of research in a variety of fields, most notably signal processing and computer graphics.
+Numerically solving differential equations is a more recent application of multiresolution properties, and has shown
+to be an attractive alternative to traditional methods for particular problems. Some methods simply use the compression properties
+of wavelets to provide spatial adaptivity to a numerical method, while other methods such as wavelet galerkin or wavelet collocation
+use the wavelet basis explicitly to reconstruct a field. Some important qualities of the method which make it so capable 
+for spatial adaptivity are that
 \begin{itemize}
     \item wavelets are localized in space and scale
     \item the wavelet basis forms a multiresolution analysis
@@ -39,84 +54,74 @@ Some important qualities of the method which make it so capable for spatial adap
 \end{itemize} 
 One of the most attractive qualities of using wavelets for solving partial differential equations (PDEs) 
 or systems of PDEs is for their ability to naturally compress the solution, providing high resolution where 
-it is needed, and fewer grid points where the solution is smooth. The wavelet basis is ideal for problems 
-which have disparate length and time scales.
+it is needed, and fewer grid points where the solution is smooth. In a study between the compression properties and 
+time-to-solution \cite{amr_vs_mra}, multiresolution methods showed a greated ability for compression of solution when
+large disparity was present between length scales in the problem.
 
-%===========================================%
-
-\section{Brief Review of Wavelets}
+% Review of wavelets:
+\section*{Brief Review of Wavelets}
 A wavelet is a mathematical function which can be used to generate a basis for representing either continuous functions or 
 discrete signals. There exist many other bases which have been utilized, most notably the Fourier
 basis composed of sine and cosine functions.
 Unlike the Fourier basis functions however, wavelets are functions with finite length. The most simple example of a wavelet
 is the Haar wavelet, which has a scaling function, $\phi(x)$, and a mother wavelet $\psi(x)$ as shown in 
 figure (\ref{fig:haar_scaling}) and (\ref{fig:haar_wavelet}).
-
 \begin{figure}[H]
 	\centering
 	\input{plotting_scripts/haar_scaling.tex}
 	\caption{Haar scaling function}
 	\label{fig:haar_scaling}
 \end{figure}
-
 \begin{figure}[H]
 	\centering
 	\input{plotting_scripts/haar_wavelet.tex}
 	\caption{Haar wavelet function}
 	\label{fig:haar_wavelet}
 \end{figure}
-
 The scaling and wavelet functions have compact support, thus to approximate functions it is necessary to shift them. 
-This action is referred to as \textit{translation}. Furthermore, since functions may exhibit sharp changes over an
+This action is \textit{translation}. Furthermore, since functions may exhibit sharp changes over an
 interval which is smaller than the piecewise constant wavelet, a wavelet of higher frequency is necessary
 to fit the function. A \textit{dilation} of the original wavelet decreases its support, allowing it to 
 approximate more complex functions. These basic operations allow for the formation of a basis.
 The basis is constructed from the scaling and wavelet functions as
-
 \begin{align}
 \phi_{j,k}(x) & = 2^{j/2} \phi(2^j x - k) \\
-\psi_{j,k}(x) & = 2^{j/2} \psi(2^j x - k) 
+\psi_{j,k}(x) & = 2^{j/2} \psi(2^j x - k).
 \label{dilation equation}
 \end{align}
-
+Only in the limit as $j$ tends to infinity does this basis fully represent a continous function.
 The three main qualities of wavelets which make them such a useful tool for 
-approximation are \textbf{Compact Support}, \textbf{Orthogonality}, and \textbf{Multiresolution Analysis}.
+approximation are \textbf{compact support}, \textbf{orthogonality}, and \textbf{multiresolution analysis}.
 
-\subsection{Compact Support}
+\subsection*{Compact Support}
 Wavelets are uniformly zero outside of a specified interval, and this useful property is known as compact support.
 This property is advantageous for approximating sharp signals, where one would like to represent the spike using only a small 
 handful of basis functions. The Fourier basis is not adequate for this purpose, since the support for the basis is global; 
 the sine and cosine functions have infinite length. 
 
-\subsection{Orthogonality}
+\subsection*{Orthogonality}
 The basis of wavelet functions constitute an orthonormal set. All translations and dilations of the 
 wavelet $\psi(x)$ are orthogonal to each other,
-
 \begin{equation}
 \int_{-\infty}^{\infty} \psi_{j,k}(x) \psi_{j',k'}(x) dx = 0,
 \end{equation}
-
 if $j \neq j'$ or $k \neq k'$. Furthermore, all combinations of translates and dilates of the wavelet are orthogonal
 to all tranlates and dilates of the scaling function,
-
 \begin{equation}
 \int_{-\infty}^{\infty} \phi_{j,k}(x) \psi_{j',k'}(x) dx = 0,
 \end{equation}
-
 for all integers $j,j',k$, and $k'$.
 
-\subsection{Multiresolution Analysis}
+\subsection*{Multiresolution Analysis}
 The nestedness of the subspaces spanned by the different wavelet scales is a most useful property, allowing functions
 to be approximated using as few basis functions as possible. Let $V_0$ be the space which is spanned by the basis of 
 scaling functions $\phi_{0,k}(x)$ at the coarsest level of resolution. The space spanned by the wavelets at the same
 level $j=0$ is $W_0$. Due to the aforementioned orthogonality between scaling functions and wavelets, the space
 $W_0$ is orthogonal to $V_0$. The refined space $V_1$ can be described by
-
 \begin{equation}
 V_1 = V_0 \oplus W_0,
 \label{V1}
 \end{equation}
-
 which represents all piecewise functions defined on half-intervals. Equation (\ref{V1}) indicates that the space spanned by 
 $\phi(2x)$ can be described by the `summation' of the spaces spanned by
 $V_0$ and $W_0$. One finer level, $V_2$, is spanned by translates of $\phi(4x)$. It can be written as
@@ -131,12 +136,21 @@ V_j = V_0 \oplus W_0 \oplus W_1 \oplus \dots \oplus W_j.
 Thus the spaces $V_j$ are nested, since the function $\phi(x)$ is a combination of $\phi(2x)$ and $\phi(2x-1)$, and so on. 
 In mathematical notation, $V_0 \subset V_1 \subset \dots \subset V_j$.
 
-%===========================================%
-\section{Adaptive Wavelet Collocation Method}
-Adaptive wavelet collocation has been successfully applied to parabolic, elliptic, and 
-hyperbolic PDEs, in applications such as aeroacoustics, turbulence, flame interactions, and others. 
+% Second-generation wavelets:
+\section*{Second-Generation Wavelet Methods}
+The wavelets previously described are only ever translates and dilates of a single mother wavelet function.
+This family of wavelets is classified as first-generation, and they are tied to the use of regular grids. 
+The lifting scheme developed by \cite{sweldens} abandoned the restriction to regular grids and the concept of translates
+and dilates. These so-called second-generation wavelets are adaptive wavelets, allowing wavelets to be built with points
+`missing' from the grid (an irregular grid).
 
-\subsection{Dyadic Grid}
+% Present methods:
+\subsection*{Adaptive Wavelet Collocation Method}
+The adaptive wavelet collocation method \cite{vasilyev} has been successfully applied to parabolic, elliptic, and
+hyperbolic PDEs in applications such as aeroacoustics, turbulence, flame interactions, and others.
+The algorithm makes use of adaptive, second-generation wavelets to compress the solution.
+
+\subsubsection*{Dyadic Grid}
 The multi-resolution properties of wavelets previously described warrant a multilevel, or dyadic grid.
 This grid should have as many levels as there are scales in the given problem. It can consist of 
 either uniformly or non-uniformly spaced points. In the case of equally spaced grid points, 
@@ -156,7 +170,7 @@ nested, implying that $\mathcal{G}^{j} \subset \mathcal{G}^{j+1}$. In other word
 subset of the points $x^{j+1}$. This can be demonstrated by the relation that 
 $x_{k}^{j}=x_{2k}^{j+1}$ for $k \in \mathcal{K}^{j}$.
 
-\subsection{Interpolating Subdivision Algorithm}
+\subsubsection*{Interpolating Subdivision Algorithm}
 The interpolating subdivision scheme is central to the second-generation wavelet collocation approach. The scheme is used to
 approximate values at odd points $x_{2k+1}^{j+1}$ by using $2N$ nearest points to construct interpolating polynomials of 
 order $2N-1$. Lagrange polynomials are used, and the method can be used with a uniform grid or with 
@@ -170,9 +184,10 @@ where the interpolating weights are Lagrange polynomial coefficients given by
 \end{equation}
 Given a uniform grid spacing at level $j$ of $h^j$, the accuracy of such an interpolation is of $\mathcal{O}((h^{j})^{2N})$.  
 
-\subsection{Wavelet Transform}
+\subsubsection*{Wavelet Transform}
 The existence of a fast wavelet transform is one of the attractive qualities of the method. The transform makes use of the 
-interpolating subdivision algorithm (\ref{interp}) for the calculation of the scaling and detail wavelet coefficients. The forward wavelet transform is given by
+interpolating subdivision algorithm (\ref{interp}) for the calculation of the scaling and detail wavelet coefficients. 
+The forward wavelet transform is given by
 \begin{equation}
 	\begin{split}
 		d_{k}^{j} &= \frac{1}{2} \left( c_{2k+1}^{j+1}-\sum_{l} w_{k,l}^{j} c_{2k+2l}^{j+1} \right), \\
@@ -187,10 +202,7 @@ and the inverse transform is given by
 	\end{split}
 \end{equation}
 
-\subsection{Construction of Interpolating Scaling and Wavelet Functions}
-The wavelet and scaling function do not have a closed-form expression.
-
-\subsubsection{Scaling Functions}
+\subsubsection*{Scaling Functions}
 The construction of second-generation interpolating wavelets makes use of the interpolating subdivision algorithm. 
 The scheme is used to interpolate functional values defined at points on level $j$, to odd points (i.e. $x_{2k+1}^{j+1}$) 
 at the next higher level of resolution. This scheme is used to construct the scaling and detail wavelet functions. 
@@ -204,54 +216,57 @@ To obtain the scaling function $\phi_{m}^{j}(x)$, from (5) set $c_{k}^{j}=\delta
 Then let all $d_{l}^{j'}=0, \forall l \in \mathcal{L}^{j'}, \forall j' \geq j$ and perform the inverse transform 
 up to an arbitrarily high level of resolution $J$. 
 
-\subsubsection{Wavelet Functions}
+\subsubsection*{Wavelet Functions}
 The wavelet $\psi_{l}^{j}$ is computed by setting $d_{m}^{j'} = \delta_{j',j} \delta_{l,m}, 
 \forall l \in \mathcal{L}^{j}, \forall j \geq j$, 
 and also $c_{k}^{j}, \forall k \in \mathcal{K}^j$. Then perform the inverse wavelet transform up to an 
 arbitrarily high level of resolution $J$.
-
 \begin{figure}
 	\center
 	\input{image/scaling_j3.tex}
 	\caption{An example of a scaling function, $\phi(x)$, for $N=3$.}
 \end{figure}
-
 \begin{figure}
 	\center
 	\input{image/detail_j3.tex}
 	\caption{An example of a wavelet, $\psi(x)$, for $N=3$.}
 \end{figure}
 
-%===========================================%
-
-\section{Approximation of Functions}
+\subsubsection*{Approximation of Functions}
 The approximation of a function $f(x)$ is done by setting the scaling coefficients at the arbitrary maximum level of 
 resolution $J$ to the function itself. Once the function is sampled this way for all $c_{k}^{J}$, the forward wavelet 
 transform is performed down to the coarsest level of resolution. The function is then represented by 
-
 \begin{equation}
         f^J(x)=\sum_{k \in \mathcal{K}^0} c_{k}^{0} \phi_{k}^{0}(x) + \sum_{j=0}^{J-1} \sum_{l \in \mathcal{L}^j}
                 d_{l}^{j} \psi_{l}^{j}(x).
 \end{equation}
-
-Often, a large number of wavelet coefficients can be discarded, and the approximation (6) still is adequate. Define 
+Often, a large number of wavelet coefficients can be discarded, and the approximation (6) is still adequate. Define 
 some threshold $\epsilon$ for the coefficients, then keep only those coefficients which satisfy 
 $|d_{l}^{j}| \geq \epsilon$. The approximation (6) becomes 
-
 \begin{equation}
         f_{\geq}^{J}(x)=\sum_{k \in \mathcal{K}^0} c_{k}^{0} \phi_{k}^{0}(x) + \sum_{j=0}^{J-1} 
         \sum_{ \substack{ l \in \mathcal{L}^j \\ |d_{l}^{j}| \geq \epsilon} } d_{l}^{j} \psi_{l}^{j}(x).
 \end{equation}
-
 In the figures below are approximations to the function $f(x)=\cos{(80 \pi x)} \exp{(-64 x^2)}$ with an increasing threshold 
 $\epsilon$.
-\begin{figure}[H]
+\begin{figure}
 	\center
 	\input{image/solution.tex}
-	\caption{Approximation of $f(x)=\cos{(80 \pi x)} \exp{(-64 x^2)},$ with $N=3$ and 256 points on $\mathcal{G}^J$. All coefficients are kept.}
+	\caption{Approximation of $f(x)=\cos{(80 \pi x)} \exp{(-64 x^2)},$ with $N=3$ and 256 points on $\mathcal{G}^J$. 
+	All coefficients are kept.}
+\end{figure}
+\begin{figure}
+	\center
+	\input{image/solution_epminus5.tex}
+	\caption{Same function with a tolerance of $\epsilon = 10^{-5}$.} 
+\end{figure}
+\begin{figure}
+	\center
+	\input{image/solution_epminus3.tex}
+	\caption{Again with a coarse tolerance of $\epsilon = 10^{-3}$.} 
 \end{figure}
 
-\subsection{Calculation of Spatial Derivatives}
+\subsubsection*{Calculation of Spatial Derivatives}
 The calculation of spatial derivatives involves analyzing the detail coefficients, as they are a measure of how well the 
 given function is approximated by the local interpolant. If a point $x_{k}^{j}$ on level $j$ of the dyadic grid, does 
 not have detail coefficients above the threshold at points $x_{2k+1}^{j+1}$ or $x_{2k-1}^{j+1}$, then the given 
@@ -259,9 +274,9 @@ function's error is bounded by the thresholding parameter $\epsilon$.  Thus a st
 which constructed the underlying polynomial should result in an accurate result at that point, 
 within some constant multiple of the tolerance $\epsilon$.
 
-\subsection{Differentiating Lagrange Polynomials} 
 The computational complexity of constructing Lagrange interpolating polynomial coefficients is $\mathcal{O}(N)$. 
-Once these terms are known, the weights needed for computing spatial derivatives on the adaptive grid can be computed with only slightly more effort.
+Once these terms are known, the weights needed for computing spatial derivatives on the adaptive grid can be computed 
+with only slightly more effort.
 This is also an $\mathcal{O}(N)$ operation. The analytic formula for the coefficients is given by
 \begin{equation}
     \frac{d}{dx} L_{k+l}(x) = L_{k+l}(x) \sum_{ \substack{ i=k-N+1 \\ i\neq k+l } }^{k+N} \frac{1}{x_{k+l}-x_i}.
@@ -274,54 +289,55 @@ Note that for a stencil consisting of four points $(N=2)$, this method is not on
 of accuracy worse than a comparable four-point centered finite difference scheme, which has $\mathcal{O}((h^j)^{2N})$
 accuracy. The only advantage of this method can be seen when the stencil is non-uniform, in which case the finite difference 
 coefficients would have to be computed either in an implicit sense, or by interpolation, as done here.
-\subsection{Non-Uniform Finite Difference Stencils}
-\textit{Here shall be summarized the approach taken by Rastigejev \& Paolucci, 2006 }
 
-%===========================================%
+An alternative and perhaps more efficient method in some cases, is to precompute every possible finite-difference stencil on the grid
+and store the coefficients in a lookup table \cite{rastigejev}.
 
-\section{Single-Precision Finite Differencing with Repeated Richardson Extrapolation}
-When evaluating derivatives with finite-precision machines, one must consider not just the truncation error of the scheme,
-but also the induced roundoff error. To illustrate, consider the 2-point centered finite difference scheme,
+\subsubsection*{Time-Stepping}
+Advancement in time of the adaptive solution is done as in any method of lines procedure. The forcing term for the differential equation
+(in time) is evaluated via appropriate finite differencing as previously explained. This procedure is repeated for as many times as there
+are stages in the time integration method (4 for RK4). At each iteration, to maintain stability of the compressed solution,
+a buffer zone of points is added. Typically the buffer zone ensures that each point that originally met the threshold is surrounded
+by two points of the same resolution level. If these points are missing, it is possible that during time integration, the points
+could become relevant (physics moving into that area) but that algorithm would have no way of knowing it.
+
+\subsubsection*{Adaptive Wavelet Collocation Code}
+A program was successfully developed in \texttt{C++} to solve numerous one-dimensional partial differential equations with the AWCM.
+The code repository can be found at \texttt{https://github.com/blg13/Wavelet/tree/CollocationPoint} 
+
+\subsection*{Multiresolution Finite-Volume}
+Most multiresolution methods for PDEs do not explicitly compute wavelets, but rather use prediction operators and the multiresolution
+framework for compression of the solution. This method was pioneered by Harten \cite{Harten}. The finite volume method works with cell
+averages, $u_{j,k}$, where $j$ denotes the resolution level and $k$ denotes the spatial index. The general idea is to 
+represent the cell-averaged data on a fine grid as values on a coarse grid plus the differences at subsequent grid levels. The idea
+is identical in nature to the restriction and prolongation actions in the multigrid framework. 
+
+\subsubsection*{Structured \& Regular Rectilinear Grid} 
+As previously mentioned, the multiresolution analysis is tied to the structure of the grid. For regular, rectilinear grids
+the prediction operators are fixed and can be easily derived in more than one dimension. In one dimension the update (fine
+to coarse) operator is given by
 \begin{equation}
-\overline{f}'(x) \approx \frac{f(x+h) - f(x-h)}{2h}.
+\overline{u}_{j,k} = \frac{1}{2} ( \overline{u}_{j+1,2k} + \overline{u}_{j+1,2k+1} )
 \end{equation}
-The derivation of the scheme and its truncation error is done using the Taylor series expansions about the points
- $x+h$ and $x-h$. This yields
+and the prediction operator (coarse to fine) is given as
+\begin{align}
+\hat{u}_{j+1,2k} & = \overline{u}_{j,k} + \sum_{i=1}^{m} \gamma_k ( \overline{u}_{j,k+i} + \overline{u}_{j,k-i} ) \\
+\hat{u}_{j+1,2k+1} & = \overline{u}_{j,k} - \sum_{i=1}^{m} \gamma_k ( \overline{u}_{j,k+i} + \overline{u}_{j,k-i} ),
+\end{align}
+where if fifth-order interpolation is used ($m=2$), then the coefficients are $\gamma_1=-\frac{22}{128}$ and $\gamma_2=\frac{3}{128}$.
+The detail coefficients computed at every resolution level are given by
 \begin{equation}
-f(x+h) = f(x) + f'(x) h + \frac{f^{(2)}(x) h^2}{2!} + \frac{f^{(3)}(x) h^3}{3!} + \mathcal{O}(h^4),
+\overline{d}_{j,k} = \overline{u}_{j,k} - \hat{u}_{j,k}.
 \end{equation}
-and
-\begin{equation}
-f(x-h) = f(x) - f'(x) h + \frac{f^{(2)}(x) h^2}{2!} - \frac{f^{(3)}(x) h^3}{3!} + \mathcal{O}(h^4).
-\end{equation}
-Subtracting these expansions and rearranging yields
-\begin{equation}
-f'(x) = \frac{ f(x+h) - f(x-h) } { 2 h } - \frac{f^{(3)}(x) h^2}{3!},
-\end{equation}
-where the final term represents the truncation error of the scheme. But in reality, computations are carried out on
-finite-precision computers, with the amount of precision given by $\epsilon_{\text{mach}}$. So the total error must 
-include a roundoff term. The roundoff error is given by the difference
-between the computer's representation of a number, $\overline{f}(x)$ with the actual number, $f(x)$. Let
-\begin{equation}
-\overline{f}(x+h) - \overline{f}(x-h) =  f(x+h) - f(x-h) + C \epsilon_{\text{mach}} f(x),
-\end{equation}
-where $C$ is some constant of order 1. Then the roundoff error in the finite difference approximation is
-\begin{align*}
-\epsilon_{\text{roundoff}} &= \frac{ \overline{f}(x+h) - \overline{f}(x-h) } { 2 h } - \frac{ f(x+h) - f(x-h) } { 2 h } \\
-& \approx \frac{ C \epsilon_{\text{mach}} } {2 h }.
-\end{align*}
-Combining the truncation error and the roundoff error in the approximation of a derivative yields
-\begin{equation}
-f'(x) = \overline{f}'(x) + \frac{f^{(3)}(x) h^2}{3!} + \frac{ C \epsilon_{\text{mach}} } {2 h }.
-\label{error}
-\end{equation}
-Since the truncation term is diminishing with decreasing step-size $h$, while the roundoff term is increasing, (\ref{error}) 
-can be viewed as an optimization problem, with a control parameter $h$. Differentiating with respect to $h$, and setting
-the resulting equation to zero yields the optimal step-size
-\begin{equation}
-h^{\ast} \approx (\epsilon_{\text{mach}})^{1/3}.
-\end{equation}
-As the step-size decreases from unity, the error of the approximation will decrease according to the truncation error, until
-$h^{\ast}$ is reached, and then the error will increase due to roundoff error.
+If the prediction operator is stable, then the detail coefficients should be an indicator of regularity, or smoothness of the underlying
+function. In this way, spatial adaptivity can be obtained by only accepting cells with detail coefficients of significant value.
+
+\subsubsection*{Irregular Connectivity Meshes}
+The need to compress large quantities of three-dimensional image data drove the graphics community over the last three decades to
+develop many methods of subdivision for creating level-of-detail models. These meshes have no regular structure, and thus first-generation
+multiresolution analysis is not possible.
+ 
+% Print bibliography:
+\printbibliography
 
 \end{document}

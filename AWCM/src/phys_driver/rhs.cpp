@@ -84,19 +84,20 @@ double rhs(double* gridpts, double* funcpts, int nactive, int i, double mod, dou
         f2 += fstencil[i] * sumOuter;
     }
 
-//    cout << "i is: " << i << "x is: " << xeval << "f1 is: " << f1 << " f2 is: " << f2 <<  endl;
     //------- Combine derivatives to form rhs --------------------------//
+	double output;
     if ( equation.compare(0,7,"burgers") == 0 ) {
-        return -f0*f1 + alpha*f2;
+        output = -f0*f1 + alpha*f2;
     } else if ( equation.compare(0,16,"modified_burgers") == 0 ) {
-        return ( -(f0 + c)*f1 + alpha*f2 );
+        output = ( -(f0 + c)*f1 + alpha*f2 );
     } else if ( equation.compare(0,19,"advection_diffusion") == 0 ) {
-        return -c*f1 + alpha*f2;
+        output = -c*f1 + alpha*f2;
     } else if ( equation.compare(0,9,"advection") == 0 ) {
-        return -c*f1;
+        output = -c*f1;
     } else if ( equation.compare(0,9,"diffusion") == 0 ) {
-        return alpha*f2;
+        output = alpha*f2;
     }
+	return output;
 
     //------- cleanup data ---------------------------------------------//    
     delete[] xstencil;
